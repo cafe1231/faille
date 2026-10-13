@@ -25,14 +25,29 @@ import Testing
 
     @Test func namesInFrench() {
         #expect(Format.dragons(["infernal", "ocean"]) == "infernal, océan")
-        #expect(Format.dragons(["elder", "mystery"]) == "ancien, mystery")
+        #expect(Format.dragons(["elder", "mystery"]) == "ancestral, mystery")
         #expect(Format.dragons([]) == "")
         #expect(Format.role("jungle") == "JGL")
         #expect(Format.role("bottom") == "BOT")
         #expect(Format.role("coach") == "COA")
         #expect(Format.champion("XinZhao") == "Xin Zhao")
-        #expect(Format.champion("KSante") == "KSante")
+        #expect(Format.champion("KSante") == "K'Sante")
         #expect(Format.champion("Rell") == "Rell")
+    }
+
+    @Test func championNameExceptions() {
+        let expected = [
+            "LeBlanc": "LeBlanc", "MonkeyKing": "Wukong", "KSante": "K'Sante", "Chogath": "Cho'Gath",
+            "Kaisa": "Kai'Sa", "Khazix": "Kha'Zix", "Velkoz": "Vel'Koz", "KogMaw": "Kog'Maw",
+            "RekSai": "Rek'Sai", "Belveth": "Bel'Veth", "Nunu": "Nunu & Willump",
+        ]
+        for (id, name) in expected {
+            #expect(Format.champion(id) == name, "\(id)")
+        }
+        // Les noms sans exception restent découpés à la casse.
+        #expect(Format.champion("MissFortune") == "Miss Fortune")
+        #expect(Format.champion("TwistedFate") == "Twisted Fate")
+        #expect(Format.champion("Ahri") == "Ahri")
     }
 
     @Test func subtitles() {

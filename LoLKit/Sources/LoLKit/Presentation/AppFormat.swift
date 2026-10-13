@@ -38,7 +38,7 @@ extension Format {
 
     private static let dragonNames = [
         "infernal": "infernal", "ocean": "océan", "cloud": "nuage", "mountain": "montagne",
-        "hextech": "hextech", "chemtech": "chemtech", "elder": "ancien",
+        "hextech": "hextech", "chemtech": "chemtech", "elder": "ancestral",
     ]
 
     /// Types de drakes en français : « infernal, océan ». Type inconnu : tel quel, en minuscules.
@@ -53,8 +53,17 @@ extension Format {
         roles[role.lowercased()] ?? String(role.uppercased().prefix(3))
     }
 
-    /// Nom de champion lisible depuis son id : « XinZhao » → « Xin Zhao » (espace avant une capitale qui suit une minuscule).
+    /// Noms de champions que la découpe à la casse ne sait pas écrire (apostrophes, nom d'affichage différent de l'id Data Dragon).
+    private static let championExceptions = [
+        "leblanc": "LeBlanc", "monkeyking": "Wukong", "ksante": "K'Sante", "chogath": "Cho'Gath", "kaisa": "Kai'Sa",
+        "khazix": "Kha'Zix", "velkoz": "Vel'Koz", "kogmaw": "Kog'Maw", "reksai": "Rek'Sai", "belveth": "Bel'Veth",
+        "nunu": "Nunu & Willump",
+    ]
+
+    /// Nom de champion lisible depuis son id : « XinZhao » → « Xin Zhao » (espace avant une capitale qui suit une minuscule),
+    /// sauf les exceptions : « KSante » → « K'Sante », « MonkeyKing » → « Wukong », « Nunu » → « Nunu & Willump »…
     public static func champion(_ id: String) -> String {
+        if let known = championExceptions[id.lowercased()] { return known }
         var result = ""
         var previous: Character?
         for character in id {

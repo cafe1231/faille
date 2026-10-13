@@ -88,6 +88,21 @@ struct StoreTests {
         }
     }
 
+    /// « Valider » sans toucher au sélecteur n'écrit rien : la couleur automatique ne devient pas un choix manuel.
+    @Test func confirmingTheColorSheetWithoutChangeWritesNothing() {
+        let automatic = FollowedTeam(id: "kc", code: "KC", name: "Karmine Corp", autoColorHex: "#5B8CFF")
+        #expect(TeamColorSheet.hexToSave(team: automatic, picked: Palette.team("#5B8CFF")) == nil)
+        #expect(TeamColorSheet.hexToSave(team: automatic, picked: Palette.team("#FF5C7A")) == "#FF5C7A")
+
+        let manual = FollowedTeam(id: "kc", code: "KC", name: "Karmine Corp", autoColorHex: "#5B8CFF", colorOverrideHex: "#FF5C7A")
+        #expect(TeamColorSheet.hexToSave(team: manual, picked: Palette.team("#FF5C7A")) == nil)
+        #expect(TeamColorSheet.hexToSave(team: manual, picked: Palette.team("#5B8CFF")) == "#5B8CFF")
+
+        // Sans aucune couleur connue (accent par défaut), le sélecteur ouvert sur l'accent n'écrit rien non plus.
+        let fresh = FollowedTeam(id: "t1", code: "T1", name: "T1")
+        #expect(TeamColorSheet.hexToSave(team: fresh, picked: Palette.team(FollowedTeam.defaultColorHex)) == nil)
+    }
+
     /// Les tests hébergés ne doivent déclencher ni interface ni réseau : `FailleApp` se fie à ce drapeau.
     @Test func hostAppKnowsItIsUnderTest() {
         #expect(RunEnvironment.isTesting)

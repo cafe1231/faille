@@ -106,6 +106,8 @@ struct TeamsView: View {
         let pills = store.leaguePills
         if let first = pills.first {
             let selected = pills.first(where: { $0.id == selectedLeagueId }) ?? first
+            // Les pilules défilent jusqu'au bord de l'écran : la zone de défilement déborde des marges de 16 pt de la
+            // page (retrait négatif), le contenu garde sa marge de départ, et rien n'est rogné au bord de la zone.
             ScrollView(.horizontal) {
                 HStack(spacing: 6) {
                     ForEach(pills) { league in
@@ -116,6 +118,9 @@ struct TeamsView: View {
                 }
             }
             .scrollIndicators(.hidden)
+            .scrollClipDisabled()
+            .contentMargins(.horizontal, 16, for: .scrollContent)
+            .padding(.horizontal, -16)
             teamList(store.teams(in: selected))
         } else {
             NoteCard(icon: .refresh, text: store.isFailing ? "Ligues indisponibles pour l'instant." : "Chargement des ligues…")

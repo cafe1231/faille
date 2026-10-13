@@ -13,6 +13,14 @@ struct TeamColorSheet: View {
         _color = State(initialValue: Palette.team(team.colorHex))
     }
 
+    /// Couleur à enregistrer en choix manuel : nil si la couleur choisie est celle déjà affichée (comparée à la couleur
+    /// de départ après le même aller-retour par le sélecteur, pour qu'une dérive d'arrondi ne compte pas comme un changement).
+    static func hexToSave(team: FollowedTeam, picked: Color) -> String? {
+        let shown = RGB(color: Palette.team(team.colorHex)).hex
+        let chosen = RGB(color: picked).hex
+        return chosen == shown ? nil : chosen
+    }
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
@@ -47,7 +55,10 @@ struct TeamColorSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Valider") {
-                        store.setColorOverride(RGB(color: color).hex, id: team.id)
+                        // Aucun changement : rien n'est écrit (une couleur automatique ne devient pas un choix manuel).
+                        if let hex = Self.hexToSave(team: team, picked: color) {
+                            store.setColorOverride(hex, id: team.id)
+                        }
                         dismiss()
                     }
                 }
