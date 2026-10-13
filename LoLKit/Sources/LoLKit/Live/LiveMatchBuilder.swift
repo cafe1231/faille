@@ -70,11 +70,19 @@ public enum LiveMatchBuilder {
 
         var stats: [TeamStats]?
         var clockStart: Date?
-        if phase == .inGame, !statsDisabled, let snap {
-            let perTeam = teams.compactMap { team in team.id.flatMap { snap.stats(for: $0) } }
-            stats = perTeam.count == teams.count ? perTeam : nil
+        var clockStoppedAt: Date?
+        if phase == .inGame, let snap {
+            // Le chrono ne dépend pas des stats : sans stats, la Live Activity montre quand même score + chrono (spec §6.3).
+            if !statsDisabled {
+                let perTeam = teams.compactMap { team in team.id.flatMap { snap.stats(for: $0) } }
+                stats = perTeam.count == teams.count ? perTeam : nil
+            }
             if let firstFrameTime {
                 clockStart = now.addingTimeInterval(-snap.timestamp.timeIntervalSince(firstFrameTime))
+            }
+            // Game en pause ou terminée côté flux : le chrono s'arrête à l'instant de la dernière mise à jour.
+            if snap.phase == .paused || snap.phase == .finished {
+                clockStoppedAt = now
             }
         }
 
@@ -83,6 +91,7 @@ public enum LiveMatchBuilder {
             seriesScore: wins,
             gameNumber: gameNumber,
             gameClockStart: clockStart,
+            gameClockStoppedAt: clockStoppedAt,
             stats: stats,
             statsAvailable: !statsDisabled,
             spoilerFree: false,

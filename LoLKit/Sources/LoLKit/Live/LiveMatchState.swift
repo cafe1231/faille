@@ -37,8 +37,15 @@ public struct LiveMatchAttributes: Codable, Sendable, Equatable, Hashable {
 
 /// Partie dynamique d'une Live Activity. Même JSON pour l'appli (v1) et le serveur de push (phase 2).
 public struct LiveMatchState: Codable, Sendable, Equatable, Hashable {
+    /// Les valeurs brutes font partie du contrat JSON. Une valeur inconnue (version plus récente) devient `.inGame`,
+    /// la phase la plus neutre : la Live Activity reste affichée au lieu de ne plus se mettre à jour.
     public enum Phase: String, Codable, Sendable, Hashable {
         case upcoming, inGame, betweenGames, finished
+
+        public init(from decoder: any Decoder) throws {
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            self = Phase(rawValue: raw) ?? .inGame
+        }
     }
 
     /// Au-delà, la Live Activity affiche « màj il y a X min ».
@@ -50,6 +57,9 @@ public struct LiveMatchState: Codable, Sendable, Equatable, Hashable {
     public var gameNumber: Int?
     /// Début estimé de la game en heure de l'appareil : le chrono s'affiche avec un minuteur natif.
     public var gameClockStart: Date?
+    /// Renseigné quand le flux annonce la game en pause ou terminée : le chrono s'arrête alors à
+    /// `gameClockStoppedAt - gameClockStart` au lieu de continuer à tourner.
+    public var gameClockStoppedAt: Date?
     /// Stats des deux équipes, dans l'ordre de `LiveMatchAttributes.teams`.
     public var stats: [TeamStats]?
     public var statsAvailable: Bool
@@ -57,12 +67,13 @@ public struct LiveMatchState: Codable, Sendable, Equatable, Hashable {
     public var winnerCode: String?
     public var updatedAt: Date
 
-    public init(phase: Phase, seriesScore: [Int]?, gameNumber: Int?, gameClockStart: Date?, stats: [TeamStats]?,
-                statsAvailable: Bool, spoilerFree: Bool, winnerCode: String?, updatedAt: Date) {
+    public init(phase: Phase, seriesScore: [Int]?, gameNumber: Int?, gameClockStart: Date?, gameClockStoppedAt: Date?,
+                stats: [TeamStats]?, statsAvailable: Bool, spoilerFree: Bool, winnerCode: String?, updatedAt: Date) {
         self.phase = phase
         self.seriesScore = seriesScore
         self.gameNumber = gameNumber
         self.gameClockStart = gameClockStart
+        self.gameClockStoppedAt = gameClockStoppedAt
         self.stats = stats
         self.statsAvailable = statsAvailable
         self.spoilerFree = spoilerFree
@@ -78,6 +89,7 @@ public struct LiveMatchState: Codable, Sendable, Equatable, Hashable {
         copy.seriesScore = nil
         copy.gameNumber = nil
         copy.gameClockStart = nil
+        copy.gameClockStoppedAt = nil
         copy.stats = nil
         copy.winnerCode = nil
         copy.spoilerFree = true
