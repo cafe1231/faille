@@ -7,7 +7,7 @@ enum Icon: String, CaseIterable, Sendable {
     case eyeOff = "eyeoff"
     case star
     case starFill = "star-fill"
-    case trophy, settings, search, back, arrow, pin, check, refresh, off
+    case trophy, settings, search, back, arrow, pin, check, refresh, off, pause
 
     var assetName: String {
         "icon-" + rawValue

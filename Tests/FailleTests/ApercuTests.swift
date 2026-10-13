@@ -20,7 +20,7 @@ struct ApercuTests {
     }
 
     @Test func iconsAreInTheCatalog() {
-        #expect(Icon.allCases.count == 21)
+        #expect(Icon.allCases.count == 22)
         for icon in Icon.allCases {
             #expect(UIImage(named: icon.assetName) != nil, "icône manquante : \(icon.assetName)")
         }

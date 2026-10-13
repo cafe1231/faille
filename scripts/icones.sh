@@ -63,6 +63,7 @@ icon pin      "<rect $S x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"3\"/><pa
 icon check    "<path $S d=\"M5 12l5 5L20 7\"/>"
 icon refresh  "<path $S d=\"M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4\"/>"
 icon off      "<circle $S cx=\"12\" cy=\"12\" r=\"9\"/><path $S d=\"M6 6l12 12\"/>"
+icon pause    "<circle $S cx=\"12\" cy=\"12\" r=\"9\"/><path $S d=\"M10 9v6M14 9v6\"/>"
 
 mkdir -p "$CATALOG/LaunchBackground.colorset"
 cat > "$CATALOG/LaunchBackground.colorset/Contents.json" <<'EOF'
