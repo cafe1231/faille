@@ -16,7 +16,7 @@ struct RootView: View {
         TabView(selection: $tab) {
             Tab("Matchs", image: Icon.trophy.assetName, value: AppTab.matches) {
                 NavigationStack {
-                    PlaceholderScreen(title: "Mes équipes")
+                    MatchesView(openTeams: { tab = .teams })
                 }
             }
             Tab("Équipes", image: Icon.star.assetName, value: AppTab.teams) {
@@ -26,22 +26,6 @@ struct RootView: View {
             }
         }
         .tint(Palette.accent)
-    }
-}
-
-/// Onglet pas encore construit (retiré à la Task 10).
-private struct PlaceholderScreen: View {
-    let title: String
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                ScreenHeader(title, subtitle: "bientôt")
-            }
-            .padding(.horizontal, 16)
-        }
-        .abyssBackground()
-        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
