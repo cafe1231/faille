@@ -50,6 +50,24 @@ public enum WidgetText {
         }
     }
 
+    /// Une ligne affichée du moyen widget : son texte et les couleurs des équipes suivies qu'elle montre (pastilles).
+    public struct MediumRow: Sendable, Equatable, Identifiable {
+        /// Id du match, ou `hidden-<id de l'équipe>` pour la ligne « Prochain · masqué » d'une équipe.
+        public let id: String
+        public let text: Row
+        /// Couleurs (hex) des équipes suivies de la ligne, dans l'ordre d'affichage.
+        public let colorHexes: [String]
+        /// Ligne « <CODE> · Prochain · masqué » d'une équipe (`WidgetTeam.Next.hidden`), pas un match.
+        public let isHiddenNext: Bool
+
+        public init(id: String, text: Row, colorHexes: [String], isHiddenNext: Bool = false) {
+            self.id = id
+            self.text = text
+            self.colorHexes = colorHexes
+            self.isHiddenNext = isHiddenNext
+        }
+    }
+
     /// Le petit widget d'une équipe.
     public struct Small: Sendable, Equatable {
         public let label: String
@@ -72,6 +90,12 @@ public enum WidgetText {
         }
     }
 
+    /// Ce que dit une équipe en anti-spoiler dont le prochain match est masqué (`WidgetTeam.Next.hidden`).
+    static let hiddenNext = "Prochain · masqué"
+
+    /// Le moyen widget montre au plus ce nombre de lignes.
+    public static let mediumRowLimit = 4
+
     /// Groupe d'apps introuvable (`WidgetContent.appGroupMissing`) : titre, conseil, et les deux d'une ligne.
     static let appGroupMissingTitle = "Groupe d'apps introuvable"
     static let appGroupMissingAdvice = "Réinstalle Faille avec AltServer"
@@ -84,7 +108,7 @@ public enum WidgetText {
     public static func emptyMessage(_ content: WidgetContent) -> String {
         if content.appGroupMissing { return appGroupMissingMessage }
         if content.teams.isEmpty { return "Aucune équipe suivie" }
-        return hasHiddenTeam(content) ? "Prochain · masqué" : "Aucun match prévu"
+        return hasHiddenTeam(content) ? hiddenNext : "Aucun match prévu"
     }
 
     /// Widget en ligne : « KC 1–0 C9 · G2 », « T1 vs FLY · En direct », « GEN vs FUR · jeu. 11:00 ».
@@ -144,6 +168,25 @@ public enum WidgetText {
             let text = remaining < 60 ? "0 min" : Format.countdown(from: content.date, to: start)
             return .countdown(text: text, code: code, progress: progress)
         }
+    }
+
+    /// Lignes du moyen widget, `limit` au plus : d'abord les lignes datées (`content.lines` : le direct, puis les prochains
+    /// matchs par heure de début), puis une ligne « T1 · Prochain · masqué » par équipe dont le prochain match est masqué
+    /// (`WidgetTeam.Next.hidden`), dans l'ordre de suivi. Les lignes masquées ne sont ni triées ni placées selon le match
+    /// caché : leur présence et leur place ne dépendent que du nombre de lignes datées et de l'ordre de suivi (spec §8).
+    /// Une équipe en direct a déjà sa ligne dans `content.lines`. Vide quand il n'y a rien : la vue écrit `emptyMessage`.
+    public static func mediumRows(_ content: WidgetContent, limit: Int = mediumRowLimit,
+                                  timeZone: TimeZone = .current) -> [MediumRow] {
+        let dated = content.lines.prefix(limit).map { line in
+            MediumRow(id: line.matchId, text: row(line, now: content.date, timeZone: timeZone),
+                      colorHexes: line.colorHexes.compactMap { $0 })
+        }
+        let hidden = content.teams.filter { $0.next == .hidden }.prefix(max(0, limit - dated.count)).map { team in
+            MediumRow(id: "hidden-\(team.team.id)",
+                      text: Row(title: team.team.code, trailing: hiddenNext, isLive: false, isMasked: true),
+                      colorHexes: [team.team.colorHex], isHiddenNext: true)
+        }
+        return dated + hidden
     }
 
     /// Ligne du moyen widget : « KC 1 – 0 C9 » + « Game 2 » ; masqué : « T1 vs FLY » + « En direct » ;

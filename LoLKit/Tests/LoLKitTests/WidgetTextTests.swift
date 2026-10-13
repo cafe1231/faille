@@ -111,6 +111,68 @@ import Testing
                 == WidgetText.Row(title: "GEN vs FUR", trailing: "jeu. 11:00", isLive: false, isMasked: false))
     }
 
+    // MARK: Lignes du moyen widget (W2)
+
+    private let t1 = FollowedTeam(id: "t1", code: "T1", name: "T1", spoilerFree: true, autoColorHex: "#FF5C7A")
+    private let gen = FollowedTeam(id: "gen", code: "GEN", name: "Gen.G", spoilerFree: true, autoColorHex: "#FFB454")
+
+    private func datedLine(_ id: String, _ codes: [String], hour: Int) -> WidgetLine {
+        WidgetLine(matchId: id, leagueName: "Mondial", codes: codes, colorHexes: [nil, nil],
+                   status: .upcoming(date("2026-10-15T\(hour):00:00Z")), isMasked: false)
+    }
+
+    private func medium(lines: [WidgetLine], hidden: [FollowedTeam], others: [FollowedTeam] = []) -> WidgetContent {
+        WidgetContent(date: now,
+                      teams: (others.map { WidgetTeam(team: $0, next: .noMatch) } + hidden.map { WidgetTeam(team: $0, next: .hidden) }),
+                      lines: lines)
+    }
+
+    @Test func mediumRowsListTheDatedLinesThenTheHiddenTeams() {
+        let a = datedLine("a", ["KC", "C9"], hour: 10)
+        let b = datedLine("b", ["GEN", "FUR"], hour: 11)
+        let rows = WidgetText.mediumRows(medium(lines: [live, a, b], hidden: [t1, gen]), timeZone: paris)
+        #expect(rows.map(\.text.title) == ["KC 1 – 0 C9", "KC vs C9", "GEN vs FUR", "T1"])
+        #expect(rows.last?.text == WidgetText.Row(title: "T1", trailing: "Prochain · masqué", isLive: false, isMasked: true))
+        #expect(rows.last?.colorHexes == ["#FF5C7A"])
+        #expect(rows.map(\.isHiddenNext) == [false, false, false, true])
+        #expect(rows.count == WidgetText.mediumRowLimit)
+    }
+
+    @Test func mediumRowsFillTheLimitWithDatedLinesFirstThenHiddenTeamsInFollowOrder() {
+        let dated = (1...5).map { datedLine("m\($0)", ["KC", "C9"], hour: 10 + $0) }
+        // Quatre lignes datées ou plus : aucune ligne masquée, la limite est atteinte avec les seules lignes datées.
+        #expect(WidgetText.mediumRows(medium(lines: dated, hidden: [t1]), timeZone: paris).map(\.id)
+                == ["m1", "m2", "m3", "m4"])
+        // Trois lignes datées : une seule place pour les équipes masquées, la première dans l'ordre de suivi.
+        let three = WidgetText.mediumRows(medium(lines: Array(dated.prefix(3)), hidden: [t1, gen]), timeZone: paris)
+        #expect(three.map(\.id) == ["m1", "m2", "m3", "hidden-t1"])
+        // Deux lignes datées : les deux équipes masquées, dans l'ordre de suivi (jamais selon la date d'un match caché).
+        let two = WidgetText.mediumRows(medium(lines: Array(dated.prefix(2)), hidden: [gen, t1]), timeZone: paris)
+        #expect(two.map(\.id) == ["m1", "m2", "hidden-gen", "hidden-t1"])
+    }
+
+    @Test func mediumRowsHaveOneRowPerHiddenTeamWhenNothingIsDated() {
+        let rows = WidgetText.mediumRows(medium(lines: [], hidden: [t1], others: [kc]), timeZone: paris)
+        #expect(rows.map(\.text.title) == ["T1"])
+        // Aucune équipe masquée, aucune ligne : rien (la vue écrit alors `emptyMessage`).
+        #expect(WidgetText.mediumRows(medium(lines: [], hidden: [], others: [kc]), timeZone: paris).isEmpty)
+        #expect(WidgetText.mediumRows(WidgetContent(date: now, teams: [], lines: []), timeZone: paris).isEmpty)
+    }
+
+    @Test func aLiveTeamNeverGetsAHiddenRowToo() {
+        // T1 est en direct (masqué) : sa ligne est déjà dans `lines`, pas de ligne « Prochain · masqué » en plus.
+        let content = WidgetContent(date: now, teams: [WidgetTeam(team: t1, next: .live(maskedLive))], lines: [maskedLive])
+        #expect(WidgetText.mediumRows(content, timeZone: paris).map(\.id) == ["T1-FLY"])
+    }
+
+    @Test func datedRowsKeepTheColorsOfTheFollowedTeams() {
+        let colored = WidgetLine(matchId: "c", leagueName: "Mondial", codes: ["KC", "FLY"], colorHexes: ["#5B8CFF", nil],
+                                 status: .upcoming(date("2026-10-15T10:00:00Z")), isMasked: false)
+        let rows = WidgetText.mediumRows(medium(lines: [colored], hidden: []), timeZone: paris)
+        #expect(rows.first?.colorHexes == ["#5B8CFF"])
+        #expect(rows.first?.text == WidgetText.row(colored, now: now, timeZone: paris))
+    }
+
     @Test func smallWidget() {
         let t1 = FollowedTeam(id: "t1", code: "T1", name: "T1", spoilerFree: true)
         #expect(WidgetText.small(WidgetTeam(team: kc, next: .match(upcoming)), timeZone: paris)

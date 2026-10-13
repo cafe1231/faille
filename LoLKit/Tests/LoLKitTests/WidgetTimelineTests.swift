@@ -265,6 +265,25 @@ import Testing
         #expect(genLine.matchId == "t1-gen" && genLine.codes == ["GEN", "T1"])
     }
 
+    /// W2 : les lignes du moyen widget ne dépendent pas du match caché de T1 (existence, date, adversaire non suivi).
+    /// (Résidu connu, spec §8 : un prochain match de T1 contre une autre équipe suivie fait passer celle-ci à
+    /// « Prochain · masqué » — règle C.)
+    @Test func mediumRowsDoNotDependOnTheHiddenMatch() {
+        let t1Last = match("t1-fly-done", .completed, "2026-10-14T17:00:00Z", "T1", "FLY", wins: [3, 1])
+        let at = date("2026-10-15T12:00:00Z")
+        let noNext = WidgetTimeline.content(at: at, input: input([t1Last, genFur], fetchedAt: "2026-10-15T11:00:00Z"))
+        let earlyNext = WidgetTimeline.content(
+            at: at, input: input([t1Last, genFur, match("t1-a", .unstarted, "2026-10-15T14:00:00Z", "T1", "FLY")],
+                                 fetchedAt: "2026-10-15T11:00:00Z"))
+        let lateNext = WidgetTimeline.content(
+            at: at, input: input([t1Last, genFur, match("t1-b", .unstarted, "2026-10-19T09:00:00Z", "T1", "FUR")],
+                                 fetchedAt: "2026-10-15T11:00:00Z"))
+        let expected = WidgetText.mediumRows(noNext)
+        #expect(expected.map(\.id) == ["gen-fur", "hidden-t1"])
+        #expect(WidgetText.mediumRows(earlyNext) == expected)
+        #expect(WidgetText.mediumRows(lateNext) == expected)
+    }
+
     @Test func smallWidgetDefaultsToTheFirstFollowedTeam() {
         let content = WidgetTimeline.content(at: date("2026-10-15T12:00:00Z"),
                                              input: input([], fetchedAt: "2026-10-15T11:00:00Z"))
