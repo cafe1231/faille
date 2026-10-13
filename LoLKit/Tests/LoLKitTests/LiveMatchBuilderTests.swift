@@ -12,7 +12,7 @@ import Testing
 
     @Test func upcoming() {
         let details = makeDetails(wins: [0, 0], games: [(1, game1, .unstarted), (2, "g2", .unstarted)])
-        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, spoilerFree: false, now: now)
+        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .upcoming)
         #expect(state.gameNumber == 1)
         #expect(state.seriesScore == [0, 0])
@@ -23,7 +23,7 @@ import Testing
         let details = makeDetails(wins: [0, 0], games: [(1, game1, .inProgress), (2, "g2", .unstarted)])
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_ingame"),
                                            firstFrameTime: date("2026-10-04T20:18:26.892Z"),
-                                           statsDisabled: false, spoilerFree: false, now: now)
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .inGame)
         #expect(state.gameNumber == 1)
         #expect(state.statsAvailable)
@@ -42,7 +42,7 @@ import Testing
         let details = makeDetails(wins: [0, 0], games: [(1, game1, .inProgress)],
                                   teams: [("99566405941863385", "LYON"), ("98926509885559666", "TLAW")])
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_ingame"), firstFrameTime: nil,
-                                           statsDisabled: false, spoilerFree: false, now: now)
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.stats?.map(\.kills) == [6, 7])
         #expect(state.gameClockStart == nil)
     }
@@ -50,7 +50,7 @@ import Testing
     @Test func statsDisabled() throws {
         let details = makeDetails(wins: [0, 0], games: [(1, game1, .inProgress)])
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_ingame"), firstFrameTime: nil,
-                                           statsDisabled: true, spoilerFree: false, now: now)
+                                           statsDisabled: true, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .inGame)
         #expect(!state.statsAvailable)
         #expect(state.stats == nil)
@@ -58,7 +58,7 @@ import Testing
 
     @Test func betweenGames() {
         let details = makeDetails(wins: [1, 0], games: [(1, game1, .completed), (2, "g2", .unstarted)])
-        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, spoilerFree: false, now: now)
+        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .betweenGames)
         #expect(state.gameNumber == 2)
         #expect(state.seriesScore == [1, 0])
@@ -67,7 +67,7 @@ import Testing
     @Test func feedFinishedBeforeApiUpdatesWins() throws {
         let details = makeDetails(wins: [0, 0], games: [(1, game1, .inProgress), (2, "g2", .unstarted)])
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_finished"), firstFrameTime: nil,
-                                           statsDisabled: false, spoilerFree: false, now: now)
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .betweenGames)
         #expect(state.gameNumber == 2)
     }
@@ -75,7 +75,7 @@ import Testing
     @Test func deciderStaysInGameWhenFeedFinishesFirst() throws {
         let details = makeDetails(wins: [2, 2], games: [(5, game1, .inProgress)])
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_finished"), firstFrameTime: nil,
-                                           statsDisabled: false, spoilerFree: false, now: now)
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .inGame)
         #expect(state.gameNumber == 5)
         #expect(state.stats?.first?.kills == 14)
@@ -84,14 +84,14 @@ import Testing
     @Test func matchPointStaysInGame() throws {
         let details = makeDetails(wins: [1, 0], games: [(1, "g1x", .completed), (2, game1, .inProgress), (3, "g3", .unstarted)], bestOf: 3)
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_finished"), firstFrameTime: nil,
-                                           statsDisabled: false, spoilerFree: false, now: now)
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .inGame)
         #expect(state.gameNumber == 2)
     }
 
     @Test func betweenGamesNeverExceedsBestOf() {
         let details = makeDetails(wins: [1, 1], games: [(1, "a", .completed), (2, "b", .completed)], bestOf: 2)
-        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, spoilerFree: false, now: now)
+        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .betweenGames)
         #expect((state.gameNumber ?? 0) <= 2)
     }
@@ -99,7 +99,7 @@ import Testing
     @Test func snapshotOfAnotherGameIsIgnored() throws {
         let details = makeDetails(wins: [1, 0], games: [(1, game1, .completed), (2, "g2", .inProgress)])
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_ingame"), firstFrameTime: nil,
-                                           statsDisabled: false, spoilerFree: false, now: now)
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .inGame)
         #expect(state.gameNumber == 2)
         #expect(state.stats == nil)
@@ -108,16 +108,22 @@ import Testing
     @Test func finishedFromRealDetails() throws {
         let details = try JSONDecoder.lolesports()
             .decode(EventDetailsResponse.self, from: Fixture.data("getEventDetails")).data.event
-        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, spoilerFree: false, now: now)
+        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .finished)
         #expect(state.seriesScore == [3, 1])
         #expect(state.winnerCode == "TLAW")
         #expect(state.gameNumber == nil)
     }
 
+    /// TLAW (équipe de `makeDetails`) suivie en anti-spoiler.
+    private func spoilerFreeFollows() -> FollowList {
+        FollowList(teams: [FollowedTeam(id: "98926509885559666", code: "TLAW", name: "TLAW", spoilerFree: true)])
+    }
+
     @Test func spoilerFreeStripsEverythingButPhase() throws {
         let details = makeDetails(wins: [1, 0], games: [(1, game1, .completed), (2, "g2", .inProgress)])
-        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, spoilerFree: true, now: now)
+        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false,
+                                           follows: spoilerFreeFollows(), revealed: [], now: now)
         #expect(state.phase == .inGame)
         #expect(state.spoilerFree)
         #expect(state.seriesScore == nil)
@@ -125,6 +131,46 @@ import Testing
         #expect(state.stats == nil)
         #expect(state.winnerCode == nil)
         #expect(state.gameClockStart == nil)
+        #expect(state.gameClockStoppedAt == nil)
+    }
+
+    @Test func maskingIsDecidedByTheBuilderFromFollowsAndReveals() throws {
+        let details = makeDetails(wins: [1, 0], games: [(1, game1, .completed), (2, "g2", .inProgress)])
+        let revealed = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false,
+                                              follows: spoilerFreeFollows(), revealed: [details.id], now: now)
+        #expect(!revealed.spoilerFree)
+        #expect(revealed.seriesScore == [1, 0])
+
+        // Équipe suivie sans anti-spoiler, ou aucune équipe suivie : rien n'est masqué.
+        let plain = FollowList(teams: [FollowedTeam(id: "98926509885559666", code: "TLAW", name: "TLAW")])
+        for follows in [plain, FollowList()] {
+            let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false,
+                                               follows: follows, revealed: [], now: now)
+            #expect(!state.spoilerFree)
+            #expect(state.seriesScore == [1, 0])
+        }
+    }
+
+    @Test func maskedFinishedSeriesKeepsOnlyThePhase() throws {
+        let details = try JSONDecoder.lolesports()
+            .decode(EventDetailsResponse.self, from: Fixture.data("getEventDetails")).data.event
+        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false,
+                                           follows: spoilerFreeFollows(), revealed: [], now: now)
+        #expect(state.phase == .finished)
+        #expect(state.spoilerFree)
+        #expect(state.seriesScore == nil)
+        #expect(state.winnerCode == nil)
+    }
+
+    @Test func maskedBetweenGamesLooksLikeLive() {
+        // Spec §8 : seuls « En direct », « Terminé » et « À venir » sont montrés. « Entre deux games » révélerait qu'une game vient de finir.
+        let details = makeDetails(wins: [1, 0], games: [(1, game1, .completed), (2, "g2", .unstarted)])
+        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false,
+                                           follows: spoilerFreeFollows(), revealed: [], now: now)
+        #expect(state.phase == .inGame)
+        #expect(state.gameNumber == nil)
+        #expect(state.seriesScore == nil)
+        #expect(state.spoilerFree)
     }
 
     @Test func attributesUseFollowedColors() throws {
@@ -173,7 +219,7 @@ import Testing
         let attributes = try #require(LiveMatchBuilder.attributes(for: details, follows: FollowList()))
         let snap = try snapshot("window_ingame")
         let state = LiveMatchBuilder.state(details: details, snapshot: snap, firstFrameTime: nil, statsDisabled: false,
-                                           spoilerFree: false, now: now)
+                                           follows: FollowList(), revealed: [], now: now)
         #expect(attributes.teams.map(\.id) == [lyon, tlaw])
         let stats = try #require(state.stats)
         #expect(stats == attributes.teams.compactMap { snap.stats(for: $0.id) })
@@ -186,7 +232,7 @@ import Testing
         let details = makeDetails(wins: [2, 2], games: [(5, game1, .inProgress)])
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_ingame"),
                                            firstFrameTime: date("2026-10-04T20:18:26.892Z"),
-                                           statsDisabled: false, spoilerFree: false, now: now)
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         let attributes = LiveMatchAttributes(matchId: "115565004607949429", leagueName: "Mondial", bestOf: 5, teams: [
             .init(id: "98926509885559666", code: "TLAW", name: "Team Liquid Alienware", colorHex: "#5B8CFF"),
             .init(id: "99566405941863385", code: "LYON", name: "LYON", colorHex: nil),

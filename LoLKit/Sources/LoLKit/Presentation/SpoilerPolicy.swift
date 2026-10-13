@@ -67,7 +67,7 @@ public enum Presenter {
     }
 
     /// Vainqueur d'un match terminé : l'équipe marquée `outcome == "win"`, sinon l'unique équipe au plus grand nombre de victoires (> 0), sinon nil.
-    public static func winnerCode(_ teams: [MatchTeam]) -> String? {
+    static func winnerCode(_ teams: [MatchTeam]) -> String? {
         let marked = teams.filter { $0.result?.outcome == "win" }
         if marked.count == 1 { return marked[0].code }
         let best = teams.map(\.gameWins).max() ?? 0
@@ -77,7 +77,7 @@ public enum Presenter {
     }
 
     /// Game en cours : celle marquée `inProgress`, sinon la suivante d'après les victoires.
-    public static func currentGameNumber(_ event: MatchEvent) -> Int {
+    static func currentGameNumber(_ event: MatchEvent) -> Int {
         if let game = event.match.games?.first(where: { $0.state == .inProgress }) { return game.number }
         return event.match.teams.reduce(0) { $0 + $1.gameWins } + 1
     }

@@ -52,6 +52,25 @@ import Testing
         #expect(Presenter.scoreLine(for: event, follows: try follows(), revealed: ["m4"]).score == [3, 1])
     }
 
+    @Test func maskedFinishedMatchHasNoScore() throws {
+        let teams = [makeTeam("T1", id: "98767991853197861", wins: 3), makeTeam("GEN", id: "g", wins: 1)]
+        let line = Presenter.scoreLine(for: makeEvent(id: "m4", state: .completed, teams: teams), follows: try follows(), revealed: [])
+        #expect(line.isMasked)
+        #expect(line.score == nil)
+    }
+
+    @Test func revealingOneMatchLeavesTheOthersMasked() throws {
+        let m1 = makeEvent(id: "m1", state: .inProgress,
+                           teams: [makeTeam("T1", id: "98767991853197861", wins: 1), makeTeam("FLY", id: "f", wins: 0)], games: liveGames)
+        let m2 = makeEvent(id: "m2", state: .completed,
+                           teams: [makeTeam("T1", id: "98767991853197861", wins: 3), makeTeam("GEN", id: "g", wins: 1)])
+        let revealed: Set<String> = ["m1"]
+        #expect(!Presenter.scoreLine(for: m1, follows: try follows(), revealed: revealed).isMasked)
+        let hidden = Presenter.scoreLine(for: m2, follows: try follows(), revealed: revealed)
+        #expect(hidden.isMasked)
+        #expect(hidden.score == nil)
+    }
+
     @Test func upcomingHasNoScore() throws {
         let event = makeEvent(id: "m5", state: .unstarted, start: "2026-10-15T18:00:00Z",
                               teams: [makeTeam("KC", name: "Karmine Corp"), makeTeam("C9")])

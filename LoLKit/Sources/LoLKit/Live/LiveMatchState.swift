@@ -83,9 +83,11 @@ public struct LiveMatchState: Codable, Sendable, Equatable, Hashable {
 
     public var staleDate: Date { updatedAt.addingTimeInterval(Self.staleAfter) }
 
-    /// Version sans spoiler : seule la phase reste (« En direct », « Terminé »…).
+    /// Version sans spoiler : seule la phase reste, et seulement « En direct », « Terminé » ou « À venir » (spec §8).
+    /// « Entre deux games » révélerait qu'une game vient de se terminer : il redevient « En direct ».
     public func masked() -> LiveMatchState {
         var copy = self
+        if copy.phase == .betweenGames { copy.phase = .inGame }
         copy.seriesScore = nil
         copy.gameNumber = nil
         copy.gameClockStart = nil

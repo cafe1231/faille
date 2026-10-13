@@ -82,13 +82,13 @@ import Testing
     @Test func clockStopsWhenTheFeedIsFinishedOrPaused() throws {
         let details = makeDetails(wins: [2, 2], games: [(5, game, .inProgress)])
         let finished = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_finished"), firstFrameTime: nil,
-                                              statsDisabled: false, spoilerFree: false, now: now)
+                                              statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(finished.phase == .inGame)
         #expect(finished.gameClockStoppedAt == now)
 
         let running = try snapshot("window_ingame")
         let live = LiveMatchBuilder.state(details: details, snapshot: running, firstFrameTime: nil,
-                                          statsDisabled: false, spoilerFree: false, now: now)
+                                          statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(live.gameClockStoppedAt == nil)
 
         let paused = GameSnapshot(gameId: running.gameId, phase: .paused, timestamp: running.timestamp,
@@ -96,7 +96,7 @@ import Testing
                                   blue: running.blue, red: running.red,
                                   bluePlayers: running.bluePlayers, redPlayers: running.redPlayers)
         let stopped = LiveMatchBuilder.state(details: details, snapshot: paused, firstFrameTime: nil,
-                                             statsDisabled: false, spoilerFree: false, now: now)
+                                             statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(stopped.gameClockStoppedAt == now)
     }
 
@@ -105,7 +105,7 @@ import Testing
         let details = makeDetails(wins: [0, 0], games: [(1, game, .inProgress)])
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_ingame"),
                                            firstFrameTime: date("2026-10-04T20:18:26.892Z"),
-                                           statsDisabled: true, spoilerFree: false, now: now)
+                                           statsDisabled: true, follows: FollowList(), revealed: [], now: now)
         #expect(state.stats == nil)
         #expect(!state.statsAvailable)
         let clock = try #require(state.gameClockStart)
