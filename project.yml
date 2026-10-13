@@ -22,10 +22,13 @@ targets:
     sources:
       - App
       - Shared
+      - Resources
     dependencies:
       - target: FailleWidgets
       - package: LoLKit
-    scheme: {}
+    scheme:
+      testTargets:
+        - FailleTests
     entitlements:
       path: App/Faille.entitlements
       properties:
@@ -36,7 +39,11 @@ targets:
       properties:
         CFBundleDisplayName: Faille
         CFBundleShortVersionString: "0.1.0"
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIUserInterfaceStyle: Dark
+        UIAppFonts:
+          - Sora-Variable.ttf
         NSSupportsLiveActivities: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -50,6 +57,13 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.cafe1231.faille
         # Appli en Swift 6 (concurrence stricte) ; l'extension reste en Swift 5 jusqu'à l'étape 3.
         SWIFT_VERSION: "6.0"
+        # Pas d'icône d'appli ni de couleur d'accent dans le catalogue à l'étape 2 : actool ne doit pas les chercher.
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: ""
+      configs:
+        Debug:
+          # Les tests hébergés utilisent du code de LoLKit lié dans l'appli : on ne l'élague pas en Debug.
+          DEAD_CODE_STRIPPING: "NO"
   FailleWidgets:
     type: app-extension
     platform: iOS
@@ -73,3 +87,18 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cafe1231.faille.widgets
+  FailleTests:
+    # Tests hébergés dans l'appli (police, catalogue et scène disponibles) ; Swift Testing.
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests/FailleTests
+    dependencies:
+      - target: Faille
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cafe1231.faille.tests
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Faille.app/Faille"
+        BUNDLE_LOADER: "$(TEST_HOST)"

@@ -53,3 +53,50 @@ jobs:
           name: Faille-ipa
           path: Faille.ipa
           retention-days: 14
+
+  apercus:
+    # Tests de l'appli sur simulateur (store, aperçus) : les écrans en PNG dans l'artefact Faille-apercus.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Générer le projet Xcode
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Choisir un simulateur iPhone sous iOS 26 ou plus
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list --json devices available | jq -r '
+            [.devices | to_entries[] | select(.key | test("iOS-(2[6-9]|[3-9][0-9])")) | .value[]
+             | select(.name | startswith("iPhone"))] | first | .udid // empty')
+          if [ -z "$UDID" ]; then
+            xcrun simctl list devices available
+            echo "Aucun simulateur iPhone iOS 26+ disponible" >&2
+            exit 1
+          fi
+          echo "Simulateur : $UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Tests et aperçus
+        run: |
+          xcodebuild test -project Faille.xcodeproj -scheme Faille \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/test \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Lister les aperçus
+        if: always()
+        run: ls -la build/apercus || echo "aucun aperçu"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Faille-apercus
+          path: build/apercus/*.png
+          if-no-files-found: warn
+          retention-days: 14
