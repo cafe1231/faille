@@ -4,7 +4,7 @@ import SwiftUI
 struct FailleApp: App {
     var body: some Scene {
         WindowGroup {
-            ProbeView()
+            RootView()
         }
     }
 }

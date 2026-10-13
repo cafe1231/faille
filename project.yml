@@ -4,10 +4,13 @@ options:
   deploymentTarget:
     iOS: "26.0"
   createIntermediateGroups: true
+packages:
+  LoLKit:
+    path: LoLKit
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.0.2"
+    MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     TARGETED_DEVICE_FAMILY: "1,2"
     CODE_SIGNING_ALLOWED: "NO"
@@ -21,6 +24,7 @@ targets:
       - Shared
     dependencies:
       - target: FailleWidgets
+      - package: LoLKit
     scheme: {}
     entitlements:
       path: App/Faille.entitlements
@@ -31,7 +35,7 @@ targets:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: Faille
-        CFBundleShortVersionString: "0.0.2"
+        CFBundleShortVersionString: "0.1.0"
         UILaunchScreen: {}
         NSSupportsLiveActivities: true
         UISupportedInterfaceOrientations:
@@ -44,12 +48,16 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cafe1231.faille
+        # Appli en Swift 6 (concurrence stricte) ; l'extension reste en Swift 5 jusqu'à l'étape 3.
+        SWIFT_VERSION: "6.0"
   FailleWidgets:
     type: app-extension
     platform: iOS
     sources:
       - Widgets
       - Shared
+    dependencies:
+      - package: LoLKit
     entitlements:
       path: Widgets/FailleWidgets.entitlements
       properties:
@@ -59,7 +67,7 @@ targets:
       path: Widgets/Info.plist
       properties:
         CFBundleDisplayName: Faille
-        CFBundleShortVersionString: "0.0.2"
+        CFBundleShortVersionString: "0.1.0"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

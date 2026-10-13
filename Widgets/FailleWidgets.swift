@@ -1,4 +1,5 @@
 import ActivityKit
+import LoLKit
 import SwiftUI
 import WidgetKit
 
@@ -10,16 +11,17 @@ struct FailleWidgets: WidgetBundle {
     }
 }
 
+/// Sonde jusqu'à l'étape 3 : prouve que l'extension trouve le même groupe d'apps que l'appli
+/// et y lit les équipes suivies (follows.json).
 struct ProbeEntry: TimelineEntry {
     let date: Date
-    let lastWrite: Date?
-    let groupOK: Bool
-    let group: String
+    let group: String?
+    let codes: [String]
 }
 
 struct ProbeProvider: TimelineProvider {
     func placeholder(in context: Context) -> ProbeEntry {
-        ProbeEntry(date: .now, lastWrite: nil, groupOK: true, group: ProbeStore.appGroup)
+        ProbeEntry(date: .now, group: AppGroup.configured, codes: ["KC", "T1"])
     }
 
     func getSnapshot(in context: Context, completion: @escaping (ProbeEntry) -> Void) {
@@ -31,7 +33,9 @@ struct ProbeProvider: TimelineProvider {
     }
 
     private func entry() -> ProbeEntry {
-        ProbeEntry(date: .now, lastWrite: ProbeStore.read(), groupOK: ProbeStore.groupAvailable, group: ProbeStore.appGroup)
+        // Lecture seule : l'extension ne met jamais de fichier de côté et n'écrit rien.
+        let follows = FileStore(directory: AppGroup.directory, readOnly: true).load(FollowList.self, from: .follows)
+        return ProbeEntry(date: .now, group: AppGroup.identifier, codes: follows?.teams.map(\.code) ?? [])
     }
 }
 
@@ -42,7 +46,7 @@ struct ProbeWidget: Widget {
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("Sonde Faille")
-        .description("Vérifie le partage entre l'appli et le widget.")
+        .description("Vérifie que le widget lit les équipes suivies dans l'appli.")
         .supportedFamilies([.systemSmall, .accessoryRectangular, .accessoryInline])
     }
 }
@@ -52,14 +56,15 @@ struct ProbeWidgetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("Faille · \(entry.groupOK ? "groupe OK" : "groupe KO")")
+            Text("Faille · \(entry.group == nil ? "groupe KO" : "groupe OK")")
                 .font(.caption2)
-            Text(entry.group)
+            Text(entry.group ?? "stockage local")
                 .font(.caption2)
                 .lineLimit(1)
                 .truncationMode(.middle)
-            Text(entry.lastWrite.map { $0.formatted(date: .omitted, time: .shortened) } ?? "rien lu")
+            Text(entry.codes.isEmpty ? "aucune équipe" : entry.codes.joined(separator: " · "))
                 .font(.headline)
+                .lineLimit(2)
         }
     }
 }
