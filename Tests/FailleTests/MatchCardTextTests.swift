@@ -34,8 +34,53 @@ struct MatchCardTextTests {
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
         // Ni le score de série (« 3 – 1 ») ni son tiret : le seul chiffre permis est celui de « T1 ».
         let text = lastRowText(line, order: order, date: "DATE")
-        #expect(text == "Dernier · T1 vs GEN · DATE · masqué")
+        #expect(text == "Dernier · T1 vs GEN · Terminé · DATE")
         #expect(!text.contains("3") && !text.contains("–"))
+    }
+
+    /// Spec §8 : un match masqué n'affiche que « En direct », « Terminé » ou « À venir » (jamais « masqué » en guise d'état).
+    @Test func maskedMatchesOnlyShowTheirStatus() {
+        #expect(LiveChipText.maskedText(phase: .inGame, opponent: nil) == "En direct")
+        #expect(LiveChipText.maskedText(phase: .inGame, opponent: "FLY") == "En direct vs FLY")
+        // Entre deux games, un match masqué reste « En direct » (sinon le nombre de pauses trahit la longueur de la série).
+        #expect(LiveChipText.maskedText(phase: .betweenGames, opponent: "FLY") == "En direct vs FLY")
+        #expect(LiveChipText.maskedText(phase: .finished, opponent: nil) == "Terminé")
+        #expect(LiveChipText.maskedText(phase: .finished, opponent: "FLY") == "Terminé vs FLY")
+        #expect(LiveChipText.maskedText(phase: .upcoming, opponent: nil) == "À venir")
+    }
+
+    @Test func liveIconOnlyAccompaniesTheLiveState() {
+        #expect(LiveChipText.icon(for: .inGame) == .live)
+        #expect(LiveChipText.icon(for: .betweenGames) == .live)
+        #expect(LiveChipText.icon(for: .finished) == .check)
+        #expect(LiveChipText.icon(for: .upcoming) == .clock)
+    }
+
+    @Test func unmaskedUpcomingIsWrittenAVenir() {
+        let upcoming = LiveMatchState(phase: .upcoming, seriesScore: [0, 0], gameNumber: 1, gameClockStart: nil,
+                                      gameClockStoppedAt: nil, stats: nil, statsAvailable: true, spoilerFree: false,
+                                      winnerCode: nil, updatedAt: SampleData.date("2026-10-15T15:05:00Z"))
+        #expect(LiveChipText.prefix(for: upcoming) == "À venir")
+        var finished = upcoming
+        finished.phase = .finished
+        #expect(LiveChipText.prefix(for: finished) == "Terminé")
+    }
+
+    /// `getLive` (ou le calendrier) donne le match pour terminé alors que les victoires ne l'ont pas encore rattrapé :
+    /// masqué, il s'affiche « Terminé » et non « En direct ».
+    @Test func maskedMatchTheAPICallsCompletedIsShownFinished() {
+        let store = AppStore(preview: .standard)
+        let live = SampleData.t1Live   // T1 est en anti-spoiler : masqué
+        let masked = store.liveState(for: live)
+        #expect(masked.spoilerFree && masked.phase == .inGame)
+        #expect(masked.displayed(for: live).phase == .inGame)   // l'API le dit en cours : rien ne change
+
+        let completed = MatchEvent(startTime: live.startTime, state: .completed, type: live.type, blockName: live.blockName,
+                                   league: live.league, match: live.match, streams: live.streams)
+        let shown = masked.displayed(for: completed)
+        #expect(shown.phase == .finished)
+        #expect(shown.spoilerFree && shown.seriesScore == nil && shown.gameNumber == nil)
+        #expect(LiveChipText.maskedText(phase: shown.phase, opponent: "FLY") == "Terminé vs FLY")
     }
 
     @Test func revealedLastRowShowsTheScore() throws {

@@ -103,12 +103,15 @@ struct MatchDetailView: View {
     }
 
     @ViewBuilder private func statusChip(event: MatchEvent?, state: LiveMatchState?) -> some View {
-        switch state?.phase ?? phase(of: event) {
+        // Comme sur la carte : un match que l'API donne pour terminé est « Terminé » (jamais « En direct », spec §8),
+        // même si ses détails n'ont pas encore rattrapé la fin de la série.
+        let shown = state?.displayed(for: event)
+        switch shown?.phase ?? phase(of: event) {
         case .inGame, .betweenGames:
             Chip {
                 IconView(icon: .live, size: 12)
-                if let state {
-                    LiveChipText(state: state, opponent: nil)
+                if let shown {
+                    LiveChipText(state: shown, opponent: nil)
                 } else {
                     Text("En direct")
                 }

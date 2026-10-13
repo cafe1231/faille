@@ -2,14 +2,14 @@ import LoLKit
 import SwiftUI
 
 /// Texte de la ligne « Dernier » d'une carte : « Dernier · GEN 3 – 0 HLE » ; sans score (masqué, spec §8) :
-/// « Dernier · T1 vs GEN · sam. 11 oct. · 09:00 · masqué » (ni résultat ni vainqueur, mais la date).
+/// « Dernier · T1 vs GEN · Terminé · sam. 11 oct. · 09:00 » (ni résultat ni vainqueur : seulement « Terminé » et la date).
 /// Le score vient de `ScoreLine` (donc de `SpoilerPolicy`) ; `order` est l'ordre d'affichage (équipe de la carte à gauche).
 func lastRowText(_ line: ScoreLine, order: [Int], date: String) -> String {
     let codes = reorder(line.teamCodes, order) ?? line.teamCodes
     if let score = line.score.flatMap({ reorder($0, order) }), score.count == 2, codes.count == 2 {
         return "Dernier · \(codes[0]) \(score[0]) – \(score[1]) \(codes[1])"
     }
-    return "Dernier · \(codes.joined(separator: " vs ")) · \(date) · \(line.isMasked ? "masqué" : "terminé")"
+    return "Dernier · \(codes.joined(separator: " vs ")) · Terminé · \(date)"
 }
 
 /// Carte Vitrail d'une équipe suivie (spec §5.1) : en direct, prochain, dernier.
@@ -56,14 +56,16 @@ struct TeamCardView: View {
     }
 
     @ViewBuilder private func liveBlock(_ event: MatchEvent) -> some View {
-        let state = store.liveState(for: event)
+        // Un match que `getLive` donne pour terminé est « Terminé », jamais « En direct » (spec §8).
+        let state = store.liveState(for: event).displayed(for: event)
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
         let teams = order.map { event.match.teams[$0] }
+        let icon = LiveChipText.icon(for: state.phase)
         NavigationLink(value: MatchRoute(matchId: event.id)) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
-                    Chip {
-                        IconView(icon: .live, size: 12)
+                    Chip(muted: icon != .live) {
+                        IconView(icon: icon, size: 12)
                         LiveChipText(state: state, opponent: teams.count == 2 ? teams[1].code : nil)
                     }
                     if state.spoilerFree {

@@ -7,18 +7,53 @@ func reorder<T>(_ values: [T], _ order: [Int]) -> [T]? {
     return order.map { values[$0] }
 }
 
+extension LiveMatchState {
+    /// État à afficher dans une pastille. Un match que l'API donne pour terminé (`getLive` ou calendrier) est « Terminé »,
+    /// même si ses victoires ou ses détails n'ont pas encore rattrapé la fin de la série (spec §8 : jamais « En direct »
+    /// pour un match masqué terminé).
+    func displayed(for event: MatchEvent?) -> LiveMatchState {
+        guard event?.state == .completed, phase != .finished else { return self }
+        var copy = self
+        copy.phase = .finished
+        copy.gameNumber = nil
+        copy.gameClockStart = nil
+        copy.gameClockStoppedAt = nil
+        return copy
+    }
+}
+
 /// « En direct · Game 2 · 18:42 » : le chrono tourne seul (minuteur natif), figé si la game est en pause ou finie.
-/// Masqué (spec §8) : « En direct » ou « En direct vs FLY », rien d'autre.
+/// Masqué (spec §8) : « En direct », « Terminé » ou « À venir » (suivi de « vs FLY » si l'adversaire est donné), rien d'autre.
 struct LiveChipText: View {
     let state: LiveMatchState
     let opponent: String?
 
+    /// Icône de la pastille : « en direct » n'accompagne que l'état en direct.
+    static func icon(for phase: LiveMatchState.Phase) -> Icon {
+        switch phase {
+        case .inGame, .betweenGames: return .live
+        case .finished: return .check
+        case .upcoming: return .clock
+        }
+    }
+
+    /// Texte d'un match masqué : seulement l'état (entre deux games, un match masqué reste « En direct »).
+    static func maskedText(phase: LiveMatchState.Phase, opponent: String?) -> String {
+        let label: String
+        switch phase {
+        case .inGame, .betweenGames: label = "En direct"
+        case .finished: label = "Terminé"
+        case .upcoming: label = "À venir"
+        }
+        return opponent.map { "\(label) vs \($0)" } ?? label
+    }
+
     var body: some View {
         if state.spoilerFree {
-            Text(opponent.map { "En direct vs \($0)" } ?? "En direct")
+            Text(Self.maskedText(phase: state.phase, opponent: opponent))
         } else {
             HStack(spacing: 0) {
-                Text(prefix)
+                Text(Self.prefix(for: state))
                 if state.phase == .inGame, let start = state.gameClockStart {
                     Text(" · ")
                     if let stopped = state.gameClockStoppedAt {
@@ -32,7 +67,8 @@ struct LiveChipText: View {
         }
     }
 
-    private var prefix: String {
+    /// Libellé d'un match non masqué (le chrono suit pour une game en cours).
+    static func prefix(for state: LiveMatchState) -> String {
         switch state.phase {
         case .inGame:
             return state.gameNumber.map { "En direct · Game \($0)" } ?? "En direct"
@@ -41,7 +77,7 @@ struct LiveChipText: View {
         case .finished:
             return "Terminé"
         case .upcoming:
-            return "Bientôt"
+            return "À venir"
         }
     }
 }
