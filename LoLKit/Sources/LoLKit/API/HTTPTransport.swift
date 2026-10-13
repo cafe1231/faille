@@ -18,7 +18,8 @@ public protocol HTTPTransport: Sendable {
     func get(_ url: URL, headers: [String: String]) async throws -> HTTPResponse
 }
 
-/// Transport réel. Utilise `dataTask` (disponible partout, y compris Linux).
+/// Transport réel. Utilise `dataTask` (disponible partout, y compris Linux) ; annuler la `Task` appelante
+/// annule la requête (`URLError.cancelled`).
 public struct URLSessionTransport: HTTPTransport {
     public init() {}
 
@@ -29,15 +30,17 @@ public struct URLSessionTransport: HTTPTransport {
             request.setValue(value, forHTTPHeaderField: name)
         }
         let finalRequest = request
-        return try await withCheckedThrowingContinuation { continuation in
-            URLSession.shared.dataTask(with: finalRequest) { data, response, error in
+        return try await CancellableCall.run { completion in
+            let task = URLSession.shared.dataTask(with: finalRequest) { data, response, error in
                 if let error {
-                    continuation.resume(throwing: error)
+                    completion(.failure(error))
                     return
                 }
                 let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-                continuation.resume(returning: HTTPResponse(status: status, body: data ?? Data()))
-            }.resume()
+                completion(.success(HTTPResponse(status: status, body: data ?? Data())))
+            }
+            task.resume()
+            return { task.cancel() }
         }
     }
 }
