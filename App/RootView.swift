@@ -17,6 +17,9 @@ struct RootView: View {
             Tab("Matchs", image: Icon.trophy.assetName, value: AppTab.matches) {
                 NavigationStack {
                     MatchesView(openTeams: { tab = .teams })
+                        .navigationDestination(for: MatchRoute.self) { route in
+                            MatchDetailView(matchId: route.matchId)
+                        }
                 }
             }
             Tab("Équipes", image: Icon.star.assetName, value: AppTab.teams) {
