@@ -6,9 +6,11 @@ let package = Package(
     platforms: [.iOS("26.0"), .macOS("26.0")],
     products: [
         .library(name: "LoLKit", targets: ["LoLKit"]),
+        .executable(name: "lolkit", targets: ["lolkit-cli"]),
     ],
     targets: [
         .target(name: "LoLKit"),
+        .executableTarget(name: "lolkit-cli", dependencies: ["LoLKit"]),
         .testTarget(
             name: "LoLKitTests",
             dependencies: ["LoLKit"],
