@@ -23,13 +23,20 @@ public protocol HTTPTransport: Sendable {
 public struct URLSessionTransport: HTTPTransport {
     public init() {}
 
-    public func get(_ url: URL, headers: [String: String]) async throws -> HTTPResponse {
+    /// Requête GET de l'API. Pas de cache HTTP : LoLKit a son propre cache disque, et une réponse `getLive` servie par le
+    /// cache d'URLSession masquerait le mode avion (la panne ne remonterait jamais).
+    static func makeRequest(_ url: URL, headers: [String: String]) -> URLRequest {
         var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
         request.timeoutInterval = 15
         for (name, value) in headers {
             request.setValue(value, forHTTPHeaderField: name)
         }
-        let finalRequest = request
+        return request
+    }
+
+    public func get(_ url: URL, headers: [String: String]) async throws -> HTTPResponse {
+        let finalRequest = Self.makeRequest(url, headers: headers)
         return try await CancellableCall.run { completion in
             let task = URLSession.shared.dataTask(with: finalRequest) { data, response, error in
                 if let error {

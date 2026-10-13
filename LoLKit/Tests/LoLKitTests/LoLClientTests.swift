@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 import Testing
 @testable import LoLKit
 
@@ -68,6 +71,15 @@ import Testing
         let fake = FakeTransport()
         try await fake.on("getLive", status: 403, body: "{\"message\":\"Forbidden\"}")
         await #expect(throws: LoLAPIError.http(status: 403)) { try await LoLClient(transport: fake).live() }
+    }
+
+    @Test func realTransportIgnoresTheHTTPCache() throws {
+        // LoLKit a son propre cache disque : un getLive venu du cache HTTP masquerait le mode avion.
+        let url = try #require(URL(string: "https://esports-api.lolesports.com/persisted/gw/getLive?hl=fr-FR"))
+        let request = URLSessionTransport.makeRequest(url, headers: ["x-api-key": "k"])
+        #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
+        #expect(request.timeoutInterval == 15)
+        #expect(request.value(forHTTPHeaderField: "x-api-key") == "k")
     }
 
     @Test func startingTimeIsOneMinuteBackRoundedToTenSeconds() {
