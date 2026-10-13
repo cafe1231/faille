@@ -1,0 +1,65 @@
+name: Faille
+options:
+  bundleIdPrefix: com.cafe1231
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    CODE_SIGNING_ALLOWED: "NO"
+    CODE_SIGNING_REQUIRED: "NO"
+targets:
+  Faille:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Shared
+    dependencies:
+      - target: FailleWidgets
+    scheme: {}
+    entitlements:
+      path: App/Faille.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.cafe1231.faille
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Faille
+        UILaunchScreen: {}
+        NSSupportsLiveActivities: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cafe1231.faille
+  FailleWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Widgets
+      - Shared
+    entitlements:
+      path: Widgets/FailleWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.cafe1231.faille
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Faille
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cafe1231.faille.widgets

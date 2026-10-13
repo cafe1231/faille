@@ -30,3 +30,9 @@ Package.resolved
 # Systèmes
 .DS_Store
 Thumbs.db
+
+# Générés par XcodeGen depuis project.yml
+App/Info.plist
+App/Faille.entitlements
+Widgets/Info.plist
+Widgets/FailleWidgets.entitlements
