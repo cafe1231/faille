@@ -15,7 +15,7 @@ import Testing
     }
 
     @Test func nextAndLastFromRealSchedule() throws {
-        let cards = TeamCards.build(follows: try follows(["KC", "G2", "T1"]), schedule: try schedule(), live: [])
+        let cards = TeamCards.build(follows: try follows(["KC", "G2", "T1"]), schedule: try schedule(), live: [], revealed: [])
         #expect(cards.map(\.team.code) == ["KC", "G2", "T1"])
 
         let kc = cards[0]
@@ -32,7 +32,7 @@ import Testing
         let list = try follows(["KC", "G2", "T1"])
         let t1Live = makeEvent(id: "live-t1", state: .inProgress, teams: [makeTeam("T1", id: "98767991853197861"), makeTeam("FLY", id: "x")])
         let g2Live = makeEvent(id: "live-g2", state: .inProgress, teams: [makeTeam("G2", id: "98767991926151025"), makeTeam("FUR", id: "y")])
-        let cards = TeamCards.build(follows: list, schedule: try schedule(), live: [t1Live, g2Live])
+        let cards = TeamCards.build(follows: list, schedule: try schedule(), live: [t1Live, g2Live], revealed: [])
         #expect(cards.map(\.team.code) == ["G2", "T1", "KC"])
         #expect(cards[0].live?.id == "live-g2")
         #expect(cards[1].live?.id == "live-t1")
@@ -42,7 +42,7 @@ import Testing
         let list = try follows(["KC"])
         let kcLive = makeEvent(id: "115660588583171786", state: .inProgress,
                                teams: [makeTeam("C9", id: "98767991877340524"), makeTeam("KC", id: "111692118851466302")])
-        let card = try #require(TeamCards.build(follows: list, schedule: try schedule(), live: [kcLive]).first)
+        let card = try #require(TeamCards.build(follows: list, schedule: try schedule(), live: [kcLive], revealed: []).first)
         #expect(card.live?.id == "115660588583171786")
         #expect(card.next == nil)
     }
@@ -50,7 +50,7 @@ import Testing
     @Test func scheduleInProgressIsUsedWhenLiveIsUnavailable() throws {
         let list = try follows(["KC"])
         let inProgress = makeEvent(id: "m", state: .inProgress, teams: [makeTeam("KC", name: "Karmine Corp"), makeTeam("C9")])
-        let card = try #require(TeamCards.build(follows: list, schedule: [inProgress], live: nil).first)
+        let card = try #require(TeamCards.build(follows: list, schedule: [inProgress], live: nil, revealed: []).first)
         #expect(card.live?.id == "m")
     }
 
@@ -58,7 +58,7 @@ import Testing
         // `getLive` répond et ne contient pas ce match : le calendrier est périmé, le match n'est plus en direct.
         let list = try follows(["KC"])
         let inProgress = makeEvent(id: "m", state: .inProgress, teams: [makeTeam("KC", name: "Karmine Corp"), makeTeam("C9")])
-        let card = try #require(TeamCards.build(follows: list, schedule: [inProgress], live: []).first)
+        let card = try #require(TeamCards.build(follows: list, schedule: [inProgress], live: [], revealed: []).first)
         #expect(card.live == nil)
         #expect(card.next == nil)
         #expect(card.last == nil)
@@ -68,6 +68,6 @@ import Testing
         let list = try follows(["T1", "GEN"])
         let later = makeEvent(id: "a", state: .unstarted, start: "2026-10-20T10:00:00Z", teams: [makeTeam("T1", name: "T1"), makeTeam("X")])
         let sooner = makeEvent(id: "b", state: .unstarted, start: "2026-10-16T10:00:00Z", teams: [makeTeam("GEN", name: "Gen.G Esports"), makeTeam("Y")])
-        #expect(TeamCards.build(follows: list, schedule: [later, sooner], live: []).map(\.team.code) == ["GEN", "T1"])
+        #expect(TeamCards.build(follows: list, schedule: [later, sooner], live: [], revealed: []).map(\.team.code) == ["GEN", "T1"])
     }
 }

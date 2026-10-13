@@ -58,3 +58,66 @@ struct MatchCardTextTests {
         #expect(lastRowText(store.scoreLine(event), order: order, date: "DATE") == "Dernier · GEN 3 – 0 HLE")
     }
 }
+
+/// Ligne « Prochain » des cartes (F1, spec §8) : l'existence ou l'adversaire du prochain match d'une équipe dont le
+/// dernier match est masqué ne doit rien trahir (ni dans la carte, ni dans l'ordre des cartes, ni dans le compte).
+@MainActor
+struct NextRowPrivacyTests {
+    private func upcoming(_ id: String, start: String, _ a: (code: String, name: String), _ b: (code: String, name: String)) -> MatchEvent {
+        func side(_ team: (code: String, name: String)) -> MatchTeam {
+            MatchTeam(id: nil, name: team.name, code: team.code, image: nil, result: MatchTeam.Result(outcome: nil, gameWins: 0))
+        }
+        return MatchEvent(startTime: SampleData.date(start), state: .unstarted, type: "match", blockName: "Play-in",
+                          league: SampleData.worlds,
+                          match: MatchInfo(id: id, teams: [side(a), side(b)], strategy: Strategy(type: "bestOf", count: 5), games: nil),
+                          streams: nil)
+    }
+
+    private func finished(_ id: String, start: String) -> MatchEvent {
+        func side(_ code: String, _ name: String, _ wins: Int) -> MatchTeam {
+            MatchTeam(id: nil, name: name, code: code, image: nil,
+                      result: MatchTeam.Result(outcome: wins == 3 ? "win" : "loss", gameWins: wins))
+        }
+        return MatchEvent(startTime: SampleData.date(start), state: .completed, type: "match", blockName: "Play-in",
+                          league: SampleData.worlds,
+                          match: MatchInfo(id: id, teams: [side("T1", "T1", 3), side("HLE", "Hanwha Life Esports", 1)],
+                                           strategy: Strategy(type: "bestOf", count: 5), games: nil),
+                          streams: nil)
+    }
+
+    /// KC (aucun match), T1 (anti-spoiler : dernier match terminé + un prochain match très proche), GEN (prochain match plus tard).
+    private func store() -> AppStore {
+        let schedule = [
+            finished("t1-done", start: "2026-10-11T09:00:00Z"),
+            upcoming("t1-next", start: "2026-10-14T09:00:00Z", ("T1", "T1"), ("FLY", "FlyQuest")),
+            upcoming("gen-next", start: "2026-10-16T09:00:00Z", ("GEN", "Gen.G"), ("FUR", "FURIA")),
+        ]
+        return AppStore(preview: PreviewData(follows: SampleData.follows, schedule: schedule, live: []))
+    }
+
+    @Test func maskedCardShowsAFixedNextLineAndIsNotCounted() throws {
+        let store = store()
+        let t1 = try #require(store.cards.first { $0.team.code == "T1" })
+        #expect(t1.next?.id == "t1-next")                         // la donnée existe...
+        #expect(store.nextLine(for: t1) == .hidden)               // ...mais la carte n'a pas le droit de l'annoncer
+        let gen = try #require(store.cards.first { $0.team.code == "GEN" })
+        let genNext = try #require(gen.next)
+        #expect(store.nextLine(for: gen) == .match(genNext))
+        #expect(store.cardsSubtitle(store.cards) == "0 en direct · 1 à venir")
+    }
+
+    @Test func maskedCardKeepsItsFollowPositionInsteadOfItsNextMatchDate() {
+        // Sans la règle : T1 (14 oct.) passerait avant GEN (16 oct.). Avec : GEN d'abord, puis KC et T1 dans l'ordre de suivi.
+        #expect(store().cards.map(\.team.code) == ["GEN", "KC", "T1"])
+    }
+
+    @Test func revealingTheLastMatchBringsTheNextLineBack() throws {
+        let store = store()
+        store.reveal(matchId: "t1-done")
+        #expect(store.cards.map(\.team.code) == ["T1", "GEN", "KC"])
+        let t1 = try #require(store.cards.first { $0.team.code == "T1" })
+        let t1Next = try #require(t1.next)
+        #expect(store.nextLine(for: t1) == .match(t1Next))
+        #expect(store.cardsSubtitle(store.cards) == "0 en direct · 2 à venir")
+    }
+}

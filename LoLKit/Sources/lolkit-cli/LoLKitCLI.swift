@@ -86,7 +86,7 @@ struct LoLKitCLI {
         follows.follow(team)
         let leagueIds = ScheduleQuery.leagueIds(follows: follows, leagues: try await client.leagues())
         let events = try await client.schedule(leagueIds: leagueIds)
-        let card = TeamCards.build(follows: follows, schedule: events, live: try await client.live()).first
+        let card = TeamCards.build(follows: follows, schedule: events, live: try await client.live(), revealed: []).first
         print("\(team.name) (\(team.homeLeague?.name ?? "sans ligue d'attache"))")
         if let live = card?.live {
             print("  En direct : \(live.match.teams.map(\.code).joined(separator: " vs "))")

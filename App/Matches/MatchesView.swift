@@ -15,7 +15,7 @@ struct MatchesView: View {
         let cards = store.cards
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                ScreenHeader("Mes équipes", subtitle: cards.isEmpty ? Format.followCount(0) : Format.cardsSubtitle(cards))
+                ScreenHeader("Mes équipes", subtitle: cards.isEmpty ? Format.followCount(0) : store.cardsSubtitle(cards))
                 if let banner = store.bannerText {
                     ErrorBanner(text: banner)
                 }

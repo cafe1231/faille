@@ -42,7 +42,7 @@ import Testing
             TeamCard(team: FollowedTeam(id: "t1", code: "T1", name: "T1"), live: nil, next: event, last: nil),
             TeamCard(team: FollowedTeam(id: "gen", code: "GEN", name: "Gen.G"), live: nil, next: nil, last: event),
         ]
-        #expect(Format.cardsSubtitle(cards) == "1 en direct · 1 à venir")
+        #expect(Format.cardsSubtitle(cards, follows: FollowList(), revealed: []) == "1 en direct · 1 à venir")
         #expect(Format.followCount(0) == "aucune équipe suivie")
         #expect(Format.followCount(1) == "1 suivie")
         #expect(Format.followCount(3) == "3 suivies")

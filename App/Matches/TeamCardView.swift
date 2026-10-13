@@ -23,18 +23,25 @@ struct TeamCardView: View {
     }
 
     var body: some View {
+        // Jamais `card.next` directement : la ligne « Prochain » passe par LoLKit (anti-spoiler, spec §8).
+        let nextLine = store.nextLine(for: card)
         VStack(alignment: .leading, spacing: 10) {
             SectionLabel(text: header, dot: tint)
             if let live = card.live {
                 liveBlock(live)
             }
-            if let next = card.next {
+            switch nextLine {
+            case let .match(next):
                 nextRow(next)
+            case .hidden:
+                hiddenNextRow
+            case .none:
+                EmptyView()
             }
             if let last = card.last {
                 lastRow(last)
             }
-            if card.live == nil && card.next == nil && card.last == nil {
+            if card.live == nil, card.last == nil, case .none = nextLine {
                 Text("Aucun match dans le calendrier récent")
                     .font(Typo.secondary)
                     .foregroundStyle(Palette.secondary)
@@ -84,6 +91,17 @@ struct TeamCardView: View {
         if state.spoilerFree {
             RevealButton { store.reveal(matchId: event.id) }
         }
+    }
+
+    /// Dernier match masqué (spec §8) : ligne fixe, qu'un prochain match existe ou non. Pas un lien : rien à ouvrir.
+    private var hiddenNextRow: some View {
+        HStack(spacing: 6) {
+            IconView(icon: .eyeOff, size: 13)
+            Text("Prochain · masqué")
+        }
+        .font(Typo.secondary)
+        .foregroundStyle(Palette.secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// « GEN vs FUR » / « Prochain · jeu. 16 oct. · 11:00 » ; si l'équipe joue déjà : « Ensuite · … vs GEN ».

@@ -67,10 +67,15 @@ extension Format {
         return result
     }
 
-    /// Sous-titre de l'onglet Matchs : « 2 en direct · 1 à venir » (à venir = cartes sans direct mais avec un prochain match).
-    public static func cardsSubtitle(_ cards: [TeamCard]) -> String {
+    /// Sous-titre de l'onglet Matchs : « 2 en direct · 1 à venir » (à venir = cartes sans direct mais avec un prochain match
+    /// visible). Anti-spoiler (spec §8) : une carte dont la ligne « Prochain » est masquée ne compte pas.
+    public static func cardsSubtitle(_ cards: [TeamCard], follows: FollowList, revealed: Set<String>) -> String {
         let live = cards.filter { $0.live != nil }.count
-        let upcoming = cards.filter { $0.live == nil && $0.next != nil }.count
+        let upcoming = cards.filter { card in
+            guard card.live == nil else { return false }
+            if case .match = Presenter.nextLine(for: card, follows: follows, revealed: revealed) { return true }
+            return false
+        }.count
         return "\(live) en direct · \(upcoming) à venir"
     }
 

@@ -131,9 +131,21 @@ final class AppStore {
 
     // MARK: Lectures pour les vues
 
-    /// Cartes Vitrail de l'onglet Matchs : en direct d'abord, puis par prochain match (spec §5.1).
+    /// Cartes Vitrail de l'onglet Matchs : en direct d'abord, puis par prochain match (spec §5.1). Une carte dont la
+    /// ligne « Prochain » est masquée (spec §8) n'est pas ordonnée par son prochain match.
     var cards: [TeamCard] {
-        TeamCards.build(follows: follows, schedule: schedule, live: live)
+        TeamCards.build(follows: follows, schedule: schedule, live: live, revealed: settings.revealedMatchIds)
+    }
+
+    /// Ligne « Prochain » d'une carte : `.hidden` tant que le dernier match de l'équipe est masqué (spec §8, jamais
+    /// `card.next` directement : l'existence ou l'adversaire du prochain match trahirait un résultat).
+    func nextLine(for card: TeamCard) -> NextLine {
+        Presenter.nextLine(for: card, follows: follows, revealed: settings.revealedMatchIds)
+    }
+
+    /// Sous-titre de l'onglet Matchs ; les cartes à « Prochain » masqué ne comptent pas dans « à venir ».
+    func cardsSubtitle(_ cards: [TeamCard]) -> String {
+        Format.cardsSubtitle(cards, follows: follows, revealed: settings.revealedMatchIds)
     }
 
     /// Dernière mise à jour réussie du calendrier ou du direct.
