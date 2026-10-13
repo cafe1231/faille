@@ -32,6 +32,25 @@ public enum Format {
         return "\(days[(parts.weekday ?? 1) - 1]) \(parts.day ?? 0) \(months[(parts.month ?? 1) - 1]) · \(time)"
     }
 
+    /// « ven. 16 oct. » dans le fuseau donné.
+    public static func day(_ date: Date, timeZone: TimeZone = .current) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let parts = calendar.dateComponents([.weekday, .day, .month], from: date)
+        return "\(days[(parts.weekday ?? 1) - 1]) \(parts.day ?? 0) \(months[(parts.month ?? 1) - 1])"
+    }
+
+    /// Date courte des widgets : « jeu. 11:00 » d'ici 6 jours (au calendrier), sinon « mar. 20 oct. ».
+    public static func shortDate(_ date: Date, now: Date, timeZone: TimeZone = .current) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let ahead = calendar.dateComponents([.day], from: calendar.startOfDay(for: now),
+                                            to: calendar.startOfDay(for: date)).day ?? 0
+        guard ahead <= 6 else { return day(date, timeZone: timeZone) }
+        let weekday = calendar.component(.weekday, from: date)
+        return "\(days[weekday - 1]) \(time(date, timeZone: timeZone))"
+    }
+
     /// Compte à rebours court pour le widget rond : « 45 min », « 21h », « 3 j », « maintenant ».
     public static func countdown(from now: Date, to date: Date) -> String {
         let minutes = Int(date.timeIntervalSince(now) / 60)
