@@ -8,9 +8,10 @@ struct SmallWidgetView: View {
     let team: WidgetTeam?
     /// Le groupe d'apps est introuvable (`WidgetContent.appGroupMissing`) : le dire au lieu de « Aucune équipe suivie ».
     var appGroupMissing = false
+    @Environment(\.timeZone) private var timeZone
 
     var body: some View {
-        let text = WidgetText.small(team, appGroupMissing: appGroupMissing)
+        let text = WidgetText.small(team, appGroupMissing: appGroupMissing, timeZone: timeZone)
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(text.label)
@@ -77,24 +78,30 @@ struct SmallWidgetView: View {
     }
 }
 
-/// Moyen widget (spec §7, maquette ③) : matchs en direct, puis prochains matchs de toutes les équipes suivies.
+/// Moyen widget (spec §7, maquette ③) : matchs en direct, puis prochains matchs de toutes les équipes suivies, puis une
+/// ligne « Prochain · masqué » par équipe dont le prochain match est masqué (`WidgetText.mediumRows`, 4 lignes au plus).
 struct MediumWidgetView: View {
     let content: WidgetContent
-    static let maxRows = 4
+    @Environment(\.timeZone) private var timeZone
+
+    /// Espace entre deux éléments de la pile ; le séparateur d'une ligne le coupe en deux (en surimpression, il ne
+    /// compte pas dans la hauteur : 4 lignes et l'en-tête tiennent dans 158 pt comme dans 170 pt).
+    private static let spacing: CGFloat = 6
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let rows = WidgetText.mediumRows(content, timeZone: timeZone)
+        VStack(alignment: .leading, spacing: Self.spacing) {
             HStack {
                 Text("Mes équipes")
                     .font(Sora.font(10, .semibold))
                     .tracking(0.8)
                     .textCase(.uppercase)
                 Spacer()
-                Text(Format.day(content.date))
+                Text(Format.day(content.date, timeZone: timeZone))
                     .font(Sora.font(10, .medium))
             }
             .foregroundStyle(Palette.secondary)
-            if content.lines.isEmpty {
+            if rows.isEmpty {
                 Spacer(minLength: 0)
                 Text(WidgetText.emptyMessage(content))
                     .font(Sora.font(13, .medium))
@@ -102,11 +109,16 @@ struct MediumWidgetView: View {
                     .frame(maxWidth: .infinity)
                 Spacer(minLength: 0)
             } else {
-                ForEach(Array(content.lines.prefix(Self.maxRows).enumerated()), id: \.element.id) { index, line in
-                    if index > 0 {
-                        Divider().overlay(Color.white.opacity(0.07))
-                    }
-                    row(line)
+                ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                    rowView(row)
+                        .overlay(alignment: .top) {
+                            if index > 0 {
+                                Rectangle()
+                                    .fill(Color.white.opacity(0.07))
+                                    .frame(height: 1)
+                                    .offset(y: -(Self.spacing + 1) / 2)
+                            }
+                        }
                 }
                 Spacer(minLength: 0)
             }
@@ -115,12 +127,13 @@ struct MediumWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// « ● KC 1 – 0 C9   [en direct Game 2] » ; à venir : « ● GEN vs FUR   jeu. 11:00 ».
-    private func row(_ line: WidgetLine) -> some View {
-        let text = WidgetText.row(line, now: content.date)
+    /// « ● KC 1 – 0 C9   [en direct Game 2] » ; à venir : « ● GEN vs FUR   jeu. 11:00 » ;
+    /// équipe masquée : « ● T1   [œil barré] Prochain · masqué ».
+    private func rowView(_ row: WidgetText.MediumRow) -> some View {
+        let text = row.text
         return HStack(spacing: 6) {
             HStack(spacing: -3) {
-                ForEach(Array(line.colorHexes.compactMap { $0 }.enumerated()), id: \.offset) { _, hex in
+                ForEach(Array(row.colorHexes.enumerated()), id: \.offset) { _, hex in
                     Circle()
                         .fill(Palette.team(hex))
                         .frame(width: 7, height: 7)
@@ -139,6 +152,13 @@ struct MediumWidgetView: View {
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
                 .background(Color.white.opacity(0.12), in: Capsule())
+            } else if row.isHiddenNext {
+                HStack(spacing: 4) {
+                    IconView(icon: .eyeOff, size: 10)
+                    Text(text.trailing)
+                }
+                .font(Sora.font(11, .regular))
+                .foregroundStyle(Palette.secondary)
             } else {
                 Text(text.trailing)
                     .font(Sora.font(11, .regular))

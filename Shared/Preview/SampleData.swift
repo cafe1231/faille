@@ -129,6 +129,12 @@ enum SampleData {
         [kcLive, t1Live, noStatsLive]
     }
 
+    /// Prochain match de KC (17 oct., 18:00 à Paris). Hors de `schedule` : seuls les widgets l'ajoutent
+    /// (`WidgetSamples`), pour que le moyen widget ait quatre lignes sans changer les écrans de l'appli.
+    static var kcNext: MatchEvent {
+        upcoming("m-kc-blg", "2026-10-17T16:00:00Z", "kc", "blg")
+    }
+
     /// Calendrier (forme `getSchedule` : sans id d'équipe, reconnues par leur nom).
     static var schedule: [MatchEvent] {
         [

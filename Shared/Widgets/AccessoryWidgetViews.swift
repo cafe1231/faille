@@ -6,10 +6,11 @@ import WidgetKit
 /// iOS n'en garde qu'une image et une ligne de texte, dans sa propre police.
 struct InlineWidgetView: View {
     let content: WidgetContent
+    @Environment(\.timeZone) private var timeZone
 
     var body: some View {
         Label {
-            Text(WidgetText.inline(content))
+            Text(WidgetText.inline(content, timeZone: timeZone))
         } icon: {
             InlineIcon.image(content.headline?.isLive == true ? .live : .clock)
         }
@@ -20,9 +21,10 @@ struct InlineWidgetView: View {
 /// Monochrome sur l'écran verrouillé : seulement les niveaux primaire et secondaire, jamais de couleur d'équipe.
 struct RectangularWidgetView: View {
     let content: WidgetContent
+    @Environment(\.timeZone) private var timeZone
 
     var body: some View {
-        let text = WidgetText.rectangular(content)
+        let text = WidgetText.rectangular(content, timeZone: timeZone)
         VStack(alignment: .leading, spacing: 1) {
             HStack(spacing: 4) {
                 IconView(icon: text.isLive ? .live : .trophy, size: 10)
