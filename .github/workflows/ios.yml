@@ -38,6 +38,8 @@ jobs:
           test -f "$APPEX/Sora-Variable.ttf"
           test -f "$APPEX/Assets.car"
           /usr/libexec/PlistBuddy -c "Print :UIAppFonts:0" "$APPEX/Info.plist" | grep -qx "Sora-Variable.ttf"
+          # Réglages du petit widget (AppIntent) : métadonnées extraites à la compilation.
+          ls "$APPEX/Metadata.appintents" || echo "::warning::Metadata.appintents absent de l'extension : le choix d'équipe du petit widget risque de manquer"
 
       - name: Signer en ad hoc avec les entitlements
         # AltServer re-signe ensuite avec l'Apple ID de Dan ; il lit les entitlements embarqués ici.
