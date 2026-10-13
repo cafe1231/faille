@@ -25,6 +25,24 @@ public struct FollowedTeam: Codable, Sendable, Equatable, Identifiable {
         self.colorOverrideHex = colorOverrideHex
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case id, code, name, image, homeLeagueName, spoilerFree, autoColorHex, colorOverrideHex
+    }
+
+    /// Décodage tolérant : seuls `id`, `code` et `name` sont indispensables, le reste a une valeur par défaut
+    /// (une liste enregistrée par une ancienne version ne doit pas être perdue).
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        code = try container.decode(String.self, forKey: .code)
+        name = try container.decode(String.self, forKey: .name)
+        image = try container.decodeIfPresent(String.self, forKey: .image)
+        homeLeagueName = try container.decodeIfPresent(String.self, forKey: .homeLeagueName)
+        spoilerFree = try container.decodeIfPresent(Bool.self, forKey: .spoilerFree) ?? false
+        autoColorHex = try container.decodeIfPresent(String.self, forKey: .autoColorHex)
+        colorOverrideHex = try container.decodeIfPresent(String.self, forKey: .colorOverrideHex)
+    }
+
     public init(team: Team) {
         id = team.id
         code = team.code
@@ -56,6 +74,16 @@ public struct FollowList: Codable, Sendable, Equatable {
 
     public init(teams: [FollowedTeam] = []) {
         self.teams = teams
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case teams
+    }
+
+    /// Une entrée illisible est ignorée : les autres équipes suivies sont conservées.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        teams = try container.decode(LossyArray<FollowedTeam>.self, forKey: .teams).elements
     }
 
     public func contains(id: String) -> Bool {

@@ -74,6 +74,59 @@ import Testing
         #expect(try JSONDecoder().decode(FollowList.self, from: data) == follows)
     }
 
+    @Test func refreshKeepsUserSettingsAndNeverAddsTeams() throws {
+        var follows = FollowList()
+        let kc = try catalogTeam("KC")
+        follows.follow(kc)
+        follows.setSpoilerFree(true, id: kc.id)
+        follows.setAutoColor("#5B8CFF", id: kc.id)
+        follows.setColorOverride("#FF5C7A", id: kc.id)
+        let renamed = Team(id: kc.id, slug: kc.slug, name: "Karmine Corp Blue Lions", code: "KCL",
+                           image: kc.image, status: "active", homeLeague: kc.homeLeague)
+        follows.refresh(from: [renamed, try catalogTeam("T1")])
+        let team = try #require(follows.team(id: kc.id))
+        #expect(team.name == "Karmine Corp Blue Lions")
+        #expect(team.spoilerFree)
+        #expect(team.autoColorHex == "#5B8CFF")
+        #expect(team.colorOverrideHex == "#FF5C7A")
+        #expect(follows.teams.map(\.code) == ["KCL"])
+    }
+
+    @Test func roundTripsColorsAndOverride() throws {
+        var follows = FollowList()
+        let kc = try catalogTeam("KC")
+        follows.follow(kc)
+        follows.setAutoColor("#5B8CFF", id: kc.id)
+        follows.setColorOverride("#FF5C7A", id: kc.id)
+        let decoded = try JSONDecoder().decode(FollowList.self, from: JSONEncoder().encode(follows))
+        #expect(decoded == follows)
+        #expect(decoded.team(id: kc.id)?.autoColorHex == "#5B8CFF")
+        #expect(decoded.team(id: kc.id)?.colorOverrideHex == "#FF5C7A")
+    }
+
+    @Test func legacyJSONWithoutSpoilerFreeDecodesAsFalse() throws {
+        let json = #"{"teams":[{"id":"111692118851466302","code":"KC","name":"Karmine Corp"}]}"#
+        let follows = try JSONDecoder().decode(FollowList.self, from: Data(json.utf8))
+        let team = try #require(follows.teams.first)
+        #expect(team.code == "KC")
+        #expect(team.spoilerFree == false)
+        #expect(team.image == nil && team.homeLeagueName == nil)
+        #expect(team.autoColorHex == nil && team.colorOverrideHex == nil)
+    }
+
+    @Test func unreadableEntryIsDroppedAndOthersKept() throws {
+        let json = #"""
+        {"teams":[
+          {"id":"a","code":"KC","name":"Karmine Corp","spoilerFree":true},
+          {"code":"SANS","name":"Sans identifiant"},
+          {"id":"b","code":"T1","name":"T1"}
+        ]}
+        """#
+        let follows = try JSONDecoder().decode(FollowList.self, from: Data(json.utf8))
+        #expect(follows.teams.map(\.code) == ["KC", "T1"])
+        #expect(follows.team(id: "a")?.spoilerFree == true)
+    }
+
     @Test func scheduleLeagueIdsAreHomeLeaguesPlusInternational() throws {
         let leagues = try JSONDecoder.lolesports()
             .decode(LeaguesResponse.self, from: Fixture.data("getLeagues")).data.leagues.elements
