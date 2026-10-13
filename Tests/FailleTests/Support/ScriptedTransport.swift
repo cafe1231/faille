@@ -2,7 +2,8 @@ import Foundation
 import LoLKit
 
 /// Faux réseau dont le comportement change en cours de test et qui garde la liste des requêtes reçues.
-/// Par défaut il répond comme `StubTransport` ; `extra` peut fournir d'autres réponses (un logo, par exemple).
+/// Par défaut il répond comme `StubTransport` ; `extra` peut fournir d'autres réponses (un logo, par exemple) et
+/// `failure` faire échouer une URL précise (erreur réseau) sans toucher aux autres.
 actor ScriptedTransport: HTTPTransport {
     enum Mode: Sendable {
         /// Réponses de `StubTransport` (ou de `extra`).
@@ -19,11 +20,15 @@ actor ScriptedTransport: HTTPTransport {
     private var mode: Mode
     private let delay: Duration
     private let extra: @Sendable (URL) -> HTTPResponse?
+    private let failure: @Sendable (URL) -> (any Error)?
 
-    init(mode: Mode = .ok, delay: Duration = .zero, extra: @escaping @Sendable (URL) -> HTTPResponse? = { _ in nil }) {
+    init(mode: Mode = .ok, delay: Duration = .zero,
+         extra: @escaping @Sendable (URL) -> HTTPResponse? = { _ in nil },
+         failure: @escaping @Sendable (URL) -> (any Error)? = { _ in nil }) {
         self.mode = mode
         self.delay = delay
         self.extra = extra
+        self.failure = failure
     }
 
     func setMode(_ newMode: Mode) {
@@ -43,6 +48,9 @@ actor ScriptedTransport: HTTPTransport {
         case .failing:
             return HTTPResponse(status: 503, body: Data())
         case .ok:
+            if let error = failure(url) {
+                throw error
+            }
             if let response = extra(url) {
                 return response
             }

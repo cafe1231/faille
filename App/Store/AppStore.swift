@@ -271,36 +271,51 @@ final class AppStore {
         }
     }
 
-    /// Tirer pour rafraîchir : calendrier et direct relus, comme à l'ouverture, même juste après un échec.
+    /// Tirer pour rafraîchir : calendrier et direct relus, comme à l'ouverture, même juste après un échec ; les
+    /// données qui n'ont encore jamais réussi (premier lancement hors ligne) aussi. Ne rend la main qu'une fois ses
+    /// requêtes faites (le spinner de `.refreshable` en dépend), y compris quand un cycle était déjà en cours.
     func refreshNow() async {
-        await cycle(opening: true, forcing: [.live, .schedule])
+        await cycle(opening: true, pullToRefresh: true)
     }
 
     /// Un cycle : ce que `RefreshPolicy` juge dû, dans l'ordre ligues → équipes → direct → calendrier.
     func refreshDue(opening: Bool) async {
-        await cycle(opening: opening, forcing: [])
+        await cycle(opening: opening, pullToRefresh: false)
     }
 
-    /// - Parameter forcing: types dont la dernière tentative est oubliée avant de consulter la politique, pour
-    ///   qu'un tirer-pour-rafraîchir agisse même dans la minute qui suit un échec (le délai de nouvel essai ne le retient pas).
-    private func cycle(opening: Bool, forcing: Set<DataKind>) async {
-        guard !isPreview, !isRefreshing else { return }
+    /// Une demande de rafraîchissement n'est jamais perdue : si un cycle tourne déjà (la boucle, ou celui lancé par un
+    /// `toggleFollow`), on attend sa fin puis on fait le sien, avec sa propre ouverture / son propre forçage.
+    /// - Parameter pullToRefresh: oublie la dernière tentative du direct, du calendrier et de toute donnée qui n'a
+    ///   jamais réussi, avant de consulter la politique, pour qu'un tirer-pour-rafraîchir agisse même dans la minute
+    ///   qui suit un échec (le délai de nouvel essai ne le retient pas).
+    private func cycle(opening: Bool, pullToRefresh: Bool) async {
+        guard !isPreview else { return }
+        while isRefreshing {
+            // Attente courte et annulable : la tâche qui attend s'arrête avec sa scène.
+            try? await Task.sleep(for: .milliseconds(50))
+            if Task.isCancelled { return }
+        }
         isRefreshing = true
         defer { isRefreshing = false }
-        for kind in forcing {
-            lastAttempt[kind] = nil
+        if pullToRefresh {
+            for kind in DataKind.allCases where kind == .live || kind == .schedule || lastSuccess[kind] == nil {
+                lastAttempt[kind] = nil
+            }
         }
         let due = RefreshPolicy.due(refreshInput(opening: opening))
+        var liveFetched = false
         for kind in [DataKind.leagues, .teams, .live] where due.contains(kind) {
-            await fetch(kind)
+            let succeeded = await fetch(kind)
             if Task.isCancelled { return }
+            if kind == .live { liveFetched = succeeded }
         }
         // Le calendrier dépend des ligues (peut-être tout juste chargées) et des matchs sortis du direct : on redemande.
         if RefreshPolicy.due(refreshInput(opening: opening)).contains(.schedule) {
             await fetch(.schedule)
             if Task.isCancelled { return }
         }
-        if due.contains(.live) { await refreshLiveStats() }
+        // Un direct qui vient d'échouer n'est pas une raison de demander les stats de ses matchs (ils échoueraient aussi).
+        if liveFetched { await refreshLiveStats() }
         if colorsDirty && !isFailing && !Task.isCancelled { await updateTeamColors() }
     }
 
@@ -319,7 +334,9 @@ final class AppStore {
         Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled
     }
 
-    private func fetch(_ kind: DataKind) async {
+    /// - Returns: vrai si la donnée a été relue ; faux en cas d'échec ou d'annulation.
+    @discardableResult
+    private func fetch(_ kind: DataKind) async -> Bool {
         let started = Date()
         let previousAttempt = lastAttempt[kind]
         lastAttempt[kind] = started
@@ -355,12 +372,13 @@ final class AppStore {
             lastSuccess[kind] = started
             isFailing = false
             if kind != .live { recomputeDirectory() }
+            return true
         } catch {
             if Self.isCancellation(error) {
                 // Passage en arrière-plan : ce n'est pas une panne (ni tentative ratée ni bandeau), on réessaiera
                 // à la prochaine ouverture.
                 lastAttempt[kind] = previousAttempt
-                return
+                return false
             }
             isFailing = true
             Self.log.error("\(kind.rawValue, privacy: .public) : \(String(describing: error), privacy: .public)")
@@ -370,6 +388,7 @@ final class AppStore {
             if kind == .live, let success = lastSuccess[.live], Date().timeIntervalSince(success) > RefreshPolicy.liveTrust {
                 live = nil // direct trop vieux : les cartes retombent sur le calendrier
             }
+            return false
         }
     }
 
@@ -425,6 +444,11 @@ final class AppStore {
 
     /// Couleur automatique de chaque équipe suivie, tirée de son logo (spec §9) ; refaite quand le logo change d'URL.
     /// Le nom du fichier vient de la chaîne brute de l'API ; l'URL https ne sert qu'au téléchargement.
+    ///
+    /// `colorsDirty` ne redevient vrai que par un rafraîchissement des équipes (une fois par jour), un nouvel abonnement,
+    /// ou une passe interrompue par une annulation. Un logo qui échoue (réseau, hôte des images en panne) est donc
+    /// sauté sans bloquer les équipes suivantes, et n'est réessayé qu'au prochain rafraîchissement des équipes : pas
+    /// de tempête de requêtes à chaque tick.
     private func updateTeamColors() async {
         colorsDirty = false
         guard let files else { return }
@@ -447,9 +471,13 @@ final class AppStore {
                 let color = LogoPixels.rgba(thumbnail).map { TeamColor.teamColor(rgba: TeamColor.unpremultiplied($0)) } ?? .accent
                 follows.setAutoColor(color.hex, id: team.id)
             } catch {
-                // Réseau ou annulation : nouvel essai au prochain cycle sans panne, sans insister sur les autres logos.
-                colorsDirty = true
-                break
+                if Self.isCancellation(error) {
+                    // Passe interrompue (scène en arrière-plan) : on la refera au prochain cycle.
+                    colorsDirty = true
+                    break
+                }
+                // Ce logo seul est en échec : on passe aux équipes suivantes.
+                Self.log.info("logo de \(team.code, privacy: .public) : \(String(describing: error), privacy: .public)")
             }
         }
     }
