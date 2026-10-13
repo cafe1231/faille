@@ -298,21 +298,29 @@ import Testing
         #expect(dates == times(["16:15:00", "16:20:01"]))
     }
 
-    @Test func reloadAtTheNextStartOrWithinThirtyMinutes() {
+    /// W9, budget de rechargement de WidgetKit : les entrées couvrent déjà 6 h et chaque début de match, et l'appli
+    /// recharge les widgets à chaque écriture ; l'extension ne se recharge donc qu'une heure avant la fin des entrées.
+    @Test func reloadIsOneHourBeforeTheEntriesRunOut() {
         let now = date("2026-10-15T12:00:00Z")
-        let later = match("kc-g2", .unstarted, "2026-10-15T14:00:00Z", "KC", "G2")
+        #expect(WidgetTimeline.reloadDate(now: now) == date("2026-10-15T17:00:00Z"))
+        #expect(WidgetTimeline.reloadDate(now: now) == now.addingTimeInterval(WidgetTimeline.horizon - 3600))
+    }
+
+    /// Le rechargement ne dépend pas des matchs : un début proche, déjà passé, d'équipes non suivies ou aucun match ne le
+    /// déplace pas ; il tombe toujours avant la dernière date que les entrées peuvent couvrir (jamais de trou).
+    @Test func reloadDoesNotDependOnTheMatches() {
+        let now = date("2026-10-15T12:00:00Z")
         let soon = match("kc-g2", .unstarted, "2026-10-15T12:10:00Z", "KC", "G2")
+        let passed = match("kc-g2", .unstarted, "2026-10-15T11:00:00Z", "KC", "G2")
         let others = makeEvent(id: "g2-fnc", state: .unstarted, start: "2026-10-15T12:05:00Z",
                                teams: [makeTeam("G2"), makeTeam("FNC")])
-        #expect(WidgetTimeline.reloadDate(now: now, input: input([later], fetchedAt: "2026-10-15T11:00:00Z"))
-                == date("2026-10-15T12:30:00Z"))
-        #expect(WidgetTimeline.reloadDate(now: now, input: input([soon], fetchedAt: "2026-10-15T11:00:00Z"))
-                == date("2026-10-15T12:10:00Z"))
-        #expect(WidgetTimeline.reloadDate(now: now, input: input([], fetchedAt: "2026-10-15T11:00:00Z"))
-                == date("2026-10-15T12:30:00Z"))
-        // Un match d'équipes non suivies ne compte pas.
-        #expect(WidgetTimeline.reloadDate(now: now, input: input([others], fetchedAt: "2026-10-15T11:00:00Z"))
-                == date("2026-10-15T12:30:00Z"))
+        for schedule in [[soon], [passed], [others], []] {
+            let input = input(schedule, fetchedAt: "2026-10-15T11:30:00Z")
+            let entries = WidgetTimeline.entryDates(now: now, input: input)
+            #expect(entries.first == now && entries.allSatisfy { $0 >= now })   // un début déjà passé n'ajoute rien
+            #expect(WidgetTimeline.reloadDate(now: now) == date("2026-10-15T17:00:00Z"))
+            #expect(WidgetTimeline.reloadDate(now: now) < now.addingTimeInterval(WidgetTimeline.horizon))
+        }
     }
 
     // MARK: Anti-spoiler sur tout le planning

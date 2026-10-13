@@ -14,10 +14,10 @@ import Foundation
 /// « Prochain » : elle se rafraîchit à l'ouverture, pas l'extension, qui ne doit pas annoncer un match que rien ne
 /// confirme plus.
 public enum WidgetTimeline {
-    /// Rechargement au plus tard 30 min après le calcul (spec §7), ou au prochain début de match s'il est plus proche.
-    public static let reloadInterval: TimeInterval = 30 * 60
     /// Les entrées couvrent les 6 h qui viennent : si iOS tarde à recharger, le widget reste juste.
     public static let horizon: TimeInterval = 6 * 3600
+    /// Le rechargement tombe cette durée avant la fin des entrées : le widget ne manque jamais d'entrée à venir.
+    public static let reloadMargin: TimeInterval = 3600
     /// Pas du compte à rebours pendant la dernière heure avant un match.
     public static let countdownStep: TimeInterval = 5 * 60
 
@@ -104,11 +104,12 @@ public enum WidgetTimeline {
         return dates.sorted()
     }
 
-    /// Prochain rechargement (spec §7) : au prochain début de match d'une équipe suivie, au plus tard dans 30 min.
-    public static func reloadDate(now: Date, input: WidgetInput) -> Date {
-        let latest = now.addingTimeInterval(reloadInterval)
-        guard let next = upcomingStarts(input).filter({ $0 > now }).min() else { return latest }
-        return min(next, latest)
+    /// Prochain rechargement : `horizon - reloadMargin` après `now` (5 h), quels que soient les matchs. Les entrées
+    /// couvrent déjà les 6 h qui viennent et chaque début de match, et l'appli recharge les widgets à chaque écriture
+    /// (calendrier, direct, équipes, réglages) : l'extension ne redemande rien de plus, pour ménager le budget de
+    /// rechargements de WidgetKit.
+    public static func reloadDate(now: Date) -> Date {
+        now.addingTimeInterval(horizon - reloadMargin)
     }
 
     // MARK: - Interne

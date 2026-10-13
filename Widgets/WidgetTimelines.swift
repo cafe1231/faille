@@ -16,15 +16,16 @@ struct TeamEntry: TimelineEntry {
 }
 
 /// Planning commun (spec §7) : une entrée à chaque date de `WidgetTimeline.entryDates` (début de chaque match, paliers
-/// du compte à rebours, fin de confiance du direct), rechargement à `WidgetTimeline.reloadDate` (prochain début de
-/// match, au plus tard 30 min). Lecture seule du groupe d'apps.
+/// du compte à rebours, fin de confiance du direct et du calendrier), rechargement à `WidgetTimeline.reloadDate`
+/// (5 h plus tard : les entrées couvrent 6 h, et l'appli recharge les widgets à chaque écriture). Lecture seule du
+/// groupe d'apps.
 enum FailleTimeline {
     static func make<Entry: TimelineEntry>(now: Date = Date(), input: WidgetInput = .shared(),
                                            _ entry: (Date, WidgetContent) -> Entry) -> Timeline<Entry> {
         let entries = WidgetTimeline.entryDates(now: now, input: input).map { date in
             entry(date, WidgetTimeline.content(at: date, input: input))
         }
-        return Timeline(entries: entries, policy: .after(WidgetTimeline.reloadDate(now: now, input: input)))
+        return Timeline(entries: entries, policy: .after(WidgetTimeline.reloadDate(now: now)))
     }
 
     /// Instantané (galerie, réglages du widget) : l'état présent ; un exemple si aucune équipe n'est encore suivie.

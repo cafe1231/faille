@@ -565,7 +565,9 @@ final class AppStore {
     }
 
     /// Les widgets relisent les fichiers du groupe d'apps (spec §7). Demandés au premier plan, ces rechargements ne
-    /// sont pas décomptés du budget de WidgetKit.
+    /// sont pas décomptés du budget de WidgetKit : c'est l'appli ouverte, pas l'extension, qui les déclenche
+    /// (`WidgetTimeline.reloadDate` ne redemande que 5 h plus tard). Les rechargements faits en arrière-plan (étape 4)
+    /// compteront, eux, dans ce budget.
     private func reloadWidgets() {
         widgetReloadRequests += 1
         if reloadsWidgets {
