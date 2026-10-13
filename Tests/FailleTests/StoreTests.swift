@@ -44,6 +44,50 @@ struct StoreTests {
         #expect(failing.cards.first?.next?.id == "300")
     }
 
+    /// Réglages (R-T8) : le choix de la Live Activity va sur le disque, un nouveau store le retrouve.
+    @Test func liveActivityModeIsSavedAndReloaded() {
+        let files = TemporaryFiles.store()
+        let store = AppStore(transport: StubTransport(failing: true), files: files)
+        #expect(store.settings.liveActivityMode == .automatic)
+        store.setLiveActivityMode(.manual)
+        #expect(store.settings.liveActivityMode == .manual)
+
+        let reloaded = AppStore(transport: StubTransport(failing: true), files: files)
+        #expect(reloaded.settings.liveActivityMode == .manual)
+        reloaded.setLiveActivityMode(.automatic)
+        #expect(AppStore(transport: StubTransport(failing: true), files: files).settings.liveActivityMode == .automatic)
+    }
+
+    /// Onglet Équipes : couleur choisie à la main (sélecteur), retour à l'automatique, œil et étoile survivent au disque.
+    @Test func teamActionsOfTheTeamsTabArePersisted() async throws {
+        let files = TemporaryFiles.store()
+        let store = AppStore(transport: StubTransport(), files: files)
+        await store.refreshDue(opening: true)
+        let kc = try #require(store.catalog.first(where: { $0.code == "KC" }))
+        let g2 = try #require(store.catalog.first(where: { $0.code == "G2" }))
+        store.toggleFollow(kc)
+        store.toggleFollow(g2)
+        store.setSpoilerFree(true, id: kc.id)
+        store.setColorOverride("#FF8800", id: kc.id)
+        store.unfollow(id: g2.id)
+
+        let reloaded = AppStore(transport: StubTransport(failing: true), files: files)
+        #expect(reloaded.follows.teams.map(\.code) == ["KC"])
+        #expect(reloaded.follows.teams.first?.spoilerFree == true)
+        #expect(reloaded.follows.teams.first?.colorOverrideHex == "#FF8800")
+
+        reloaded.setColorOverride(nil, id: kc.id)
+        let automatic = AppStore(transport: StubTransport(failing: true), files: files)
+        #expect(automatic.follows.teams.first?.colorOverrideHex == nil)
+    }
+
+    /// Le sélecteur de couleur rend un `Color` SwiftUI : `RGB(color:)` doit le ramener au même hex, sans dérive.
+    @Test func pickedColorRoundTripsThroughHex() {
+        for hex in ["#5B8CFF", "#FF5C7A", "#FFB454", "#6FD3FF", "#000000", "#FFFFFF"] {
+            #expect(RGB(color: Palette.team(hex)).hex == hex)
+        }
+    }
+
     /// Les tests hébergés ne doivent déclencher ni interface ni réseau : `FailleApp` se fie à ce drapeau.
     @Test func hostAppKnowsItIsUnderTest() {
         #expect(RunEnvironment.isTesting)

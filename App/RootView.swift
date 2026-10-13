@@ -21,7 +21,7 @@ struct RootView: View {
             }
             Tab("Équipes", image: Icon.star.assetName, value: AppTab.teams) {
                 NavigationStack {
-                    PlaceholderScreen(title: "Équipes")
+                    TeamsView()
                 }
             }
         }

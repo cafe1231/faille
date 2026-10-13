@@ -5,7 +5,6 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-    @State private var mode = LiveActivityMode.automatic
 
     var body: some View {
         NavigationStack {
@@ -13,7 +12,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     SectionLabel(text: "Live Activity")
                     VStack(alignment: .leading, spacing: 10) {
-                        Picker("Live Activity", selection: $mode) {
+                        Picker("Live Activity", selection: mode) {
                             Text("Automatique").tag(LiveActivityMode.automatic)
                             Text("Manuelle").tag(LiveActivityMode.manual)
                         }
@@ -53,14 +52,15 @@ struct SettingsView: View {
                 }
             }
         }
-        .onAppear { mode = store.settings.liveActivityMode }
-        .onChange(of: mode) { _, newValue in
-            store.setLiveActivityMode(newValue)
-        }
+    }
+
+    /// Une seule source de vérité : le réglage du store, lu et écrit directement (rien n'est recopié dans la vue).
+    private var mode: Binding<LiveActivityMode> {
+        Binding(get: { store.settings.liveActivityMode }, set: { store.setLiveActivityMode($0) })
     }
 
     private var explanation: String {
-        switch mode {
+        switch store.settings.liveActivityMode {
         case .automatic:
             return "Automatique : chaque match en direct d'une équipe suivie s'affiche tout seul sur l'écran verrouillé (3 au plus)."
         case .manual:
