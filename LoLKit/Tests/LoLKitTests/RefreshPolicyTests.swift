@@ -71,6 +71,18 @@ import Testing
         #expect(RefreshPolicy.due(input) == [.live])
     }
 
+    @Test func futureSuccessStillWaitsRetryDelayAfterFailure() {
+        var input = fresh()
+        input.lastSuccess[.live] = now.addingTimeInterval(3600)
+        input.lastAttempt[.live] = ago(30)
+        input.lastSuccess[.leagues] = now.addingTimeInterval(3600)
+        input.lastAttempt[.leagues] = ago(30)
+        #expect(!RefreshPolicy.due(input).contains(.live))
+        #expect(!RefreshPolicy.due(input).contains(.leagues))
+        input.lastAttempt[.live] = ago(61)
+        #expect(RefreshPolicy.due(input).contains(.live))
+    }
+
     @Test func leftLiveDetectsDisappearedMatches() {
         let a = makeEvent(id: "a", state: .inProgress, teams: [makeTeam("KC"), makeTeam("G2")])
         let b = makeEvent(id: "b", state: .inProgress, teams: [makeTeam("T1"), makeTeam("GEN")])

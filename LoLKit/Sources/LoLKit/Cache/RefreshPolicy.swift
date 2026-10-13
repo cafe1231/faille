@@ -87,7 +87,8 @@ public enum RefreshPolicy {
     /// Une tentative ratée attend `retryDelay` ; sinon `minGap` suffit (évite les doublons à l'ouverture).
     static func canTry(success: Date?, attempt: Date?, now: Date) -> Bool {
         guard let attempt, attempt <= now else { return true }
-        let failed = success.map { attempt > $0 } ?? true
+        // Un succès daté du futur (horloge reculée) ne compte pas : il n'est pas un succès valable.
+        let failed = success.map { attempt > $0 || $0 > now } ?? true
         return now.timeIntervalSince(attempt) >= (failed ? retryDelay : minGap)
     }
 
