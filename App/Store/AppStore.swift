@@ -313,7 +313,8 @@ final class AppStore {
         isRefreshing = true
         defer { isRefreshing = false }
         // Les widgets relisent le calendrier et le direct qui viennent d'être enregistrés (spec §7) : une fois par
-        // cycle, et même si la tâche est annulée juste après un chargement réussi (le fichier est déjà écrit).
+        // cycle, et même si la tâche est annulée juste après un chargement réussi (le fichier est déjà écrit) : chaque
+        // drapeau est donc levé AVANT le contrôle d'annulation qui suit la requête.
         var liveFetched = false
         var scheduleFetched = false
         defer { if liveFetched || scheduleFetched { reloadWidgets() } }
@@ -325,8 +326,8 @@ final class AppStore {
         let due = RefreshPolicy.due(refreshInput(opening: opening))
         for kind in [DataKind.leagues, .teams, .live] where due.contains(kind) {
             let succeeded = await fetch(kind)
-            if Task.isCancelled { return }
             if kind == .live { liveFetched = succeeded }
+            if Task.isCancelled { return }
         }
         // Le calendrier dépend des ligues (peut-être tout juste chargées) et des matchs sortis du direct : on redemande.
         if RefreshPolicy.due(refreshInput(opening: opening)).contains(.schedule) {

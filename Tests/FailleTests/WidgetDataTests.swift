@@ -1,5 +1,6 @@
 import Foundation
 import LoLKit
+import os
 import Testing
 @testable import Faille
 
@@ -35,6 +36,25 @@ struct WidgetDataTests {
         #expect(store.widgetReloadRequests == 0)
         await store.refreshDue(opening: true)
         #expect(store.schedule.map(\.id) == ["300"])
+        #expect(store.widgetReloadRequests == 1)
+    }
+
+    /// R-M5 : le direct est relu et enregistré, puis la tâche du cycle est annulée (scène qui quitte le premier plan) :
+    /// les widgets doivent quand même être rechargés, le fichier est déjà écrit.
+    @Test func cancellingRightAfterASuccessfulLiveFetchStillReloadsTheWidgets() async {
+        let handle = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
+        let transport = ScriptedTransport(extra: { url in
+            // La requête du direct aboutit normalement ; la tâche est annulée avant que le cycle ne reprenne la main.
+            if url.path(percentEncoded: false).hasSuffix("/getLive") {
+                handle.withLock { $0?.cancel() }
+            }
+            return nil
+        })
+        let store = AppStore(transport: transport, files: TemporaryFiles.store())
+        let running = Task { await store.refreshDue(opening: true) }
+        handle.withLock { $0 = running }
+        await running.value
+        #expect(store.lastSuccess[.live] != nil)
         #expect(store.widgetReloadRequests == 1)
     }
 
