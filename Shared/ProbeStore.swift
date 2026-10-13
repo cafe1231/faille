@@ -2,7 +2,11 @@ import Foundation
 
 /// Sonde de l'étape 0 : l'appli écrit une date dans l'App Group, le widget la relit.
 enum ProbeStore {
-    static let appGroup = "group.com.cafe1231.faille"
+    /// Le vrai nom du groupe est lu dans le profil embarqué (Sideloadly peut le renommer).
+    static var appGroup: String {
+        Provisioning.read(bundleURL: Bundle.main.bundleURL)?.appGroups.first ?? "group.com.cafe1231.faille"
+    }
+
     private static let key = "probe.lastWrite"
 
     static var groupAvailable: Bool {

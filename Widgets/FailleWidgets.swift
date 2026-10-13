@@ -14,11 +14,12 @@ struct ProbeEntry: TimelineEntry {
     let date: Date
     let lastWrite: Date?
     let groupOK: Bool
+    let group: String
 }
 
 struct ProbeProvider: TimelineProvider {
     func placeholder(in context: Context) -> ProbeEntry {
-        ProbeEntry(date: .now, lastWrite: nil, groupOK: true)
+        ProbeEntry(date: .now, lastWrite: nil, groupOK: true, group: ProbeStore.appGroup)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (ProbeEntry) -> Void) {
@@ -30,7 +31,7 @@ struct ProbeProvider: TimelineProvider {
     }
 
     private func entry() -> ProbeEntry {
-        ProbeEntry(date: .now, lastWrite: ProbeStore.read(), groupOK: ProbeStore.groupAvailable)
+        ProbeEntry(date: .now, lastWrite: ProbeStore.read(), groupOK: ProbeStore.groupAvailable, group: ProbeStore.appGroup)
     }
 }
 
@@ -53,6 +54,10 @@ struct ProbeWidgetView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text("Faille · \(entry.groupOK ? "groupe OK" : "groupe KO")")
                 .font(.caption2)
+            Text(entry.group)
+                .font(.caption2)
+                .lineLimit(1)
+                .truncationMode(.middle)
             Text(entry.lastWrite.map { $0.formatted(date: .omitted, time: .shortened) } ?? "rien lu")
                 .font(.headline)
         }
