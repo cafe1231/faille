@@ -20,13 +20,18 @@ public struct LiveMatchAttributes: Codable, Sendable, Equatable, Hashable {
     public let matchId: String
     public let leagueName: String
     public let bestOf: Int
+    /// Dans l'ordre de `EventDetails.match.teams`, comme `LiveMatchState.seriesScore` et `stats`.
     public let teams: [Side]
+    /// Index (dans `teams`) de l'équipe suivie depuis le plus longtemps : c'est sa couleur qui teinte la Live Activity.
+    /// `nil` si aucune équipe du match n'est suivie.
+    public let primaryTeamIndex: Int?
 
-    public init(matchId: String, leagueName: String, bestOf: Int, teams: [Side]) {
+    public init(matchId: String, leagueName: String, bestOf: Int, teams: [Side], primaryTeamIndex: Int?) {
         self.matchId = matchId
         self.leagueName = leagueName
         self.bestOf = bestOf
         self.teams = teams
+        self.primaryTeamIndex = primaryTeamIndex
     }
 }
 

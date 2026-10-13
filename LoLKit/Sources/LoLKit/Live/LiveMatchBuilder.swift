@@ -2,15 +2,26 @@ import Foundation
 
 /// Construit les données de la Live Activity à partir de l'API (spec §6).
 public enum LiveMatchBuilder {
-    public static func attributes(for event: MatchEvent, follows: FollowList) -> LiveMatchAttributes {
-        LiveMatchAttributes(
-            matchId: event.id,
-            leagueName: event.league.name,
-            bestOf: event.bestOf,
-            teams: event.match.teams.map { team in
-                let followed = follows.teams.first { team.isSame(as: $0) }
-                return LiveMatchAttributes.Side(id: team.id ?? team.code, code: team.code, name: team.name, colorHex: followed?.colorHex)
-            }
+    /// Attributs construits depuis `getEventDetails`, comme l'état : les équipes sont dans le même ordre que
+    /// `state(...).seriesScore` et `.stats`. `nil` si une équipe n'a pas d'id (pas de repli sur le code, spec §4.2).
+    public static func attributes(for details: EventDetails, follows: FollowList) -> LiveMatchAttributes? {
+        let matchTeams = details.match.teams
+        var sides: [LiveMatchAttributes.Side] = []
+        for team in matchTeams {
+            guard let id = team.id else { return nil }
+            let followed = follows.teams.first { team.isSame(as: $0) }
+            sides.append(LiveMatchAttributes.Side(id: id, code: team.code, name: team.name, colorHex: followed?.colorHex))
+        }
+        // L'équipe suivie depuis le plus longtemps (ordre de `FollowList.teams`) qui joue ce match.
+        let primary = follows.teams.lazy
+            .compactMap { followed in matchTeams.firstIndex { $0.isSame(as: followed) } }
+            .first
+        return LiveMatchAttributes(
+            matchId: details.id,
+            leagueName: details.league.name,
+            bestOf: details.bestOf,
+            teams: sides,
+            primaryTeamIndex: primary
         )
     }
 

@@ -132,14 +132,54 @@ import Testing
         let kc = try catalogTeam("KC")
         follows.follow(kc)
         follows.setAutoColor("#5B8CFF", id: kc.id)
-        let event = makeEvent(id: "115660588583171786", state: .inProgress,
-                              teams: [makeTeam("C9", id: "98767991877340524", name: "Cloud9 Kia"), makeTeam("KC", id: kc.id, name: "Karmine Corp")])
-        let attributes = LiveMatchBuilder.attributes(for: event, follows: follows)
-        #expect(attributes.matchId == "115660588583171786")
-        #expect(attributes.leagueName == "Mondial")
+        let details = makeDetails(wins: [0, 0], games: [(1, game1, .inProgress)],
+                                  teams: [("98767991877340524", "C9"), (kc.id, "KC")])
+        let attributes = try #require(LiveMatchBuilder.attributes(for: details, follows: follows))
+        #expect(attributes.matchId == details.id)
+        #expect(attributes.leagueName == "LCS")
         #expect(attributes.bestOf == 5)
+        #expect(attributes.teams.map(\.id) == ["98767991877340524", kc.id])
         #expect(attributes.teams.map(\.code) == ["C9", "KC"])
         #expect(attributes.teams.map(\.colorHex) == [nil, "#5B8CFF"])
+    }
+
+    @Test func attributesNeedTeamIds() throws {
+        let details = EventDetails(
+            id: "m", league: LeagueRef(id: nil, slug: "lcs", name: "LCS", image: nil),
+            match: EventDetails.Match(strategy: Strategy(type: nil, count: 3),
+                                      teams: [makeTeam("KC", id: "111692118851466302"), makeTeam("C9")], games: []),
+            streams: nil)
+        #expect(LiveMatchBuilder.attributes(for: details, follows: FollowList()) == nil)
+    }
+
+    @Test func primaryTeamIsFirstFollowed() throws {
+        let kc = try catalogTeam("KC"), t1 = try catalogTeam("T1")
+        var follows = FollowList()
+        follows.follow(t1)
+        follows.follow(kc)
+        let details = makeDetails(wins: [0, 0], games: [(1, game1, .inProgress)], teams: [(kc.id, "KC"), (t1.id, "T1")])
+        let attributes = try #require(LiveMatchBuilder.attributes(for: details, follows: follows))
+        #expect(attributes.primaryTeamIndex == 1)   // T1, suivie avant KC, est la 2e équipe du match
+
+        let unfollowed = try #require(LiveMatchBuilder.attributes(for: details, follows: FollowList()))
+        #expect(unfollowed.primaryTeamIndex == nil)
+    }
+
+    @Test func stateOrderMatchesAttributes() throws {
+        // Équipes dans l'ordre inverse des côtés du flux (bleu = TLAW, rouge = LYON).
+        let lyon = "99566405941863385", tlaw = "98926509885559666"
+        let details = makeDetails(wins: [1, 0], games: [(1, "g0", .completed), (2, game1, .inProgress)],
+                                  teams: [(lyon, "LYON"), (tlaw, "TLAW")])
+        let attributes = try #require(LiveMatchBuilder.attributes(for: details, follows: FollowList()))
+        let snap = try snapshot("window_ingame")
+        let state = LiveMatchBuilder.state(details: details, snapshot: snap, firstFrameTime: nil, statsDisabled: false,
+                                           spoilerFree: false, now: now)
+        #expect(attributes.teams.map(\.id) == [lyon, tlaw])
+        let stats = try #require(state.stats)
+        #expect(stats == attributes.teams.compactMap { snap.stats(for: $0.id) })
+        #expect(stats[0] == snap.red)    // LYON, côté rouge
+        #expect(state.seriesScore == [1, 0])
+        #expect(state.seriesScore == details.match.teams.map(\.gameWins))
     }
 
     @Test func payloadStaysSmall() throws {
@@ -150,7 +190,7 @@ import Testing
         let attributes = LiveMatchAttributes(matchId: "115565004607949429", leagueName: "Mondial", bestOf: 5, teams: [
             .init(id: "98926509885559666", code: "TLAW", name: "Team Liquid Alienware", colorHex: "#5B8CFF"),
             .init(id: "99566405941863385", code: "LYON", name: "LYON", colorHex: nil),
-        ])
+        ], primaryTeamIndex: 0)
         let stateBytes = try JSONEncoder().encode(state).count
         let attributeBytes = try JSONEncoder().encode(attributes).count
         #expect(stateBytes < 1024)
