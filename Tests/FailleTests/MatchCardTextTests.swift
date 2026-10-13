@@ -32,10 +32,10 @@ struct MatchCardTextTests {
         #expect(card.last?.id == event.id)
         let line = store.scoreLine(event)
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
-        // La date est remplacée par un repère sans chiffre : tout chiffre dans le texte serait un score qui fuit.
+        // Ni le score de série (« 3 – 1 ») ni son tiret : le seul chiffre permis est celui de « T1 ».
         let text = lastRowText(line, order: order, date: "DATE")
         #expect(text == "Dernier · T1 vs GEN · DATE · masqué")
-        #expect(text.allSatisfy { !$0.isNumber })
+        #expect(!text.contains("3") && !text.contains("–"))
     }
 
     @Test func revealedLastRowShowsTheScore() throws {
