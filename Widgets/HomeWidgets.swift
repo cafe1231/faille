@@ -20,7 +20,7 @@ struct TeamWidgetView: View {
 
     var body: some View {
         let team = entry.content.team(id: entry.teamId)
-        SmallWidgetView(team: team)
+        SmallWidgetView(team: team, appGroupMissing: entry.content.appGroupMissing)
             .containerBackground(for: .widget) {
                 WidgetBackdrop(tint: team.map { Palette.team($0.team.colorHex) })
             }

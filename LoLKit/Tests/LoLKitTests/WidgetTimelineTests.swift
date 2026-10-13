@@ -275,6 +275,14 @@ import Testing
         #expect(WidgetTimeline.content(at: date("2026-10-15T12:00:00Z"), input: WidgetInput()).team(id: nil) == nil)
     }
 
+    /// W8 : l'extension qui n'a pas trouvé son groupe d'apps le dit dans le contenu de chaque entrée.
+    @Test func theMissingAppGroupFlagReachesTheContent() {
+        let at = date("2026-10-15T12:00:00Z")
+        #expect(WidgetTimeline.content(at: at, input: WidgetInput(appGroupMissing: true)).appGroupMissing)
+        #expect(!WidgetTimeline.content(at: at, input: WidgetInput()).appGroupMissing)
+        #expect(!WidgetTimeline.content(at: at, input: input([], fetchedAt: "2026-10-15T11:00:00Z")).appGroupMissing)
+    }
+
     // MARK: Dates des entrées et rechargement
 
     @Test func entriesAtTheStartAndAtEachCountdownStep() {

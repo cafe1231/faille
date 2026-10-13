@@ -13,8 +13,11 @@ extension WidgetInput {
         )
     }
 
-    /// Ce que lit l'extension : le dossier de Faille dans le groupe d'apps résolu à l'exécution, en lecture seule.
+    /// Ce que lit l'extension : le dossier de Faille dans le groupe d'apps résolu à l'exécution, en lecture seule. Sans
+    /// groupe d'apps (`AppGroup.identifier == nil`), rien ne peut être lu : les widgets le disent (`appGroupMissing`).
     static func shared() -> WidgetInput {
-        load(from: FileStore(directory: AppGroup.directory, readOnly: true))
+        var input = load(from: FileStore(directory: AppGroup.directory, readOnly: true))
+        input.appGroupMissing = AppGroup.identifier == nil
+        return input
     }
 }

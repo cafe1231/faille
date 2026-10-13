@@ -6,9 +6,11 @@ import WidgetKit
 /// `WidgetBackdrop` posé par l'extension). Monogrammes des deux équipes, match, jour et heure.
 struct SmallWidgetView: View {
     let team: WidgetTeam?
+    /// Le groupe d'apps est introuvable (`WidgetContent.appGroupMissing`) : le dire au lieu de « Aucune équipe suivie ».
+    var appGroupMissing = false
 
     var body: some View {
-        let text = WidgetText.small(team)
+        let text = WidgetText.small(team, appGroupMissing: appGroupMissing)
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(text.label)

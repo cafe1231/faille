@@ -72,10 +72,17 @@ public enum WidgetText {
         }
     }
 
-    /// Rien à montrer : « Aucune équipe suivie », « Prochain · masqué » (une équipe en anti-spoiler dont le prochain
-    /// match est masqué : on ne dit pas « Aucun match prévu », on y lirait une équipe éliminée, spec §8) ou
-    /// « Aucun match prévu ».
+    /// Groupe d'apps introuvable (`WidgetContent.appGroupMissing`) : titre, conseil, et les deux d'une ligne.
+    static let appGroupMissingTitle = "Groupe d'apps introuvable"
+    static let appGroupMissingAdvice = "Réinstalle Faille avec AltServer"
+    public static let appGroupMissingMessage = "Groupe d'apps introuvable — réinstalle Faille avec AltServer"
+
+    /// Rien à montrer : « Groupe d'apps introuvable — réinstalle Faille avec AltServer » (l'extension ne trouve pas le
+    /// groupe d'apps de Faille, elle n'a rien pu lire), « Aucune équipe suivie », « Prochain · masqué » (une équipe en
+    /// anti-spoiler dont le prochain match est masqué : on ne dit pas « Aucun match prévu », on y lirait une équipe
+    /// éliminée, spec §8) ou « Aucun match prévu ».
     public static func emptyMessage(_ content: WidgetContent) -> String {
+        if content.appGroupMissing { return appGroupMissingMessage }
         if content.teams.isEmpty { return "Aucune équipe suivie" }
         return hasHiddenTeam(content) ? "Prochain · masqué" : "Aucun match prévu"
     }
@@ -99,6 +106,10 @@ public enum WidgetText {
     /// (jamais « Aucun match prévu » : on y lirait une équipe éliminée, spec §8) ; sinon « Prochain · Aucun match prévu ».
     public static func rectangular(_ content: WidgetContent, timeZone: TimeZone = .current) -> Rectangular {
         guard let line = content.headline else {
+            if content.appGroupMissing {
+                return Rectangular(label: "Faille", title: appGroupMissingTitle, detail: appGroupMissingAdvice,
+                                   isLive: false, isMasked: false)
+            }
             if content.teams.isEmpty {
                 return Rectangular(label: "Faille", title: "Aucune équipe suivie", detail: "Ajoute-en dans l'appli",
                                    isLive: false, isMasked: false)
@@ -129,7 +140,9 @@ public enum WidgetText {
         case let .upcoming(start):
             let remaining = start.timeIntervalSince(content.date)
             let progress = min(1, max(0, 1 - remaining / countdownSpan))
-            return .countdown(text: Format.countdown(from: content.date, to: start), code: code, progress: progress)
+            // « maintenant » ne tient pas dans 50 pt : à zéro (ou en retard), le rond écrit « 0 min ».
+            let text = remaining < 60 ? "0 min" : Format.countdown(from: content.date, to: start)
+            return .countdown(text: text, code: code, progress: progress)
         }
     }
 
@@ -151,8 +164,14 @@ public enum WidgetText {
     /// (`WidgetTeam.Next.hidden` : règle F1, le dernier match de l'équipe est masqué ; ou règle C, son prochain match
     /// l'oppose à une autre équipe suivie en anti-spoiler dont le dernier match est masqué) ou « Aucun match prévu ».
     /// Dans le cas masqué, le match, l'adversaire et sa date ne sont pas dits (spec §8).
-    public static func small(_ team: WidgetTeam?, timeZone: TimeZone = .current) -> Small {
+    /// `appGroupMissing` (`WidgetContent.appGroupMissing`) remplace « Aucune équipe suivie » par le groupe d'apps
+    /// introuvable.
+    public static func small(_ team: WidgetTeam?, appGroupMissing: Bool = false, timeZone: TimeZone = .current) -> Small {
         guard let team else {
+            if appGroupMissing {
+                return Small(label: "Faille", title: appGroupMissingTitle, day: nil, time: nil,
+                             note: appGroupMissingAdvice, isLive: false, isMasked: false)
+            }
             return Small(label: "Faille", title: "Aucune équipe suivie", day: nil, time: nil,
                          note: "Ajoute-en dans l'appli", isLive: false, isMasked: false)
         }

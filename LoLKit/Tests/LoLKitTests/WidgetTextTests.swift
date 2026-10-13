@@ -67,6 +67,41 @@ import Testing
         #expect(WidgetText.circular(content([])) == .empty)
     }
 
+    /// W8 : à zéro, « maintenant » ne tient pas dans 50 pt ; le widget rond écrit « 0 min » (match en retard compris).
+    @Test func aCountdownAtZeroIsWrittenZeroMinutes() {
+        for start in ["2026-10-13T12:00:00Z", "2026-10-13T11:57:00Z"] {   // maintenant, puis 3 min de retard
+            let started = line(["GEN", "FUR"], .upcoming(date(start)))
+            #expect(WidgetText.circular(content([started])) == .countdown(text: "0 min", code: "GEN", progress: 1), "\(start)")
+        }
+        // Moins d'une minute avant : « 0 min » aussi, jauge presque pleine.
+        let imminent = line(["GEN", "FUR"], .upcoming(date("2026-10-13T12:00:45Z")))
+        guard case let .countdown(text, _, progress) = WidgetText.circular(content([imminent])) else {
+            Issue.record("compte à rebours attendu")
+            return
+        }
+        #expect(text == "0 min" && progress > 0.99 && progress < 1)
+        let oneMinute = line(["GEN", "FUR"], .upcoming(date("2026-10-13T12:01:00Z")))
+        #expect(WidgetText.circular(content([oneMinute])) == .countdown(text: "1 min", code: "GEN", progress: 1 - 60.0 / 86400))
+    }
+
+    /// W8 : sans groupe d'apps, les widgets le disent au lieu de « Aucune équipe suivie » (rien n'a pu être lu).
+    @Test func aMissingAppGroupIsSaidInsteadOfNoFollowedTeam() {
+        let missing = WidgetContent(date: now, teams: [], lines: [], appGroupMissing: true)
+        let message = "Groupe d'apps introuvable — réinstalle Faille avec AltServer"
+        #expect(WidgetText.emptyMessage(missing) == message)
+        #expect(WidgetText.inline(missing, timeZone: paris) == message)
+        #expect(WidgetText.rectangular(missing, timeZone: paris)
+                == WidgetText.Rectangular(label: "Faille", title: "Groupe d'apps introuvable",
+                                          detail: "Réinstalle Faille avec AltServer", isLive: false, isMasked: false))
+        #expect(WidgetText.small(nil, appGroupMissing: true, timeZone: paris)
+                == WidgetText.Small(label: "Faille", title: "Groupe d'apps introuvable", day: nil, time: nil,
+                                    note: "Réinstalle Faille avec AltServer", isLive: false, isMasked: false))
+        #expect(WidgetText.circular(missing) == .empty)
+        // Sans le drapeau, le texte ne change pas.
+        #expect(WidgetText.emptyMessage(content([], teams: [])) == "Aucune équipe suivie")
+        #expect(WidgetText.small(nil, timeZone: paris).title == "Aucune équipe suivie")
+    }
+
     @Test func mediumWidgetRows() {
         #expect(WidgetText.row(live, now: now, timeZone: paris)
                 == WidgetText.Row(title: "KC 1 – 0 C9", trailing: "Game 2", isLive: true, isMasked: false))

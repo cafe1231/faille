@@ -10,13 +10,18 @@ public struct WidgetInput: Sendable, Equatable {
     public var schedule: Cached<SchedulePage>?
     /// `cache-live.json` ; sa fraîcheur est jugée à la date de chaque entrée (`RefreshPolicy.usableLive`).
     public var live: Cached<[MatchEvent]>?
+    /// L'extension n'a trouvé aucun groupe d'apps (installation sans groupe) : elle ne peut rien lire, et les widgets le
+    /// disent au lieu de « Aucune équipe suivie ».
+    public var appGroupMissing: Bool
 
     public init(follows: FollowList = FollowList(), settings: AppSettings = AppSettings(),
-                schedule: Cached<SchedulePage>? = nil, live: Cached<[MatchEvent]>? = nil) {
+                schedule: Cached<SchedulePage>? = nil, live: Cached<[MatchEvent]>? = nil,
+                appGroupMissing: Bool = false) {
         self.follows = follows
         self.settings = settings
         self.schedule = schedule
         self.live = live
+        self.appGroupMissing = appGroupMissing
     }
 }
 
@@ -98,11 +103,14 @@ public struct WidgetContent: Sendable, Equatable {
     /// Matchs en direct (dans l'ordre des cartes de l'appli), puis prochains matchs par heure de début ; un match
     /// entre deux équipes suivies n'y est qu'une fois.
     public let lines: [WidgetLine]
+    /// Le groupe d'apps est introuvable (`WidgetInput.appGroupMissing`) : rien n'a pu être lu.
+    public let appGroupMissing: Bool
 
-    public init(date: Date, teams: [WidgetTeam], lines: [WidgetLine]) {
+    public init(date: Date, teams: [WidgetTeam], lines: [WidgetLine], appGroupMissing: Bool = false) {
         self.date = date
         self.teams = teams
         self.lines = lines
+        self.appGroupMissing = appGroupMissing
     }
 
     /// Match des widgets de l'écran verrouillé : un match en direct d'abord, sinon le prochain.

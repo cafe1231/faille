@@ -43,7 +43,7 @@ struct RectangularWidgetView: View {
                 }
                 Text(text.detail)
                     .font(Sora.font(11, .regular))
-                    .lineLimit(1)
+                    .lineLimit(2)
                     .minimumScaleFactor(0.8)
             }
             .foregroundStyle(.secondary)

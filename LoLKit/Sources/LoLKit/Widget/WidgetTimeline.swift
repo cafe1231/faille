@@ -70,7 +70,8 @@ public enum WidgetTimeline {
         return WidgetContent(
             date: date,
             teams: follows.teams.map { WidgetTeam(team: $0, next: next[$0.id] ?? .noMatch) },
-            lines: liveLines + byStart
+            lines: liveLines + byStart,
+            appGroupMissing: input.appGroupMissing
         )
     }
 
