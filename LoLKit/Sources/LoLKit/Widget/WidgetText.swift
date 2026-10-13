@@ -29,7 +29,9 @@ public enum WidgetText {
         case countdown(text: String, code: String, progress: Double)
         /// Une équipe suivie joue (masquée ou non : seul « en direct » est dit).
         case live(code: String)
-        /// Rien à annoncer.
+        /// Rien à annoncer. Volontairement neutre (jauge vide et trophée), y compris quand une équipe suivie a son prochain
+        /// match masqué (`WidgetTeam.Next.hidden`) : 50 pt ne portent pas « Prochain · masqué », et rien ne doit y
+        /// distinguer une équipe masquée d'une équipe sans match (spec §8).
         case empty
     }
 
@@ -92,7 +94,9 @@ public enum WidgetText {
     }
 
     /// Widget rectangulaire : « Prochain · GEN vs FUR · jeu. 15 oct. · 11:00 » ; en direct : « En direct ·
-    /// KC 1 – 0 C9 · Mondial · Game 2 » ; masqué : « En direct · T1 vs FLY · Mondial ».
+    /// KC 1 – 0 C9 · Mondial · Game 2 » ; masqué : « En direct · T1 vs FLY · Mondial ». Sans match à montrer : « Faille ·
+    /// Aucune équipe suivie » ; « Prochain · Masqué · Anti-spoiler » quand une équipe suivie a son prochain match masqué
+    /// (jamais « Aucun match prévu » : on y lirait une équipe éliminée, spec §8) ; sinon « Prochain · Aucun match prévu ».
     public static func rectangular(_ content: WidgetContent, timeZone: TimeZone = .current) -> Rectangular {
         guard let line = content.headline else {
             if content.teams.isEmpty {
@@ -143,7 +147,10 @@ public enum WidgetText {
         }
     }
 
-    /// Petit widget : le prochain match de l'équipe (jour et heure), son match en direct, « masqué » (règle F1) ou rien.
+    /// Petit widget : le prochain match de l'équipe (jour et heure), son match en direct, « Prochain · masqué »
+    /// (`WidgetTeam.Next.hidden` : règle F1, le dernier match de l'équipe est masqué ; ou règle C, son prochain match
+    /// l'oppose à une autre équipe suivie en anti-spoiler dont le dernier match est masqué) ou « Aucun match prévu ».
+    /// Dans le cas masqué, le match, l'adversaire et sa date ne sont pas dits (spec §8).
     public static func small(_ team: WidgetTeam?, timeZone: TimeZone = .current) -> Small {
         guard let team else {
             return Small(label: "Faille", title: "Aucune équipe suivie", day: nil, time: nil,

@@ -1,4 +1,3 @@
-import AppIntents
 import LoLKit
 import SwiftUI
 import WidgetKit

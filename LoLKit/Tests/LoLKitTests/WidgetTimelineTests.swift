@@ -298,6 +298,36 @@ import Testing
         #expect(dates == times(["16:15:00", "16:20:01"]))
     }
 
+    /// Le calendrier et le direct ont chacun leur fin de confiance : deux entrées quand ils datent de deux instants.
+    @Test func theEndsOfLiveAndScheduleTrustAreBothEntries() {
+        let both = input([kcC9], fetchedAt: "2026-10-15T16:00:00Z", live: [kcC9], liveFetchedAt: "2026-10-15T16:10:00Z")
+        #expect(WidgetTimeline.entryDates(now: date("2026-10-15T16:05:00Z"), input: both)
+                == times(["16:05:00", "16:10:01", "16:20:01"]))
+    }
+
+    /// Sans cache du direct, la fin de confiance du calendrier est la date où le match en cours cesse d'être en direct.
+    @Test func theEndOfScheduleTrustIsAnEntryAndEndsTheLiveMatch() {
+        let input = input([kcC9], fetchedAt: "2026-10-15T16:10:00Z")   // calendrier seul
+        let now = date("2026-10-15T16:15:00Z")
+        let dates = WidgetTimeline.entryDates(now: now, input: input)
+        #expect(dates == times(["16:15:00", "16:20:01"]))
+        #expect(WidgetTimeline.content(at: dates[0], input: input).headline?.matchId == "kc-c9")
+        #expect(WidgetTimeline.content(at: dates[1], input: input).headline == nil)
+    }
+
+    /// Les heures pleines du compte à rebours suivent `Format.countdown`, qui compte en heures jusqu'à 48 h puis en jours :
+    /// un palier à 47 h, aucun à 48 h.
+    @Test func hourlyStepsStopWhereTheCountdownCountsInDays() {
+        let now = date("2026-10-15T12:00:00Z")
+        let at47h30 = match("kc-g2", .unstarted, "2026-10-17T11:30:00Z", "KC", "G2")
+        #expect(WidgetTimeline.entryDates(now: now, input: input([at47h30], fetchedAt: "2026-10-15T11:00:00Z"))
+                == times(["12:00:00", "12:30:00", "13:30:00", "14:30:00", "15:30:00", "16:30:00", "17:30:00"]))
+        // À 48 h 30, « 48 h » s'écrirait déjà « 2 j » : le premier palier est celui de 47 h (13:30).
+        let at48h30 = match("kc-g2", .unstarted, "2026-10-17T12:30:00Z", "KC", "G2")
+        #expect(WidgetTimeline.entryDates(now: now, input: input([at48h30], fetchedAt: "2026-10-15T11:00:00Z"))
+                == times(["12:00:00", "13:30:00", "14:30:00", "15:30:00", "16:30:00", "17:30:00"]))
+    }
+
     /// W9, budget de rechargement de WidgetKit : les entrées couvrent déjà 6 h et chaque début de match, et l'appli
     /// recharge les widgets à chaque écriture ; l'extension ne se recharge donc qu'une heure avant la fin des entrées.
     @Test func reloadIsOneHourBeforeTheEntriesRunOut() {

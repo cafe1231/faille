@@ -51,13 +51,17 @@ public enum Format {
         return "\(days[weekday - 1]) \(time(date, timeZone: timeZone))"
     }
 
+    /// `countdown` compte en heures jusqu'à cette avance (48 h), puis en jours : `WidgetTimeline` place ses paliers
+    /// horaires jusque-là.
+    static let countdownHoursLimit = 48
+
     /// Compte à rebours court pour le widget rond : « 45 min », « 21h », « 3 j », « maintenant ».
     public static func countdown(from now: Date, to date: Date) -> String {
         let minutes = Int(date.timeIntervalSince(now) / 60)
         if minutes <= 0 { return "maintenant" }
         if minutes < 60 { return "\(minutes) min" }
         let hours = minutes / 60
-        if hours < 48 { return "\(hours)h" }
+        if hours < countdownHoursLimit { return "\(hours)h" }
         return "\(hours / 24) j"
     }
 }

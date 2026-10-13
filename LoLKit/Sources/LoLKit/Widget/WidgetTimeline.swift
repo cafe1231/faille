@@ -87,10 +87,12 @@ public enum WidgetTimeline {
         }
         for start in upcomingStarts(input) where start > now {
             add(start)
-            for hours in 1..<48 {
+            // Heures pleines tant que le compte à rebours s'écrit en heures, puis un palier toutes les `countdownStep`
+            // pendant la dernière heure.
+            for hours in 1..<Format.countdownHoursLimit {
                 add(start.addingTimeInterval(-Double(hours) * 3600))
             }
-            for steps in 1..<12 {
+            for steps in 1..<Int(3600 / countdownStep) {
                 add(start.addingTimeInterval(-Double(steps) * countdownStep))
             }
         }
