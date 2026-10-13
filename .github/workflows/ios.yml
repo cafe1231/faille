@@ -1,0 +1,49 @@
+name: iOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Si ce label n'existe pas sur GitHub, utiliser macos-latest.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Générer le projet Xcode
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Compiler sans signature
+        run: |
+          xcodebuild -project Faille.xcodeproj -scheme Faille -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO build
+
+      - name: Signer en ad hoc avec les entitlements
+        # Sideloadly re-signe ensuite avec l'Apple ID de Dan ; il lit les entitlements embarqués ici.
+        run: |
+          APP=build/Build/Products/Release-iphoneos/Faille.app
+          codesign --force --sign - --entitlements Widgets/FailleWidgets.entitlements "$APP/PlugIns/FailleWidgets.appex"
+          codesign --force --sign - --entitlements App/Faille.entitlements "$APP"
+          codesign -d --entitlements - "$APP"
+          codesign -d --entitlements - "$APP/PlugIns/FailleWidgets.appex"
+
+      - name: Empaqueter l'IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/Faille.app Payload/
+          zip -qry Faille.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Faille-ipa
+          path: Faille.ipa
+          retention-days: 14
