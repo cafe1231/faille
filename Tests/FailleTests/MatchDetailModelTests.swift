@@ -174,6 +174,11 @@ struct MatchDetailModelTests {
         #expect(await detailsRequestCount(transport) == before + 1)
     }
 
+    /// Tant que le match est en cours, les détails sont relus à la cadence du direct (60 s) sur celle de l'écran (10 s).
+    @Test func liveDetailsAreReloadedEverySixCycles() {
+        #expect(MatchDetailModel.reloadEvery == 6)
+    }
+
     private func detailsRequestCount(_ transport: ScriptedTransport) async -> Int {
         await transport.requests.filter { $0.path.hasSuffix("/getEventDetails") }.count
     }

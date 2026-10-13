@@ -78,7 +78,10 @@ struct MatchDetailView: View {
                     .foregroundStyle(Palette.secondary)
                     .lineLimit(1)
                 Spacer(minLength: 8)
+                // La pastille ne se coupe ni ne passe à la ligne : c'est le texte de gauche qui s'abrège.
                 statusChip(event: event, state: state)
+                    .lineLimit(1)
+                    .fixedSize()
             }
             ScoreRow(teams: teams, score: seriesScore(event: event, state: state, order: order, masked: masked),
                      tints: teams.map { store.tint(for: $0) }, large: true)

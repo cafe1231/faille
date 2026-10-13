@@ -15,17 +15,24 @@ final class MatchDetailModel {
     /// Un premier appel à `getEventDetails` a été tenté.
     private(set) var attempted = false
 
+    /// Nombre de cycles entre deux relectures de `getEventDetails` tant que le match est en cours : cadence du direct
+    /// (60 s) sur cadence de l'écran (10 s), soit 6.
+    static let reloadEvery = max(1, Int((RefreshPolicy.interval(.live) / RefreshPolicy.detailInterval).rounded(.up)))
+
     init(matchId: String) {
         self.matchId = matchId
     }
 
     /// Lancée par `.task` : annulée, requêtes comprises, quand l'écran disparaît.
+    /// Les détails sont toujours relus à l'ouverture (`cycle == 0`) : ceux du store peuvent dater d'un passage précédent
+    /// (match alors à venir ou entre deux games, depuis terminé) ; ils le sont aussi quand ils manquent, puis toutes les
+    /// minutes tant que le match est en cours.
     func run(store: AppStore) async {
         var cycle = 0
         while !Task.isCancelled {
             let details = store.details[matchId]
             let inProgress = details?.currentGame != nil || store.event(id: matchId)?.state == .inProgress
-            if details == nil || (inProgress && cycle % 6 == 0) {
+            if details == nil || cycle == 0 || (inProgress && cycle % Self.reloadEvery == 0) {
                 await store.loadDetails(matchId: matchId)
                 attempted = true
             }
