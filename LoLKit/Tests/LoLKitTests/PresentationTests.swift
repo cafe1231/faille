@@ -65,6 +65,25 @@ import Testing
         let event = makeEvent(id: "m6", state: .inProgress, teams: [makeTeam("A", wins: 2), makeTeam("B", wins: 1)])
         #expect(Presenter.currentGameNumber(event) == 4)
     }
+
+    @Test func completedTieHasNoWinner() throws {
+        let teams = [makeTeam("T1", id: "98767991853197861", wins: 1), makeTeam("GEN", id: "g", wins: 1)]
+        let event = makeEvent(id: "m7", state: .completed, teams: teams, bestOf: 2)
+        #expect(Presenter.scoreLine(for: event, follows: try follows(), revealed: ["m7"]).status == .finished(winnerCode: nil))
+    }
+
+    @Test func outcomeDecidesWinnerWhenGameWinsAreTied() throws {
+        let teams = [
+            MatchTeam(id: "a", name: "Alpha", code: "AAA", image: nil, result: MatchTeam.Result(outcome: "win", gameWins: 0)),
+            MatchTeam(id: "b", name: "Beta", code: "BBB", image: nil, result: MatchTeam.Result(outcome: "loss", gameWins: 0)),
+        ]
+        let event = makeEvent(id: "m8", state: .completed, teams: teams)
+        #expect(Presenter.scoreLine(for: event, follows: try follows(), revealed: ["m8"]).status == .finished(winnerCode: "AAA"))
+    }
+
+    @Test func winnerCodeWithoutResultIsNil() {
+        #expect(Presenter.winnerCode([makeTeam("A"), makeTeam("B")]) == nil)
+    }
 }
 
 @Suite struct FormatTests {

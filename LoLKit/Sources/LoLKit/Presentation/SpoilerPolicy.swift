@@ -38,7 +38,7 @@ public enum Presenter {
             status = .live(gameNumber: masked ? nil : currentGameNumber(event))
             started = true
         case .completed:
-            status = .finished(winnerCode: masked ? nil : teams.max { $0.gameWins < $1.gameWins }?.code)
+            status = .finished(winnerCode: masked ? nil : winnerCode(teams))
             started = true
         case .unstarted, .unknown:
             status = .upcoming(event.startTime)
@@ -53,6 +53,16 @@ public enum Presenter {
             status: status,
             isMasked: masked
         )
+    }
+
+    /// Vainqueur d'un match terminé : l'équipe marquée `outcome == "win"`, sinon l'unique équipe au plus grand nombre de victoires (> 0), sinon nil.
+    public static func winnerCode(_ teams: [MatchTeam]) -> String? {
+        let marked = teams.filter { $0.result?.outcome == "win" }
+        if marked.count == 1 { return marked[0].code }
+        let best = teams.map(\.gameWins).max() ?? 0
+        guard best > 0 else { return nil }
+        let leaders = teams.filter { $0.gameWins == best }
+        return leaders.count == 1 ? leaders[0].code : nil
     }
 
     /// Game en cours : celle marquée `inProgress`, sinon la suivante d'après les victoires.
