@@ -8,6 +8,8 @@ enum WidgetSize {
     static let screen = CGSize(width: 402, height: 874)
     static let small = CGSize(width: 170, height: 170)
     static let medium = CGSize(width: 364, height: 170)
+    /// Moyen widget des iPhone de 6,1 pouces (écran de 393 × 852 pt).
+    static let mediumCompact = CGSize(width: 338, height: 158)
     static let rectangular = CGSize(width: 172, height: 76)
     static let circular = CGSize(width: 76, height: 76)
     static let inline = CGSize(width: 257, height: 26)
@@ -19,6 +21,13 @@ enum WidgetSize {
 struct BoardState {
     let caption: String
     let content: WidgetContent
+}
+
+/// Un moyen widget sur la planche : sa légende, ce qu'il montre et sa taille.
+struct MediumState {
+    let caption: String
+    let content: WidgetContent
+    var size: CGSize = WidgetSize.medium
 }
 
 /// Un petit widget sur la planche : sa légende et l'équipe qu'il montre.
@@ -89,7 +98,7 @@ struct LockScreenBoard: View {
 /// Planche de l'écran d'accueil (spec §7) : petits widgets (une équipe chacun), puis moyens, sur leur fond DA.
 struct HomeScreenBoard: View {
     let smalls: [SmallState]
-    let mediums: [BoardState]
+    let mediums: [MediumState]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -103,7 +112,7 @@ struct HomeScreenBoard: View {
             ForEach(Array(mediums.enumerated()), id: \.offset) { _, state in
                 VStack(alignment: .leading, spacing: 4) {
                     BoardCaption(text: state.caption)
-                    tile(MediumWidgetView(content: state.content), size: WidgetSize.medium, tint: nil)
+                    tile(MediumWidgetView(content: state.content), size: state.size, tint: nil)
                 }
             }
             Spacer(minLength: 0)
@@ -136,11 +145,21 @@ struct HomeScreenBoard: View {
 /// matière), contrairement aux écrans de l'appli, photographiés par `Snapshot` (drawHierarchy).
 @MainActor
 enum WidgetRender {
+    /// Fuseau des planches : les dates et heures des widgets s'écrivent à Paris, quel que soit le fuseau du Mac de la CI.
+    /// Sur l'iPhone, l'environnement garde le fuseau de l'appareil.
+    static let timeZone = TimeZone(identifier: "Europe/Paris")!
+
+    /// La vue dans un cadre de la taille d'un widget, en thème sombre, à l'heure de Paris.
+    private static func framed(_ view: some View, size: CGSize) -> some View {
+        view.frame(width: size.width, height: size.height)
+            .environment(\.colorScheme, .dark)
+            .environment(\.timeZone, timeZone)
+    }
+
     /// Écrit la planche en PNG (×3) dans `build/apercus/`, à côté des captures d'écran de `Snapshot`.
     @discardableResult
     static func write(_ view: some View, size: CGSize, named name: String) throws -> URL {
-        let renderer = ImageRenderer(content: view.frame(width: size.width, height: size.height)
-            .environment(\.colorScheme, .dark))
+        let renderer = ImageRenderer(content: framed(view, size: size))
         renderer.scale = 3
         guard let png = renderer.uiImage?.pngData() else {
             throw Snapshot.Failure(description: "ImageRenderer n'a rien rendu pour \(name)")
@@ -153,8 +172,7 @@ enum WidgetRender {
 
     /// Part des pixels non transparents d'une vue rendue seule, sur fond transparent : 0 si elle ne dessine rien.
     static func inkRatio(_ view: some View, size: CGSize) -> Double {
-        let renderer = ImageRenderer(content: view.frame(width: size.width, height: size.height)
-            .environment(\.colorScheme, .dark))
+        let renderer = ImageRenderer(content: framed(view, size: size))
         renderer.scale = 1
         renderer.isOpaque = false
         guard let image = renderer.cgImage else { return 0 }
@@ -172,5 +190,15 @@ enum WidgetRender {
         guard drawn else { return 0 }
         let ink = stride(from: 3, to: pixels.count, by: 4).filter { pixels[$0] > 0 }.count
         return Double(ink) / Double(width * height)
+    }
+
+    /// Hauteur que prend une vue dans la largeur donnée (sa taille idéale, sans cadre de widget) : sert à vérifier que
+    /// le contenu d'un widget tient dans sa case, marges comprises.
+    static func idealHeight(_ view: some View, width: CGFloat) -> CGFloat {
+        let controller = UIHostingController(
+            rootView: view.frame(width: width).fixedSize(horizontal: false, vertical: true)
+                .environment(\.colorScheme, .dark)
+                .environment(\.timeZone, timeZone))
+        return controller.sizeThatFits(in: CGSize(width: width, height: 10_000)).height
     }
 }
