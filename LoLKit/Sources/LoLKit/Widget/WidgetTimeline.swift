@@ -1,12 +1,18 @@
 import Foundation
 
 /// Planning des widgets (spec §7) : ce qu'ils montrent à chaque date, calculé seulement à partir des fichiers de
-/// l'appli. Toutes les lignes passent par `Presenter.scoreLine` et `Presenter.nextLine` : l'anti-spoiler (spec §8)
-/// est exactement celui de l'appli.
+/// l'appli. Toutes les lignes passent par `Presenter.scoreLine` et `Presenter.nextLine` : les règles anti-spoiler
+/// (spec §8) sont celles de l'appli.
 ///
-/// Le cache vieillit pendant que l'appli dort : à la date d'une entrée, un direct de plus de `RefreshPolicy.liveTrust`
-/// ne fait plus foi, et un match commencé sans donnée fraîche pour le confirmer a une issue inconnue (ni en direct, ni
-/// à venir ; il compte seulement comme dernier match de ses équipes, pour l'anti-spoiler de la ligne « Prochain »).
+/// Le cache vieillit pendant que l'appli dort. À la date d'une entrée, la source du « en direct » a trois états :
+/// (a) un `getLive` en cache de moins de `RefreshPolicy.liveTrust` ; (b) à défaut, un calendrier de moins de `liveTrust`,
+/// dont les matchs en cours servent de repli ; (c) rien de fiable. En (a) et (b), les widgets font comme l'appli : un
+/// match `unstarted` dont l'heure prévue est passée reste « à venir » (compte à rebours à zéro). En (c) seulement, ils
+/// sont plus stricts que l'appli : un match commencé (en cours dans le calendrier, ou heure de début passée) a une issue
+/// inconnue ; il n'est ni en direct ni à venir, et compte comme dernier match de ses équipes, pour que la ligne
+/// « Prochain » d'une équipe en anti-spoiler reste « masqué » (règle F1). L'appli, elle, l'afficherait encore
+/// « Prochain » : elle se rafraîchit à l'ouverture, pas l'extension, qui ne doit pas annoncer un match que rien ne
+/// confirme plus.
 public enum WidgetTimeline {
     /// Rechargement au plus tard 30 min après le calcul (spec §7), ou au prochain début de match s'il est plus proche.
     public static let reloadInterval: TimeInterval = 30 * 60
@@ -19,9 +25,9 @@ public enum WidgetTimeline {
     public static func content(at date: Date, input: WidgetInput) -> WidgetContent {
         let follows = input.follows
         let revealed = input.settings.revealedMatchIds
-        let live = liveEvents(at: date, input: input)
-        let schedule = presumed(input.schedule?.value.events ?? [], at: date, live: live)
-        let cards = TeamCards.build(follows: follows, schedule: schedule, live: live, revealed: revealed)
+        let source = liveSource(at: date, input: input)
+        let schedule = presumed(input.schedule?.value.events ?? [], at: date, source: source)
+        let cards = TeamCards.build(follows: follows, schedule: schedule, live: source.live, revealed: revealed)
 
         var liveLines: [WidgetLine] = []
         var upcoming: [WidgetLine] = []
@@ -113,34 +119,59 @@ public enum WidgetTimeline {
             .map(\.startTime)
     }
 
-    /// Matchs en direct à `date` : `getLive` en cache tant qu'il fait foi ; sinon nil (les cartes retombent sur les
-    /// matchs en cours du calendrier, comme dans l'appli) si le calendrier a moins de `liveTrust` ; sinon personne
-    /// n'est donné pour en direct ([]) : un vieux calendrier ne dit plus qui joue.
-    static func liveEvents(at date: Date, input: WidgetInput) -> [MatchEvent]? {
+    /// D'où vient le « en direct » à une date (voir l'en-tête de `WidgetTimeline`).
+    enum LiveSource: Equatable {
+        /// (a) `getLive` en cache, assez récent pour faire foi.
+        case liveCache([MatchEvent])
+        /// (b) Pas de direct fiable, mais un calendrier assez récent : ses matchs en cours servent de repli.
+        case freshSchedule
+        /// (c) Rien de fiable : personne n'est donné pour en direct, un vieux calendrier ne dit plus qui joue.
+        case nothingReliable
+
+        /// Réponse de `getLive` pour `TeamCards.build` ; nil quand elle est inconnue (les cartes se replient alors sur
+        /// les matchs en cours du calendrier, comme dans l'appli).
+        var live: [MatchEvent]? {
+            switch self {
+            case let .liveCache(events): return events
+            case .freshSchedule: return nil
+            case .nothingReliable: return []
+            }
+        }
+
+        /// Une donnée fraîche existe : ce qu'elle ne dit pas ne permet pas de présumer un match commencé.
+        var isReliable: Bool {
+            if case .nothingReliable = self { return false }
+            return true
+        }
+    }
+
+    static func liveSource(at date: Date, input: WidgetInput) -> LiveSource {
         if let live = RefreshPolicy.usableLive(input.live, now: date) {
-            return live
+            return .liveCache(live)
         }
         if let schedule = input.schedule {
             let age = schedule.age(now: date)
             if age >= 0 && age <= RefreshPolicy.liveTrust {
-                return nil
+                return .freshSchedule
             }
         }
-        return []
+        return .nothingReliable
     }
 
-    /// Le calendrier vu à `date` : un match commencé dont le direct ne dit rien (en cours dans un calendrier qui ne
-    /// fait plus foi, ou pas commencé dans le cache alors que son heure est passée) devient « terminé ». Il n'est
-    /// plus ni en direct ni à venir, mais reste le dernier match de ses équipes : si l'une est en anti-spoiler, leur
-    /// ligne « Prochain » reste masquée (spec §8).
-    static func presumed(_ events: [MatchEvent], at date: Date, live: [MatchEvent]?) -> [MatchEvent] {
-        let liveIds = Set((live ?? []).map(\.id))
+    /// Le calendrier vu à `date`. Un match commencé que rien de frais ne confirme devient « terminé » : en cours dans
+    /// un calendrier qui ne fait plus foi, ou en cours dans le calendrier mais absent d'un direct frais. Un match
+    /// `unstarted` dont l'heure est passée n'est présumé commencé que dans le cas (c) : avec une donnée fraîche, il
+    /// reste « à venir », comme sur la carte de l'appli. Un match présumé terminé n'est plus ni en direct ni à venir,
+    /// mais reste le dernier match de ses équipes : si l'une est en anti-spoiler, leur ligne « Prochain » reste
+    /// masquée (spec §8).
+    static func presumed(_ events: [MatchEvent], at date: Date, source: LiveSource) -> [MatchEvent] {
+        let liveIds = Set((source.live ?? []).map(\.id))
         return events.map { event in
             if liveIds.contains(event.id) { return event }
             let started: Bool
             switch event.state {
-            case .inProgress: started = live != nil
-            case .unstarted: started = event.startTime <= date
+            case .inProgress: started = source.live != nil
+            case .unstarted: started = !source.isReliable && event.startTime <= date
             case .completed, .unknown: started = false
             }
             guard started else { return event }

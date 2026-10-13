@@ -18,14 +18,15 @@ import Testing
                          teams: [makeTeam(a, name: names[a], wins: wins[0]), makeTeam(b, name: names[b], wins: wins[1])])
     }
 
-    /// Fichiers de l'appli : calendrier (et direct, s'il est donné) relus à `fetchedAt`.
+    /// Fichiers de l'appli : calendrier relu à `fetchedAt`, et direct (s'il est donné) relu à `liveFetchedAt`
+    /// (par défaut au même instant).
     private func input(_ schedule: [MatchEvent], fetchedAt: String, live: [MatchEvent]? = nil,
-                       revealed: Set<String> = []) -> WidgetInput {
+                       liveFetchedAt: String? = nil, revealed: Set<String> = []) -> WidgetInput {
         WidgetInput(
             follows: follows,
             settings: AppSettings(revealedMatchIds: revealed),
             schedule: Cached(value: SchedulePage(leagueIds: [], events: schedule), fetchedAt: date(fetchedAt)),
-            live: live.map { Cached(value: $0, fetchedAt: date(fetchedAt)) }
+            live: live.map { Cached(value: $0, fetchedAt: date(liveFetchedAt ?? fetchedAt)) }
         )
     }
 
@@ -100,6 +101,94 @@ import Testing
         #expect(WidgetTimeline.content(at: date("2026-10-15T16:15:00Z"), input: input).headline?.status
                 == .live(score: [1, 0], gameNumber: 2))
         #expect(WidgetTimeline.content(at: date("2026-10-15T16:25:00Z"), input: input).headline?.matchId == "gen-fur")
+    }
+
+    // MARK: Match en retard (W1)
+
+    /// Tant qu'une donnée fraîche existe (direct ou calendrier de moins de 10 min), un match dont l'heure prévue est
+    /// passée reste « à venir », comme sur la carte de l'appli : rien ne dit qu'il a commencé.
+    @Test func aLateMatchStaysUpcomingWhileTheDataIsFresh() throws {
+        let fresh = input([kcG2, genFur], fetchedAt: "2026-10-15T17:58:00Z")   // calendrier seul, 5 min à 18:03
+        let late = WidgetTimeline.content(at: date("2026-10-15T18:03:00Z"), input: fresh)
+        #expect(late.lines.map(\.matchId) == ["kc-g2", "gen-fur"])
+        let line = try #require(late.headline)
+        #expect(line.status == .upcoming(date("2026-10-15T18:00:00Z")))
+        #expect(late.team(id: "kc")?.next == .match(line))
+        // Un direct frais qui ne le cite pas ne change rien (le calendrier, lui, peut être plus ancien).
+        let withLive = input([kcG2, genFur], fetchedAt: "2026-10-15T17:00:00Z", live: [], liveFetchedAt: "2026-10-15T17:58:00Z")
+        let lateWithLive = WidgetTimeline.content(at: date("2026-10-15T18:03:00Z"), input: withLive)
+        #expect(lateWithLive.lines.map(\.matchId) == ["kc-g2", "gen-fur"])
+        #expect(lateWithLive.team(id: "kc")?.next == .match(try #require(lateWithLive.headline)))
+    }
+
+    /// Passé `liveTrust` sans rien de fiable, le match en retard est présumé commencé : ni en direct ni à venir.
+    @Test func aLateMatchIsPresumedStartedOnlyOnceNothingIsTrustworthy() {
+        let input = input([kcG2, genFur], fetchedAt: "2026-10-15T17:58:00Z", live: [])
+        // 600 s : la donnée fait encore foi.
+        #expect(WidgetTimeline.content(at: date("2026-10-15T18:08:00Z"), input: input).lines.map(\.matchId)
+                == ["kc-g2", "gen-fur"])
+        // 601 s : plus rien de fiable.
+        let later = WidgetTimeline.content(at: date("2026-10-15T18:08:01Z"), input: input)
+        #expect(later.lines.map(\.matchId) == ["gen-fur"])
+        #expect(later.team(id: "kc")?.next == .noMatch)
+        // Un calendrier seul se périme de la même façon.
+        let scheduleOnly = self.input([kcG2, genFur], fetchedAt: "2026-10-15T17:58:00Z")
+        #expect(WidgetTimeline.content(at: date("2026-10-15T18:08:00Z"), input: scheduleOnly).lines.count == 2)
+        #expect(WidgetTimeline.content(at: date("2026-10-15T18:08:01Z"), input: scheduleOnly).lines.map(\.matchId)
+                == ["gen-fur"])
+    }
+
+    /// Règle F1 inchangée : T1 (anti-spoiler) dont le match en retard est présumé commencé passe à « Prochain · masqué ».
+    @Test func aMaskedTeamsLateMatchBecomesHiddenOnceItIsPresumedStarted() throws {
+        let t1Late = match("t1-late", .unstarted, "2026-10-15T18:00:00Z", "T1", "FLY")
+        let input = input([t1Late, genFur, t1Gen], fetchedAt: "2026-10-15T17:58:00Z", live: [])
+        let fresh = WidgetTimeline.content(at: date("2026-10-15T18:03:00Z"), input: input)
+        let line = try #require(fresh.team(id: "t1")?.next)
+        guard case let .match(shown) = line else {
+            Issue.record("T1 devrait encore annoncer son match en retard : \(line)")
+            return
+        }
+        #expect(shown.matchId == "t1-late" && shown.isMasked && shown.status == .upcoming(date("2026-10-15T18:00:00Z")))
+        let stale = WidgetTimeline.content(at: date("2026-10-15T18:08:01Z"), input: input)
+        #expect(stale.team(id: "t1")?.next == .hidden)
+        #expect(stale.lines.map(\.matchId) == ["gen-fur"])
+    }
+
+    /// Le calendrier se trompe de camp, pas le direct : `unstarted` dans le calendrier, `inProgress` dans `getLive` (frais).
+    @Test func liveDataOverridesAnUnstartedScheduleEntry() throws {
+        let scheduled = match("kc-c9", .unstarted, "2026-10-15T16:00:00Z", "C9", "KC")
+        let content = WidgetTimeline.content(
+            at: date("2026-10-15T16:15:00Z"),
+            input: input([scheduled, genFur], fetchedAt: "2026-10-15T15:30:00Z", live: [kcC9], liveFetchedAt: "2026-10-15T16:10:00Z"))
+        #expect(content.lines.map(\.matchId) == ["kc-c9", "gen-fur"])
+        let live = try #require(content.headline)
+        #expect(live.status == .live(score: [1, 0], gameNumber: 2))
+        #expect(content.team(id: "kc")?.next == .live(live))
+    }
+
+    /// Le calendrier dit « en cours » et le direct (frais) ne cite pas le match : il est fini.
+    @Test func aFreshLiveThatDropsAnInProgressMatchEndsIt() {
+        let content = WidgetTimeline.content(
+            at: date("2026-10-15T16:15:00Z"),
+            input: input([kcC9, genFur], fetchedAt: "2026-10-15T16:05:00Z", live: [], liveFetchedAt: "2026-10-15T16:12:00Z"))
+        #expect(content.lines.map(\.matchId) == ["gen-fur"])
+        #expect(content.team(id: "kc")?.next == .noMatch)
+    }
+
+    /// Deux équipes suivies dans le même match en direct : une seule ligne, chaque équipe le voit de son côté.
+    @Test func twoFollowedTeamsInTheSameLiveMatchShareOneLine() throws {
+        let kcGen = match("kc-gen", .inProgress, "2026-10-15T16:00:00Z", "GEN", "KC", wins: [0, 2])
+        let content = WidgetTimeline.content(at: date("2026-10-15T16:15:00Z"),
+                                             input: input([kcGen], fetchedAt: "2026-10-15T16:10:00Z", live: [kcGen]))
+        #expect(content.lines.count == 1)
+        let kcLine = try #require(content.headline)
+        #expect(kcLine.codes == ["KC", "GEN"] && kcLine.status == .live(score: [2, 0], gameNumber: 3))   // carte de KC (suivie avant GEN)
+        #expect(content.team(id: "kc")?.next == .live(kcLine))
+        guard case let .live(genLine)? = content.team(id: "gen")?.next else {
+            Issue.record("GEN n'est pas donnée en direct")
+            return
+        }
+        #expect(genLine.codes == ["GEN", "KC"] && genLine.status == .live(score: [0, 2], gameNumber: 3))   // le petit widget de GEN met GEN à gauche
     }
 
     /// Le calendrier date du match T1 – FLY (masqué) ; le lendemain, rien ne dit qu'il est fini : la ligne « Prochain »
