@@ -1,0 +1,115 @@
+import LoLKit
+import SwiftUI
+
+/// Réglages (spec §5.4) : mode de la Live Activity (utilisé à l'étape 4) et À propos.
+struct SettingsView: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var mode = LiveActivityMode.automatic
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    SectionLabel(text: "Live Activity")
+                    VStack(alignment: .leading, spacing: 10) {
+                        Picker("Live Activity", selection: $mode) {
+                            Text("Automatique").tag(LiveActivityMode.automatic)
+                            Text("Manuelle").tag(LiveActivityMode.manual)
+                        }
+                        .pickerStyle(.segmented)
+                        Text(explanation)
+                            .font(Typo.secondary)
+                            .foregroundStyle(Palette.secondary)
+                        Text("Les Live Activities arrivent dans une prochaine version de Faille ; ce choix est déjà enregistré.")
+                            .font(Typo.secondary)
+                            .foregroundStyle(Palette.secondary)
+                    }
+                    .glassCard(radius: Radius.inner, padding: 14)
+
+                    SectionLabel(text: "Faille")
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        HStack {
+                            Text("À propos").font(Typo.body)
+                            Spacer()
+                            IconView(icon: .arrow, size: 15)
+                                .foregroundStyle(Palette.secondary)
+                        }
+                        .foregroundStyle(Palette.text)
+                        .glassCard(radius: Radius.inner, padding: 14)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(16)
+            }
+            .abyssBackground()
+            .navigationTitle("Réglages")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Fermer") { dismiss() }
+                }
+            }
+        }
+        .onAppear { mode = store.settings.liveActivityMode }
+        .onChange(of: mode) { _, newValue in
+            store.setLiveActivityMode(newValue)
+        }
+    }
+
+    private var explanation: String {
+        switch mode {
+        case .automatic:
+            return "Automatique : chaque match en direct d'une équipe suivie s'affiche tout seul sur l'écran verrouillé (3 au plus)."
+        case .manual:
+            return "Manuelle : rien ne s'affiche tout seul, on épingle un match depuis son écran Détail."
+        }
+    }
+}
+
+/// À propos : source des données, version, stockage.
+struct AboutView: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                block("Faille", "Version \(Self.version)")
+                block("Données", "Matchs, équipes et stats viennent de l'API de lolesports.com (non officielle) et du flux livestats de Riot, avec environ une minute de retard sur le direct. Usage strictement personnel.")
+                block("Stockage", AppGroup.identifier.map { "Groupe d'apps : \($0)" }
+                      ?? "Aucun groupe d'apps : les données restent dans l'appli seule.")
+                Text("Police Sora, sous licence SIL Open Font License.")
+                    .font(Typo.secondary)
+                    .foregroundStyle(Palette.secondary)
+            }
+            .padding(16)
+        }
+        .abyssBackground()
+        .navigationTitle("À propos")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func block(_ title: String, _ text: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(Typo.headline)
+                .foregroundStyle(Palette.text)
+            Text(text)
+                .font(Typo.secondary)
+                .foregroundStyle(Palette.secondary)
+        }
+        .glassCard(radius: Radius.inner, padding: 14)
+    }
+
+    /// « 0.1.0 (1) · LoLKit 0.1.0 »
+    static var version: String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "\(short) (\(build)) · LoLKit \(LoLKitInfo.version)"
+    }
+}
+
+#Preview {
+    SettingsView().environment(AppStore(preview: .standard))
+}
