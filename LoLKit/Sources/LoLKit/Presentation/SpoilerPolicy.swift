@@ -25,6 +25,17 @@ public struct ScoreLine: Sendable, Equatable {
     public let score: [Int]?
     public let status: Status
     public let isMasked: Bool
+
+    public init(matchId: String, leagueName: String, bestOf: Int, teamCodes: [String], score: [Int]?,
+                status: Status, isMasked: Bool) {
+        self.matchId = matchId
+        self.leagueName = leagueName
+        self.bestOf = bestOf
+        self.teamCodes = teamCodes
+        self.score = score
+        self.status = status
+        self.isMasked = isMasked
+    }
 }
 
 public enum Presenter {

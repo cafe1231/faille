@@ -37,6 +37,19 @@ public struct PlayerLine: Sendable, Equatable {
     public let creepScore: Int
     public let gold: Int
 
+    public init(role: String, champion: String, name: String, level: Int, kills: Int, deaths: Int,
+                assists: Int, creepScore: Int, gold: Int) {
+        self.role = role
+        self.champion = champion
+        self.name = name
+        self.level = level
+        self.kills = kills
+        self.deaths = deaths
+        self.assists = assists
+        self.creepScore = creepScore
+        self.gold = gold
+    }
+
     static func lines(_ participants: [FrameParticipant], metadata: [ParticipantMetadata]) -> [PlayerLine] {
         participants.map { participant in
             let meta = metadata.first { $0.participantId == participant.participantId }
@@ -78,6 +91,19 @@ public struct GameSnapshot: Sendable, Equatable {
     public let red: TeamStats
     public let bluePlayers: [PlayerLine]
     public let redPlayers: [PlayerLine]
+
+    public init(gameId: String, phase: GamePhase, timestamp: Date, blueTeamId: String, redTeamId: String,
+                blue: TeamStats, red: TeamStats, bluePlayers: [PlayerLine], redPlayers: [PlayerLine]) {
+        self.gameId = gameId
+        self.phase = phase
+        self.timestamp = timestamp
+        self.blueTeamId = blueTeamId
+        self.redTeamId = redTeamId
+        self.blue = blue
+        self.red = red
+        self.bluePlayers = bluePlayers
+        self.redPlayers = redPlayers
+    }
 
     /// Stats de l'équipe `teamId`, quel que soit son côté.
     public func stats(for teamId: String) -> TeamStats? {

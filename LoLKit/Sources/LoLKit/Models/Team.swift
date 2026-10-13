@@ -18,6 +18,16 @@ public struct Team: Codable, Sendable, Equatable, Identifiable {
     public let status: String?
     public let homeLeague: HomeLeague?
 
+    public init(id: String, slug: String, name: String, code: String, image: String?, status: String?, homeLeague: HomeLeague?) {
+        self.id = id
+        self.slug = slug
+        self.name = name
+        self.code = code
+        self.image = image
+        self.status = status
+        self.homeLeague = homeLeague
+    }
+
     public var isActive: Bool { status == "active" }
 }
 

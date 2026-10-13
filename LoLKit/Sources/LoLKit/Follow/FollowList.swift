@@ -13,6 +13,18 @@ public struct FollowedTeam: Codable, Sendable, Equatable, Identifiable {
     /// Couleur choisie à la main ; prioritaire.
     public var colorOverrideHex: String?
 
+    public init(id: String, code: String, name: String, image: String? = nil, homeLeagueName: String? = nil,
+                spoilerFree: Bool = false, autoColorHex: String? = nil, colorOverrideHex: String? = nil) {
+        self.id = id
+        self.code = code
+        self.name = name
+        self.image = image
+        self.homeLeagueName = homeLeagueName
+        self.spoilerFree = spoilerFree
+        self.autoColorHex = autoColorHex
+        self.colorOverrideHex = colorOverrideHex
+    }
+
     public init(team: Team) {
         id = team.id
         code = team.code

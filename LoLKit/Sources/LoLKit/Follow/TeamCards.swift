@@ -5,6 +5,13 @@ public struct TeamCard: Sendable, Equatable, Identifiable {
     public let next: MatchEvent?
     public let last: MatchEvent?
 
+    public init(team: FollowedTeam, live: MatchEvent?, next: MatchEvent?, last: MatchEvent?) {
+        self.team = team
+        self.live = live
+        self.next = next
+        self.last = last
+    }
+
     public var id: String { team.id }
 }
 
