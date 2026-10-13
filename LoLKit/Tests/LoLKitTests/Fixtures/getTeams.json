@@ -1,0 +1,207 @@
+{
+ "data": {
+  "teams": [
+   {
+    "id": "111692118851466302",
+    "slug": "karmine-corp",
+    "name": "Karmine Corp",
+    "code": "KC",
+    "image": "http://static.lolesports.com/teams/1704714951336_KC.png",
+    "alternativeImage": "http://static.lolesports.com/teams/1704714951337_KC.png",
+    "backgroundImage": null,
+    "status": "active",
+    "homeLeague": {
+     "name": "LEC",
+     "region": "EMEA"
+    },
+    "players": [
+     {
+      "id": "103495716771322725",
+      "summonerName": "Canna",
+      "firstName": "Changdong",
+      "lastName": "Kim",
+      "image": "http://static.lolesports.com/players/1774651372836_canna.png",
+      "role": "top"
+     }
+    ]
+   },
+   {
+    "id": "98767991853197861",
+    "slug": "t1",
+    "name": "T1",
+    "code": "T1",
+    "image": "http://static.lolesports.com/teams/1726801573959_539px-T1_2019_full_allmode.png",
+    "alternativeImage": "http://static.lolesports.com/teams/1726801573959_539px-T1_2019_full_allmode.png",
+    "backgroundImage": "http://static.lolesports.com/teams/1596305556675_T1T1.png",
+    "status": "active",
+    "homeLeague": {
+     "name": "LCK",
+     "region": "CORÉE"
+    },
+    "players": [
+     {
+      "id": "115643633313408264",
+      "summonerName": "Guardian",
+      "firstName": "Taehyo",
+      "lastName": "Seong",
+      "image": "http://static.lolesports.com/players/1769083424311_image6-2026-01-22T130312.532.png",
+      "role": "top"
+     }
+    ]
+   },
+   {
+    "id": "100205573495116443",
+    "slug": "geng",
+    "name": "Gen.G Esports",
+    "code": "GEN",
+    "image": "http://static.lolesports.com/teams/1773829250929_GENGLOGO_GOLD.png",
+    "alternativeImage": "http://static.lolesports.com/teams/1773829250929_GENGLOGO_GOLD.png",
+    "backgroundImage": "https://lolstatic-a.akamaihd.net/esports-assets/production/team/geng-bnm75bf5.png",
+    "status": "active",
+    "homeLeague": {
+     "name": "LCK",
+     "region": "CORÉE"
+    },
+    "players": [
+     {
+      "id": "99871276342168416",
+      "summonerName": "Chovy",
+      "firstName": "Jihun",
+      "lastName": "Jung",
+      "image": "http://static.lolesports.com/players/1778842975847_LCK_GEN_Chovy_F.png",
+      "role": "mid"
+     }
+    ]
+   },
+   {
+    "id": "98767991926151025",
+    "slug": "g2-esports",
+    "name": "G2 Esports",
+    "code": "G2",
+    "image": "http://static.lolesports.com/teams/G2-FullonDark.png",
+    "alternativeImage": "http://static.lolesports.com/teams/G2-FullonLight.png",
+    "backgroundImage": "http://static.lolesports.com/teams/G2.png",
+    "status": "active",
+    "homeLeague": {
+     "name": "LEC",
+     "region": "EMEA"
+    },
+    "players": [
+     {
+      "id": "98767975961872793",
+      "summonerName": "Hans Sama",
+      "firstName": "Steven",
+      "lastName": "Liv",
+      "image": "http://static.lolesports.com/players/1768549994123_HansSama-01.png",
+      "role": "bottom"
+     }
+    ]
+   },
+   {
+    "id": "105515345386578249",
+    "slug": "solary",
+    "name": "Solary",
+    "code": "SLY",
+    "image": "http://static.lolesports.com/teams/LFL-SLY-logo.png",
+    "alternativeImage": "http://static.lolesports.com/teams/LFL-SLY-logo.png",
+    "backgroundImage": null,
+    "status": "active",
+    "homeLeague": {
+     "name": "La Ligue Française",
+     "region": "EMEA"
+    },
+    "players": [
+     {
+      "id": "105830670848411185",
+      "summonerName": "Zicssi",
+      "firstName": "Lanzo",
+      "lastName": "Ciajolo",
+      "image": "http://static.lolesports.com/players/placeholder.png",
+      "role": "jungle"
+     }
+    ]
+   },
+   {
+    "id": "98767991877340524",
+    "slug": "cloud9",
+    "name": "Cloud9 Kia",
+    "code": "C9",
+    "image": "http://static.lolesports.com/teams/1736924120254_C9Kia_IconBlue_Transparent_2000x2000.png",
+    "alternativeImage": "http://static.lolesports.com/teams/1736924120255_C9Kia_IconBlue_Transparent_2000x2000.png",
+    "backgroundImage": "https://lolstatic-a.akamaihd.net/esports-assets/production/team/cloud9-9vnfum22.png",
+    "status": "active",
+    "homeLeague": {
+     "name": "LCS",
+     "region": "AMÉRIQUE DU NORD"
+    },
+    "players": [
+     {
+      "id": "99101098218071815",
+      "summonerName": "Blaber",
+      "firstName": "Robert",
+      "lastName": "Huang",
+      "image": "http://static.lolesports.com/players/1769149391904_AME_LCS26S1_C9_BLABER.png",
+      "role": "jungle"
+     }
+    ]
+   },
+   {
+    "id": "99566405130451785",
+    "slug": "c9-academy",
+    "name": "Cloud9 Challengers",
+    "code": "C9",
+    "image": "http://static.lolesports.com/teams/1592590172107_Cloud9C9-01-FullonDark.png",
+    "alternativeImage": "http://static.lolesports.com/teams/1592590172119_Cloud9C9-03-FullonLight.png",
+    "backgroundImage": "https://lolstatic-a.akamaihd.net/esports-assets/production/team/cloud9-academy-9c5icnbj.png",
+    "status": "active",
+    "homeLeague": null,
+    "players": [
+     {
+      "id": "103524169393525450",
+      "summonerName": "EMENES",
+      "firstName": "Minsu",
+      "lastName": "Jang",
+      "image": "http://static.lolesports.com/players/1674831424167_C9_EMENES.png",
+      "role": "mid"
+     }
+    ]
+   },
+   {
+    "id": "100205572995797818",
+    "slug": "tbd",
+    "name": "TBD",
+    "code": "TBDD",
+    "image": "https://lolstatic-a.akamaihd.net/esports-assets/production/team/tbd-awibzy0k.png",
+    "alternativeImage": "https://lolstatic-a.akamaihd.net/esports-assets/production/team/tbd-frpypqn6.png",
+    "backgroundImage": null,
+    "status": "archived",
+    "homeLeague": {
+     "name": "MSI",
+     "region": "INTERNATIONAL"
+    },
+    "players": []
+   },
+   {
+    "id": "101157821444002947",
+    "slug": "nexus-blitz-pro-a",
+    "name": "Nexus Blitz Blue",
+    "code": "NXB",
+    "image": "https://lolstatic-a.akamaihd.net/esports-assets/production/team/nexus-blitz-pro-a-esrcx58b.png",
+    "alternativeImage": "https://lolstatic-a.akamaihd.net/esports-assets/production/team/nexus-blitz-pro-a-3w3j1cwx.png",
+    "backgroundImage": null,
+    "status": "active",
+    "homeLeague": null,
+    "players": [
+     {
+      "id": "98767991747728851",
+      "summonerName": "Faker",
+      "firstName": "Sanghyeok",
+      "lastName": "Lee",
+      "image": "http://static.lolesports.com/players/1769087499078_LCK_T1_Faker_F.PNG",
+      "role": "mid"
+     }
+    ]
+   }
+  ]
+ }
+}

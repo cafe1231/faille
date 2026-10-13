@@ -1,0 +1,249 @@
+{
+ "data": {
+  "event": {
+   "id": "115565004607949429",
+   "type": "match",
+   "tournament": {
+    "id": "115564797158840434"
+   },
+   "league": {
+    "id": "98767991299243165",
+    "slug": "lcs",
+    "image": "http://static.lolesports.com/leagues/1706356907418_LCSNew-01-FullonDark.png",
+    "name": "LCS"
+   },
+   "match": {
+    "strategy": {
+     "count": 5
+    },
+    "teams": [
+     {
+      "id": "98926509885559666",
+      "name": "Team Liquid Alienware",
+      "code": "TLAW",
+      "image": "http://static.lolesports.com/teams/1769357207762_TLAlienware_Minimal_Bug-White.png",
+      "result": {
+       "gameWins": 3
+      }
+     },
+     {
+      "id": "99566405941863385",
+      "name": "LYON",
+      "code": "LYON",
+      "image": "http://static.lolesports.com/teams/1743717443673_isotypelyon-03.png",
+      "result": {
+       "gameWins": 1
+      }
+     }
+    ],
+    "games": [
+     {
+      "number": 1,
+      "id": "115565004607949430",
+      "state": "completed",
+      "teams": [
+       {
+        "id": "98926509885559666",
+        "side": "blue"
+       },
+       {
+        "id": "99566405941863385",
+        "side": "red"
+       }
+      ],
+      "vods": [
+       {
+        "id": "117385575816563065",
+        "parameter": "8Mdtj9TMxWQ",
+        "locale": "en-US",
+        "mediaLocale": {
+         "locale": "en-US",
+         "englishName": "English (North America)",
+         "translatedName": "English (North America)"
+        },
+        "provider": "youtube",
+        "offset": 0,
+        "firstFrameTime": null,
+        "startMillis": 0,
+        "endMillis": 2641000
+       },
+       {
+        "id": "117385180726296676",
+        "parameter": "VFqde0kBppo",
+        "locale": "es-MX",
+        "mediaLocale": {
+         "locale": "es-MX",
+         "englishName": "Spanish (Mexico)",
+         "translatedName": "Español (Latinoamérica)"
+        },
+        "provider": "youtube",
+        "offset": 0,
+        "firstFrameTime": null,
+        "startMillis": null,
+        "endMillis": null
+       }
+      ]
+     },
+     {
+      "number": 2,
+      "id": "115565004607949431",
+      "state": "completed",
+      "teams": [
+       {
+        "id": "98926509885559666",
+        "side": "blue"
+       },
+       {
+        "id": "99566405941863385",
+        "side": "red"
+       }
+      ],
+      "vods": [
+       {
+        "id": "117385575804553544",
+        "parameter": "8Mdtj9TMxWQ",
+        "locale": "en-US",
+        "mediaLocale": {
+         "locale": "en-US",
+         "englishName": "English (North America)",
+         "translatedName": "English (North America)"
+        },
+        "provider": "youtube",
+        "offset": 0,
+        "firstFrameTime": null,
+        "startMillis": 2646000,
+        "endMillis": 5682000
+       },
+       {
+        "id": "117385180731654301",
+        "parameter": "c_1_5yDlQZ0",
+        "locale": "es-MX",
+        "mediaLocale": {
+         "locale": "es-MX",
+         "englishName": "Spanish (Mexico)",
+         "translatedName": "Español (Latinoamérica)"
+        },
+        "provider": "youtube",
+        "offset": 0,
+        "firstFrameTime": null,
+        "startMillis": null,
+        "endMillis": null
+       }
+      ]
+     },
+     {
+      "number": 3,
+      "id": "115565004607949432",
+      "state": "completed",
+      "teams": [
+       {
+        "id": "98926509885559666",
+        "side": "blue"
+       },
+       {
+        "id": "99566405941863385",
+        "side": "red"
+       }
+      ],
+      "vods": [
+       {
+        "id": "117385575804553545",
+        "parameter": "8Mdtj9TMxWQ",
+        "locale": "en-US",
+        "mediaLocale": {
+         "locale": "en-US",
+         "englishName": "English (North America)",
+         "translatedName": "English (North America)"
+        },
+        "provider": "youtube",
+        "offset": 0,
+        "firstFrameTime": null,
+        "startMillis": 5697000,
+        "endMillis": 8625000
+       },
+       {
+        "id": "117385180728326782",
+        "parameter": "TkyigAN2HHo",
+        "locale": "es-MX",
+        "mediaLocale": {
+         "locale": "es-MX",
+         "englishName": "Spanish (Mexico)",
+         "translatedName": "Español (Latinoamérica)"
+        },
+        "provider": "youtube",
+        "offset": 0,
+        "firstFrameTime": null,
+        "startMillis": null,
+        "endMillis": null
+       }
+      ]
+     },
+     {
+      "number": 4,
+      "id": "115565004607949433",
+      "state": "completed",
+      "teams": [
+       {
+        "id": "98926509885559666",
+        "side": "blue"
+       },
+       {
+        "id": "99566405941863385",
+        "side": "red"
+       }
+      ],
+      "vods": [
+       {
+        "id": "117385575794838498",
+        "parameter": "8Mdtj9TMxWQ",
+        "locale": "en-US",
+        "mediaLocale": {
+         "locale": "en-US",
+         "englishName": "English (North America)",
+         "translatedName": "English (North America)"
+        },
+        "provider": "youtube",
+        "offset": 0,
+        "firstFrameTime": null,
+        "startMillis": 8632000,
+        "endMillis": 11304000
+       },
+       {
+        "id": "117385575794838497",
+        "parameter": "VIYJL65GDYw",
+        "locale": "es-MX",
+        "mediaLocale": {
+         "locale": "es-MX",
+         "englishName": "Spanish (Mexico)",
+         "translatedName": "Español (Latinoamérica)"
+        },
+        "provider": "youtube",
+        "offset": 0,
+        "firstFrameTime": null,
+        "startMillis": null,
+        "endMillis": null
+       }
+      ]
+     },
+     {
+      "number": 5,
+      "id": "115565004607949434",
+      "state": "unneeded",
+      "teams": [
+       {
+        "id": "99566405941863385",
+        "side": "blue"
+       },
+       {
+        "id": "98926509885559666",
+        "side": "red"
+       }
+      ],
+      "vods": []
+     }
+    ]
+   },
+   "streams": []
+  }
+ }
+}

@@ -67,15 +67,17 @@ App Esport en direct/            (dépôt « faille »)
 |---|---|---|
 | Ligues | `esports-api.lolesports.com/persisted/gw/getLeagues?hl=fr-FR` | 1×/jour, cache |
 | Équipes et logos | `…/getTeams?hl=fr-FR` | 1×/jour, cache |
-| Calendrier, résultats | `…/getSchedule?hl=fr-FR&leagueId=…` (ligues des équipes suivies + compétitions internationales, pagination `pageToken`) | toutes les 30 min, et à chaque ouverture |
+| Calendrier, résultats | `…/getSchedule?hl=fr-FR&leagueId=a,b,c` (ligues d'attache des équipes suivies + Mondial, MSI, First Stand ; une seule page, qui couvre environ ±6 semaines) | toutes les 30 min, et à chaque ouverture |
 | Matchs en cours | `…/getLive?hl=fr-FR` | 60 s (le CDN met en cache 60 s) |
 | Games d'un match | `…/getEventDetails?hl=fr-FR&id=…` | à l'ouverture d'un match en direct, puis à chaque changement de game |
-| Stats d'équipe en direct | `feed.lolesports.com/livestats/v1/window/{gameId}?startingTime=…` | 10 s, uniquement pour les games affichées |
-| Stats des joueurs | `feed.lolesports.com/livestats/v1/details/{gameId}?startingTime=…` | 10 s, uniquement sur l'écran Détail |
+| Stats d'équipe **et des joueurs** en direct | `feed.lolesports.com/livestats/v1/window/{gameId}?startingTime=…` (les joueurs : `frames[].*.participants` + `gameMetadata` pour champion, rôle et pseudo) | 10 s, uniquement pour les games affichées |
+| Début d'une game (pour le chrono) | `…/window/{gameId}` **sans** `startingTime` : renvoie les premières frames | une fois par game |
 
 - L'API `persisted/gw` exige l'en-tête `x-api-key` : la clé publique que le site lolesports.com envoie à chaque visiteur. Elle vit dans une seule constante de `LoLKit/API`.
 - `startingTime` est arrondi aux 10 s et décalé d'environ 1 min dans le passé (le flux livestats a ce retard sur le direct).
-- `streams[].statsStatus == "disabled"` ou une 404 « Stats are disabled » sur `window` font passer le match en **score seul**.
+- `frames[].gameState` vaut `in_game`, `paused` ou `finished`.
+- **Stats indisponibles** : `streams[].statsStatus == "disabled"` (vu sur `getLive`) ou une 404 sur `window`. Vérifié le 13/10 : un match aux stats désactivées peut aussi renvoyer `window` en 200 avec des frames à zéro, donc **c'est `statsStatus` qui fait foi**. Le match passe alors en **score seul**.
+- Le flux `livestats/v1/details` n'est pas utilisé en v1 (`window` suffit).
 
 ### 4.2 Modèles (LoLKit)
 
@@ -86,6 +88,10 @@ App Esport en direct/            (dépôt « faille »)
 - `TeamStats` : kills, gold total, tours, inhibiteurs, barons, dragons (liste des types).
 - `PlayerStats` : rôle, champion, niveau, K/D/A, CS, gold.
 - `FollowedTeam` : id d'équipe, ordre de suivi, `spoilerFree: Bool`, `colorOverride: RGB?`.
+
+**Reconnaître une équipe suivie dans un match** : `getLive` et `getEventDetails` donnent l'id des équipes, mais **`getSchedule` ne le donne pas** (seulement nom, code, logo), et plusieurs équipes actives partagent le même code (FUR, DK, HLE…). Règle : on compare l'id quand il est présent, sinon le nom (sans tenir compte de la casse), sinon l'URL du logo. Jamais le code seul. Le nom, le code et le logo des équipes suivies sont rafraîchis chaque jour depuis `getTeams` par id (renommages de sponsor).
+
+**Ligue d'attache** : `getTeams` donne `homeLeague.name`, qui correspond au `name` de `getLeagues` (« La Ligue Française » pour la LFL, « Mondial » pour les Worlds). Environ 40 % des équipes actives n'ont pas de ligue d'attache ; elles sont trouvables par la recherche.
 
 Le décodage est **tolérant** : tout champ non essentiel est optionnel. Un champ inconnu ou absent dégrade l'affichage au lieu de faire échouer le décodage.
 
@@ -241,8 +247,9 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
 
 ## 11. Tests
 
-1. **`swift test` (Windows et CI Linux)** sur `LoLKit`, avec des fixtures JSON réelles :
-   - **Fixtures** : `getLive`, `getSchedule`, `getEventDetails`, `window` (en jeu, fin de game), `details`, `window` en 404 stats désactivées.
+1. **`swift test` (Windows via Docker, et CI Linux)** sur `LoLKit`, avec des fixtures JSON réelles capturées le 13/10/2026 :
+   - **Fixtures** : `getLeagues`, `getTeams` (réduit), `getSchedule` (LEC + Mondial, réduit), `getLive` (match aux stats désactivées), `getEventDetails` (finale LCS terminée), `window` avant la game, en jeu et en fin de game. La 404 est simulée par un faux transport.
+   - **Sur Windows** : Swift tourne dans un conteneur Docker (`swift:6.2`) via `scripts/lolkit.sh`, sans installer Swift pour Windows.
    - **Lecture** : décodage de chaque fixture ; tolérance (champ retiré → pas d'échec).
    - **Calculs** : écart de gold, liste des drakes.
    - **Machine d'états** : `upcoming → inGame(N) → betweenGames → … → finished`.
@@ -251,7 +258,7 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
    - **Couleur** : extraction sur quelques tableaux de pixels types.
 2. **`swift run lolkit live`** (Windows) : liste les matchs en direct et leurs stats depuis la vraie API.
    - `swift run lolkit schedule KC` : prochains matchs d'une équipe.
-   - `swift run lolkit record <gameId>` : enregistre des fixtures.
+   - `swift run lolkit leagues` : liste des ligues.
 3. **CI iOS (macOS)** :
    - Génération XcodeGen, puis compilation de l'appli + extension non signées, puis `.ipa` en artefact.
    - Un test d'aperçu produit des **PNG** de la Live Activity (tous les états), de la Dynamic Island et des widgets, via `ImageRenderer` sur simulateur. Ils sont publiés en artefact pour voir le rendu depuis Windows.
@@ -283,15 +290,17 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
 | **3. Widgets** | 3 widgets écran verrouillé + 2 écran d'accueil | Widgets justes sur l'iPhone, aperçus PNG en CI |
 | **4. Live Activity** | Vues + Dynamic Island, états, auto/manuel, arrière-plan, pas fraîche | Checklist §11.4 passée pendant un match des Worlds |
 
+Plans : `docs/superpowers/plans/2026-10-13-etape-0-chaine.md` et `docs/superpowers/plans/2026-10-13-lolkit.md`. Les plans des étapes 2 à 4 seront écrits après le verdict de l'étape 0 (App Group ou plan B) et une fois les interfaces de LoLKit stabilisées.
+
 ## 14. Risques et points ouverts
 
 - **L'API lolesports change** (des indices montrent une migration vers GraphQL côté site) : toute la dépendance est dans `LoLKit/API`, et les fixtures permettent de voir tout de suite ce qui a cassé.
 - **Sideloadly et l'App Group** : non vérifié, d'où l'étape 0 en premier.
 - **Compte gratuit** : appli à réinstaller tous les 7 jours, 3 applis sideloadées maximum, 10 identifiants d'app par semaine (l'appli en consomme 2).
 - **Retard des stats** : environ 1 min derrière le direct, ce qui est normal pour ce flux.
-- **À confirmer par Dan** :
-  - Ton iPhone est-il sous iOS 26 ou plus ?
-  - Le nom « Faille » et l'identifiant `com.cafe1231.faille` te vont-ils ?
+- **Confirmé par Dan (13/10/2026)** :
+  - iPhone sous iOS 26 : minimum iOS 26.0 retenu.
+  - Nom « Faille » et identifiant `com.cafe1231.faille` retenus.
 
 ## Annexes
 

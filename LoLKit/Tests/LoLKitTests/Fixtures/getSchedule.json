@@ -1,0 +1,285 @@
+{
+ "data": {
+  "schedule": {
+   "pages": {
+    "older": "b2xkZXI6OjExNTU0ODY4MTgwMzQwNjEzOQ==",
+    "newer": "bmV3ZXI6OjExNTY2MDU0MDcyNjA5NTA5Nw=="
+   },
+   "events": [
+    {
+     "startTime": "2026-09-06T15:00:00Z",
+     "state": "completed",
+     "type": "match",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC",
+      "slug": "lec"
+     },
+     "match": {
+      "id": "115548681803406303",
+      "flags": [
+       "hasVod",
+       "isSpoiler"
+      ],
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "image": "http://static.lolesports.com/teams/1704714951336_KC.png",
+        "result": {
+         "outcome": "loss",
+         "gameWins": 1
+        },
+        "record": {
+         "wins": 1,
+         "losses": 2
+        }
+       },
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "image": "http://static.lolesports.com/teams/G2-FullonDark.png",
+        "result": {
+         "outcome": "win",
+         "gameWins": 3
+        },
+        "record": {
+         "wins": 3,
+         "losses": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     }
+    },
+    {
+     "startTime": "2026-09-19T15:00:00Z",
+     "state": "completed",
+     "type": "match",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC",
+      "slug": "lec"
+     },
+     "match": {
+      "id": "115548681803406327",
+      "flags": [
+       "hasVod",
+       "isSpoiler"
+      ],
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "image": "http://static.lolesports.com/teams/1704714951336_KC.png",
+        "result": {
+         "outcome": "loss",
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 1,
+         "losses": 2
+        }
+       },
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "image": "http://static.lolesports.com/teams/1734012609283_MKOI_FullColor_Blue.png",
+        "result": {
+         "outcome": "win",
+         "gameWins": 3
+        },
+        "record": {
+         "wins": 3,
+         "losses": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     }
+    },
+    {
+     "startTime": "2026-09-20T15:00:00Z",
+     "state": "completed",
+     "type": "match",
+     "blockName": "Finale",
+     "league": {
+      "name": "LEC",
+      "slug": "lec"
+     },
+     "match": {
+      "id": "115548681803406333",
+      "flags": [
+       "hasVod",
+       "isSpoiler"
+      ],
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "image": "http://static.lolesports.com/teams/G2-FullonDark.png",
+        "result": {
+         "outcome": "win",
+         "gameWins": 3
+        },
+        "record": {
+         "wins": 3,
+         "losses": 0
+        }
+       },
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "image": "http://static.lolesports.com/teams/1734012609283_MKOI_FullColor_Blue.png",
+        "result": {
+         "outcome": "loss",
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 3,
+         "losses": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     }
+    },
+    {
+     "startTime": "2026-10-15T18:00:00Z",
+     "state": "unstarted",
+     "type": "match",
+     "blockName": "Play-ins",
+     "league": {
+      "name": "Mondial",
+      "slug": "worlds"
+     },
+     "match": {
+      "id": "115660588583171786",
+      "flags": [],
+      "teams": [
+       {
+        "name": "Cloud9 Kia",
+        "code": "C9",
+        "image": "http://static.lolesports.com/teams/1736924120254_C9Kia_IconBlue_Transparent_2000x2000.png",
+        "result": {
+         "outcome": null,
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 0,
+         "losses": 0
+        }
+       },
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "image": "http://static.lolesports.com/teams/1704714951336_KC.png",
+        "result": {
+         "outcome": null,
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 0,
+         "losses": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     }
+    },
+    {
+     "startTime": "2026-10-15T23:00:00Z",
+     "state": "unstarted",
+     "type": "match",
+     "blockName": "Play-ins",
+     "league": {
+      "name": "Mondial",
+      "slug": "worlds"
+     },
+     "match": {
+      "id": "115660588583040710",
+      "flags": [],
+      "teams": [
+       {
+        "name": "FURIA",
+        "code": "FUR",
+        "image": "http://static.lolesports.com/teams/FURIA---black.png",
+        "result": {
+         "outcome": null,
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 0,
+         "losses": 0
+        }
+       },
+       {
+        "name": "MVK Esports",
+        "code": "MVK",
+        "image": "http://static.lolesports.com/teams/1767089709161_White_Logo.png",
+        "result": {
+         "outcome": null,
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 0,
+         "losses": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     }
+    },
+    {
+     "startTime": "2026-10-16T18:00:00Z",
+     "state": "unstarted",
+     "type": "match",
+     "blockName": "Play-ins",
+     "league": {
+      "name": "Mondial",
+      "slug": "worlds"
+     },
+     "match": {
+      "id": "115660588583171790",
+      "flags": [],
+      "teams": [
+       {
+        "name": "TBD",
+        "code": "TBD",
+        "image": "https://static.lolesports.com/teams/team-tbd.png",
+        "result": null,
+        "record": null
+       },
+       {
+        "name": "TBD",
+        "code": "TBD",
+        "image": "https://static.lolesports.com/teams/team-tbd.png",
+        "result": null,
+        "record": null
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     }
+    }
+   ]
+  }
+ }
+}

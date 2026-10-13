@@ -1,0 +1,165 @@
+{
+ "data": {
+  "schedule": {
+   "events": [
+    {
+     "id": "117133830110912111",
+     "startTime": "2026-10-13T09:00:00Z",
+     "state": "inProgress",
+     "type": "match",
+     "blockName": "Quarts de finale",
+     "league": {
+      "id": "117126995932274206",
+      "slug": "demacia_cup",
+      "name": "DCGI",
+      "image": "http://static.lolesports.com/leagues/1788253732774_94x-81.png",
+      "priority": 1,
+      "displayPriority": {
+       "position": 0,
+       "status": "not_selected"
+      }
+     },
+     "tournament": {
+      "id": "117133773242499009"
+     },
+     "match": {
+      "id": "117133830110912111",
+      "teams": [
+       {
+        "id": "105505619546859895",
+        "name": "HANJIN BRION",
+        "slug": "fredit-brion",
+        "code": "BRO",
+        "image": "http://static.lolesports.com/teams/1716454325887_Nowyprojekt.png",
+        "result": {
+         "outcome": null,
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 0,
+         "losses": 0
+        }
+       },
+       {
+        "id": "99566404846951820",
+        "name": "LGD GAMING",
+        "slug": "lgd-gaming",
+        "code": "LGD",
+        "image": "http://static.lolesports.com/teams/LGD-FullonDark-1.png",
+        "result": {
+         "outcome": null,
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 0,
+         "losses": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      },
+      "games": [
+       {
+        "number": 1,
+        "id": "117133830110912112",
+        "state": "inProgress",
+        "teams": [
+         {
+          "id": "105505619546859895",
+          "side": "blue"
+         },
+         {
+          "id": "99566404846951820",
+          "side": "red"
+         }
+        ],
+        "vods": []
+       },
+       {
+        "number": 2,
+        "id": "117133830110912113",
+        "state": "unstarted",
+        "teams": [
+         {
+          "id": "105505619546859895",
+          "side": "blue"
+         },
+         {
+          "id": "99566404846951820",
+          "side": "red"
+         }
+        ],
+        "vods": []
+       },
+       {
+        "number": 3,
+        "id": "117133830110912114",
+        "state": "unstarted",
+        "teams": [
+         {
+          "id": "99566404846951820",
+          "side": "blue"
+         },
+         {
+          "id": "105505619546859895",
+          "side": "red"
+         }
+        ],
+        "vods": []
+       },
+       {
+        "number": 4,
+        "id": "117133830110912115",
+        "state": "unstarted",
+        "teams": [
+         {
+          "id": "105505619546859895",
+          "side": "blue"
+         },
+         {
+          "id": "99566404846951820",
+          "side": "red"
+         }
+        ],
+        "vods": []
+       },
+       {
+        "number": 5,
+        "id": "117133830110912116",
+        "state": "unstarted",
+        "teams": [
+         {
+          "id": "99566404846951820",
+          "side": "blue"
+         },
+         {
+          "id": "105505619546859895",
+          "side": "red"
+         }
+        ],
+        "vods": []
+       }
+      ]
+     },
+     "streams": [
+      {
+       "parameter": "aflol",
+       "locale": "ko-KR",
+       "mediaLocale": {
+        "locale": "ko-KR",
+        "englishName": "Korean (Korea)",
+        "translatedName": "한국어"
+       },
+       "provider": "afreecatv",
+       "countries": [],
+       "offset": 0,
+       "statsStatus": "disabled"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}
