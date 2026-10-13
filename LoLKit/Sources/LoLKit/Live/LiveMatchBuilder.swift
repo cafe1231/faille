@@ -31,6 +31,9 @@ public enum LiveMatchBuilder {
     ///   - statsDisabled: `MatchEvent.statsDisabled` ou 404 sur le flux.
     ///   - follows: équipes suivies ; l'anti-spoiler est appliqué ici (`SpoilerPolicy`), jamais laissé à l'appelant.
     ///   - revealed: ids de matchs que l'utilisateur a choisi de révéler.
+    ///   - now: heure de réception de la frame : ancre du chrono (et date d'arrêt d'une game en pause ou finie).
+    ///   - updatedAt: dernière relecture réussie des données qui nourrissent cet état (spec §4.3) ; c'est elle qui donne
+    ///     `staleDate`. nil : `now`.
     public static func state(
         details: EventDetails,
         snapshot: GameSnapshot?,
@@ -38,7 +41,8 @@ public enum LiveMatchBuilder {
         statsDisabled: Bool,
         follows: FollowList,
         revealed: Set<String>,
-        now: Date
+        now: Date,
+        updatedAt: Date? = nil
     ) -> LiveMatchState {
         let teams = details.match.teams
         let wins = teams.map(\.gameWins)
@@ -99,7 +103,7 @@ public enum LiveMatchBuilder {
             statsAvailable: !statsDisabled,
             spoilerFree: false,
             winnerCode: phase == .finished ? Presenter.winnerCode(teams) : nil,
-            updatedAt: now
+            updatedAt: updatedAt ?? now
         )
         let masked = SpoilerPolicy.isMasked(teams, matchId: details.id, follows: follows, revealed: revealed)
         return masked ? state.masked() : state

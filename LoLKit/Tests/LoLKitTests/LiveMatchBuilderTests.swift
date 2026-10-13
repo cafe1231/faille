@@ -242,4 +242,18 @@ import Testing
         #expect(stateBytes < 1024)
         #expect(stateBytes + attributeBytes < 4096)
     }
+
+    /// Étape 4 : `updatedAt` est la dernière relecture réussie (d'où `staleDate`) ; `now` reste l'ancre du chrono.
+    @Test func updatedAtIsTheLastGoodRefreshNotTheClockAnchor() throws {
+        let refreshed = now.addingTimeInterval(-50)
+        let details = makeDetails(wins: [0, 0], games: [(1, game1, .inProgress)])
+        let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_ingame"),
+                                           firstFrameTime: date("2026-10-04T20:18:26.892Z"),
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now,
+                                           updatedAt: refreshed)
+        #expect(state.updatedAt == refreshed)
+        #expect(state.staleDate == refreshed.addingTimeInterval(LiveMatchState.staleAfter))
+        let clock = try #require(state.gameClockStart)
+        #expect(abs(clock.timeIntervalSince(now.addingTimeInterval(-1202.701))) < 0.01)
+    }
 }

@@ -65,6 +65,8 @@ public struct LiveMatchState: Codable, Sendable, Equatable, Hashable {
     public var statsAvailable: Bool
     public var spoilerFree: Bool
     public var winnerCode: String?
+    /// Dernière relecture réussie des données qui ont produit cet état (ni l'heure du calcul, ni l'ancre du chrono) :
+    /// `staleDate` en découle. Format inchangé dans le contrat (secondes depuis 2001).
     public var updatedAt: Date
 
     public init(phase: Phase, seriesScore: [Int]?, gameNumber: Int?, gameClockStart: Date?, gameClockStoppedAt: Date?,
