@@ -221,6 +221,7 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
 - Un match masqué n'affiche :
   - ni score de série, ni numéro de game, ni stats, ni vainqueur, ni résultat dans « Dernier » ;
   - que « En direct », « Terminé » ou « À venir », avec la date. Entre deux games, un match masqué reste « En direct » (sinon le nombre de pauses trahit la longueur de la série).
+- **Le prochain match ne doit rien trahir non plus** : tant que le dernier match en direct ou terminé d'une équipe est masqué et non révélé, la ligne « Prochain » affiche « Prochain · masqué » (qu'un prochain match existe ou non), et l'équipe ne compte pas dans « N à venir » ni dans le tri des cartes par prochain match (`Presenter.nextLine`). Sinon une élimination ou une qualification se lirait sur la carte.
 - Partout, sans exception : appli, Live Activity, Dynamic Island, widgets.
 - **Révéler** : dans l'appli seulement, « toucher pour révéler » sur la carte ou le Détail. La révélation est mémorisée pour ce match. Live Activity et widgets suivent cette révélation à leur prochaine mise à jour.
 - La règle est une **fonction unique** de `LoLKit/Presentation` (`SpoilerPolicy.isMasked`) ; `Presenter.scoreLine` (appli, widgets) et `LiveMatchBuilder.state` (Live Activity) l'appellent eux-mêmes à partir des équipes suivies et des matchs révélés. Toutes les surfaces passent par elles.
@@ -228,7 +229,7 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
 ## 9. Direction artistique (reprise d'Échap Hub)
 
 - **Abysse** : fond `#0b1020`, nappe bleue `rgba(60,140,255,0.18)` en haut à gauche, nappe turquoise `rgba(0,220,200,0.14)` en bas à droite. Texte `#e9eefb`, secondaire `#94a0bf`, accent `#6fd3ff`.
-- **Verre** : Liquid Glass natif d'iOS 26 pour les cartes et la barre de navigation, réglé pour retrouver Échap (arête lumineuse en haut, ombre profonde). Coins 28 pt (cartes) et 22 pt (éléments internes).
+- **Verre** : Liquid Glass natif d'iOS 26 pour la barre d'onglets et les boutons de barre d'outils ; cartes et bandeau en verre « matière » qui reproduit Échap (`.ultraThinMaterial` + dégradé de la teinte + reflet en haut + bordure lumineuse + ombre profonde). Le Liquid Glass sur les cartes réfractait le contenu juste au-dessus d'elles (écho visible, étape 2). Coins 28 pt (cartes) et 22 pt (éléments internes).
 - **Sora** 400/500/600/700, embarquée dans l'appli et l'extension. Titres 32 pt, graisse 700, interlettrage -0,04 em ; corps 15 pt ; secondaire 12 pt ; étiquettes 11 pt en capitales espacées.
 - **Icônes** au trait (1,8 pt, grille 24), jamais d'emoji. Jeu dédié : kills (épées), gold (pièces), tour, inhibiteur (cristal), drake (flamme), baron (hexagone), en direct (ondes), anti-spoiler (œil barré), suivre (étoile), réglages, recherche.
 - **Vitrail : une teinte = une équipe suivie.** Carte teintée : dégradé à 160° de la couleur de l'équipe vers `rgba(255,255,255,0.03)`, point lumineux dans l'en-tête. Équipes non suivies : verre neutre. La nature d'une info se lit à son icône, jamais à sa couleur. « En direct » est donc une icône + du texte, pas du rouge.
