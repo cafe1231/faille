@@ -1,0 +1,5 @@
+# Fins de ligne LF partout : le code est compilé sur macOS/Linux en CI
+* text=auto eol=lf
+*.png binary
+*.ttf binary
+*.otf binary

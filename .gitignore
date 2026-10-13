@@ -1,0 +1,32 @@
+# Outils
+.superpowers/
+research_notes/
+
+# Projet Xcode généré par XcodeGen depuis project.yml
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+build/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Artefacts
+*.ipa
+*.app
+*.dSYM*
+
+# Secrets : jamais dans le dépôt
+*.p8
+*.p12
+*.mobileprovision
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# Systèmes
+.DS_Store
+Thumbs.db
