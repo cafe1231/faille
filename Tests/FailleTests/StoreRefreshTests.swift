@@ -263,11 +263,13 @@ struct StoreRefreshTests {
         })
         let store = AppStore(transport: transport, files: files)
         await store.refreshDue(opening: true)
+        await store.updateColorsIfNeeded()   // la passe des couleurs vit hors du cycle (étape 4)
         #expect(store.follows.team(id: "a")?.autoColorHex == nil) // en échec : réessayé plus tard
         #expect(store.follows.team(id: "b")?.autoColorHex == RGB.accent.hex) // 404 sur son logo : accent, traitée
         #expect(!store.isFailing) // un logo n'est pas une panne de l'API
 
         await store.refreshDue(opening: false)
+        await store.updateColorsIfNeeded()
         let brokenRequests = await transport.requests.filter { $0.absoluteString.contains("broken.png") }
         #expect(brokenRequests.count == 1)
     }

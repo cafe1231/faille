@@ -49,6 +49,9 @@ final class AppStore {
     @ObservationIgnored private var matchLeftLive = false
     @ObservationIgnored private var colorsDirty = true
     @ObservationIgnored private var isRefreshing = false
+    /// Tâches lancées par une action de l'utilisateur (suivre, masquer, révéler, épingler…) : elles vivent avec la scène
+    /// et sont annulées quand la boucle du premier plan s'arrête (`endScene`), au lieu de continuer en arrière-plan.
+    @ObservationIgnored private var sceneTasks: [UUID: Task<Void, Never>] = [:]
     /// `follows.json` / `settings.json` existent mais n'ont pas pu être lus au lancement (erreur d'E/S, par exemple
     /// fichier verrouillé) : les valeurs par défaut ne doivent jamais être écrites par-dessus. Avant la première
     /// modification de l'utilisateur, on retente la lecture.
@@ -185,16 +188,20 @@ final class AppStore {
 
     /// État d'un match en direct pour sa carte : anti-spoiler, phase, score, chrono et stats viennent de LoLKit.
     func liveState(for event: MatchEvent) -> LiveMatchState {
-        state(details: EventDetails(event: event), statsDisabled: event.statsDisabled)
+        state(details: EventDetails(event: event), statsDisabled: event.statsDisabled, updatedAt: lastSuccess[.live])
     }
 
     /// Même chose depuis `getEventDetails` (écran Détail) ; nil tant que les détails ne sont pas chargés.
     func detailState(matchId: String) -> LiveMatchState? {
         guard let loaded = self.details[matchId] else { return nil }
-        return state(details: loaded, statsDisabled: loaded.statsDisabled || event(id: matchId)?.statsDisabled == true)
+        return state(details: loaded, statsDisabled: loaded.statsDisabled || event(id: matchId)?.statsDisabled == true,
+                     updatedAt: lastSuccess[.live])
     }
 
-    private func state(details: EventDetails, statsDisabled: Bool) -> LiveMatchState {
+    /// État d'un match par LoLKit. Deux heures distinctes (spec §4.3) : l'heure de réception de la frame, ancre du
+    /// chrono ; et `updatedAt`, dernière relecture réussie de la donnée (le direct, ou le calendrier), dont découle
+    /// `staleDate` (nil : l'heure du calcul).
+    func state(details: EventDetails, statsDisabled: Bool, updatedAt: Date?) -> LiveMatchState {
         let game = details.currentGame
         let unavailable = game.map { statsUnavailable.contains($0.id) } ?? false
         return LiveMatchBuilder.state(
@@ -205,7 +212,8 @@ final class AppStore {
             follows: follows,
             revealed: settings.revealedMatchIds,
             // Heure de réception de la frame : le chrono démarre au bon endroit et tourne ensuite tout seul.
-            now: game.flatMap { snapshotDates[$0.id] } ?? Date()
+            now: game.flatMap { snapshotDates[$0.id] } ?? Date(),
+            updatedAt: updatedAt
         )
     }
 
@@ -239,7 +247,7 @@ final class AppStore {
         }
         saveFollows()
         // Une équipe d'une autre ligue change les ligues du calendrier : la politique le voit tout de suite.
-        Task { await refreshDue(opening: false) }
+        runWithScene { await self.refreshDue(opening: false) }
     }
 
     func unfollow(id: String) {
@@ -253,7 +261,7 @@ final class AppStore {
         syncFollowsBeforeChange()
         follows.setSpoilerFree(on, id: id)
         saveFollows()
-        Task { await refreshLiveStats() }
+        runWithScene { await self.refreshLiveStats() }
     }
 
     /// Couleur choisie à la main ; nil = revenir à la couleur tirée du logo.
@@ -268,7 +276,7 @@ final class AppStore {
         syncSettingsBeforeChange()
         settings.revealedMatchIds.insert(matchId)
         saveSettings()
-        Task { await refreshLiveStats() }
+        runWithScene { await self.refreshLiveStats() }
     }
 
     /// Réglage « Live Activity » (spec §5.4), utilisé à l'étape 4.
@@ -280,14 +288,62 @@ final class AppStore {
 
     // MARK: Rafraîchissements
 
-    /// Boucle du premier plan, lancée par `.task(id: scenePhase)` : s'arrête, requêtes comprises, quand la tâche est annulée.
+    /// Boucle du premier plan, lancée par `.task(id: scenePhase)` : s'arrête, requêtes comprises, quand la tâche est
+    /// annulée. Deux boucles en parallèle : les données de l'API, et les couleurs tirées des logos — hors du cycle gardé
+    /// par `isRefreshing`, un hôte de logos lent ne retient plus aucun rafraîchissement. Quand la scène quitte le premier
+    /// plan, les tâches lancées par les actions de l'utilisateur s'arrêtent avec elle.
     func poll() async {
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await self.refreshLoop() }
+            group.addTask { await self.colorLoop() }
+        }
+        endScene()
+    }
+
+    private func refreshLoop() async {
         var opening = true
         while !Task.isCancelled {
             await refreshDue(opening: opening)
             opening = false
             try? await Task.sleep(for: .seconds(RefreshPolicy.tick))
         }
+    }
+
+    /// Un tour d'attente d'abord : le premier cycle a alors dit si l'API répond (`isFailing`).
+    private func colorLoop() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(RefreshPolicy.tick))
+            await updateColorsIfNeeded()
+        }
+    }
+
+    /// Couleurs d'équipe à (re)calculer depuis les logos (spec §9) : au premier plan seulement, jamais pendant un réveil
+    /// en arrière-plan (le temps accordé par iOS est compté), jamais quand l'API est en panne.
+    func updateColorsIfNeeded() async {
+        guard !isPreview, colorsDirty, !isFailing, !Task.isCancelled else { return }
+        await updateTeamColors()
+    }
+
+    /// Lance le travail d'une action de l'utilisateur, lié à la scène (annulé par `endScene`).
+    func runWithScene(_ work: @escaping @MainActor @Sendable () async -> Void) {
+        let id = UUID()
+        sceneTasks[id] = Task {
+            await work()
+            self.sceneTasks[id] = nil
+        }
+    }
+
+    /// La scène quitte le premier plan : les tâches des actions s'arrêtent.
+    func endScene() {
+        for task in sceneTasks.values {
+            task.cancel()
+        }
+        sceneTasks.removeAll()
+    }
+
+    /// Tâches d'action en cours (tests).
+    var sceneTaskCount: Int {
+        sceneTasks.count
     }
 
     /// Tirer pour rafraîchir : calendrier et direct relus, comme à l'ouverture, même juste après un échec ; les
@@ -340,7 +396,6 @@ final class AppStore {
         }
         // Un direct qui vient d'échouer n'est pas une raison de demander les stats de ses matchs (ils échoueraient aussi).
         if liveFetched { await refreshLiveStats() }
-        if colorsDirty && !isFailing && !Task.isCancelled { await updateTeamColors() }
     }
 
     private var wantedLeagueIds: [String] {

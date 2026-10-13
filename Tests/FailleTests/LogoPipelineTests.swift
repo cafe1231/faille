@@ -35,6 +35,7 @@ struct LogoPipelineTests {
         })
         let store = AppStore(transport: transport, files: files)
         await store.refreshDue(opening: true)
+        await store.updateColorsIfNeeded()   // la passe des couleurs vit hors du cycle (étape 4)
 
         // Téléchargé en https (l'http est refusé par ATS) ; nommé d'après la chaîne brute de l'API (R-T2).
         let requested = await transport.requests.map(\.absoluteString)
@@ -54,6 +55,7 @@ struct LogoPipelineTests {
 
         // Le logo est déjà là : le cycle suivant ne le retélécharge pas.
         await store.refreshDue(opening: false)
+        await store.updateColorsIfNeeded()
         #expect(await transport.requests.map(\.absoluteString).filter { $0 == secure }.count == 1)
     }
 
@@ -65,6 +67,7 @@ struct LogoPipelineTests {
         ]), to: .follows)
         let store = AppStore(transport: ScriptedTransport(), files: files) // 404 sur les logos
         await store.refreshDue(opening: true)
+        await store.updateColorsIfNeeded()
         #expect(store.follows.teams.first?.autoColorHex == RGB.accent.hex)
         #expect(store.logoFile(for: raw) == nil)
     }
