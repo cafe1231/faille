@@ -17,12 +17,19 @@ public struct TeamCard: Sendable, Equatable, Identifiable {
 
 public enum TeamCards {
     /// Cartes triées : équipes en direct d'abord (ordre de suivi), puis par date du prochain match, puis ordre de suivi.
-    public static func build(follows: FollowList, schedule: [MatchEvent], live: [MatchEvent]) -> [TeamCard] {
-        let liveIds = Set(live.map(\.id))
+    /// - Parameter live: réponse de `getLive`, ou `nil` si elle est inconnue (erreur réseau). Connue, elle fait seule foi :
+    ///   un match `inProgress` du calendrier absent de `live` n'est pas en direct (calendrier périmé). Inconnue,
+    ///   un match `inProgress` du calendrier peut servir de repli.
+    public static func build(follows: FollowList, schedule: [MatchEvent], live: [MatchEvent]?) -> [TeamCard] {
+        let liveIds = Set((live ?? []).map(\.id))
         let cards = follows.teams.map { team -> TeamCard in
             let involves: (MatchEvent) -> Bool = { event in event.match.teams.contains { $0.isSame(as: team) } }
-            let liveMatch = live.first(where: involves)
-                ?? schedule.first { involves($0) && $0.state == .inProgress }
+            let liveMatch: MatchEvent?
+            if let live {
+                liveMatch = live.first(where: involves)
+            } else {
+                liveMatch = schedule.first { involves($0) && $0.state == .inProgress }
+            }
             let next = schedule
                 .filter { involves($0) && $0.state == .unstarted && !liveIds.contains($0.id) }
                 .min { $0.startTime < $1.startTime }

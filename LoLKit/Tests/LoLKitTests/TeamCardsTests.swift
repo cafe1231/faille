@@ -50,8 +50,18 @@ import Testing
     @Test func scheduleInProgressIsUsedWhenLiveIsUnavailable() throws {
         let list = try follows(["KC"])
         let inProgress = makeEvent(id: "m", state: .inProgress, teams: [makeTeam("KC", name: "Karmine Corp"), makeTeam("C9")])
-        let card = try #require(TeamCards.build(follows: list, schedule: [inProgress], live: []).first)
+        let card = try #require(TeamCards.build(follows: list, schedule: [inProgress], live: nil).first)
         #expect(card.live?.id == "m")
+    }
+
+    @Test func staleInProgressIsIgnoredWhenLiveIsKnown() throws {
+        // `getLive` répond et ne contient pas ce match : le calendrier est périmé, le match n'est plus en direct.
+        let list = try follows(["KC"])
+        let inProgress = makeEvent(id: "m", state: .inProgress, teams: [makeTeam("KC", name: "Karmine Corp"), makeTeam("C9")])
+        let card = try #require(TeamCards.build(follows: list, schedule: [inProgress], live: []).first)
+        #expect(card.live == nil)
+        #expect(card.next == nil)
+        #expect(card.last == nil)
     }
 
     @Test func teamsWithNextMatchAreSortedByDate() throws {
