@@ -1,17 +1,6 @@
 import LoLKit
 import SwiftUI
 
-/// Texte de la ligne « Dernier » d'une carte : « Dernier · GEN 3 – 0 HLE » ; sans score (masqué, spec §8) :
-/// « Dernier · T1 vs GEN · Terminé · sam. 11 oct. · 09:00 » (ni résultat ni vainqueur : seulement « Terminé » et la date).
-/// Le score vient de `ScoreLine` (donc de `SpoilerPolicy`) ; `order` est l'ordre d'affichage (équipe de la carte à gauche).
-func lastRowText(_ line: ScoreLine, order: [Int], date: String) -> String {
-    let codes = reorder(line.teamCodes, order) ?? line.teamCodes
-    if let score = line.score.flatMap({ reorder($0, order) }), score.count == 2, codes.count == 2 {
-        return "Dernier · \(codes[0]) \(score[0]) – \(score[1]) \(codes[1])"
-    }
-    return "Dernier · \(codes.joined(separator: " vs ")) · Terminé · \(date)"
-}
-
 /// Carte Vitrail d'une équipe suivie (spec §5.1) : en direct, prochain, dernier.
 /// Chaque match est un lien vers son Détail ; l'anti-spoiler (§8) vient de LoLKit.
 struct TeamCardView: View {
@@ -136,11 +125,11 @@ struct TeamCardView: View {
         .buttonStyle(.plain)
     }
 
-    /// « Dernier · GEN 3 – 0 HLE » ; masqué : « Dernier · T1 vs GEN · sam. 11 oct. · 09:00 · masqué » (aucun résultat, spec §8).
+    /// « Dernier · GEN 3 – 0 HLE » ; masqué : « Dernier · T1 vs GEN · Terminé · sam. 11 oct. · 09:00 » (aucun résultat, spec §8).
     private func lastRow(_ event: MatchEvent) -> some View {
         let line = store.scoreLine(event)
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
-        let text = lastRowText(line, order: order, date: Format.matchDate(event.startTime))
+        let text = Format.lastRow(line, order: order, date: Format.matchDate(event.startTime))
         return NavigationLink(value: MatchRoute(matchId: event.id)) {
             Text(text)
                 .font(Typo.secondary)

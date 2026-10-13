@@ -97,6 +97,27 @@ extension Format {
         }
     }
 
+    /// Seul état qu'affiche un match masqué (spec §8) : « En direct » (entre deux games aussi : le nombre de pauses
+    /// trahirait la longueur de la série), « Terminé » ou « À venir ».
+    public static func maskedStatus(_ phase: LiveMatchState.Phase) -> String {
+        switch phase {
+        case .inGame, .betweenGames: return "En direct"
+        case .finished: return "Terminé"
+        case .upcoming: return "À venir"
+        }
+    }
+
+    /// Ligne « Dernier » d'une carte (spec §5.1, §8) : « Dernier · GEN 3 – 0 HLE » ; sans score (match masqué) :
+    /// « Dernier · T1 vs GEN · Terminé · sam. 11 oct. · 09:00 » — ni résultat ni vainqueur, seulement l'état et la date.
+    /// Le score vient de `ScoreLine` (donc de `SpoilerPolicy`) ; `order` est l'ordre d'affichage (`displayOrder`).
+    public static func lastRow(_ line: ScoreLine, order: [Int], date: String) -> String {
+        let codes = reorder(line.teamCodes, order) ?? line.teamCodes
+        if let score = line.score.flatMap({ reorder($0, order) }), score.count == 2, codes.count == 2 {
+            return "Dernier · \(codes[0]) \(score[0]) – \(score[1]) \(codes[1])"
+        }
+        return "Dernier · \(codes.joined(separator: " vs ")) · \(maskedStatus(.finished)) · \(date)"
+    }
+
     static func twoDigits(_ value: Int) -> String {
         value < 10 ? "0\(value)" : "\(value)"
     }

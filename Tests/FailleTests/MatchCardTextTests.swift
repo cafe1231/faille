@@ -33,7 +33,7 @@ struct MatchCardTextTests {
         let line = store.scoreLine(event)
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
         // Ni le score de série (« 3 – 1 ») ni son tiret : le seul chiffre permis est celui de « T1 ».
-        let text = lastRowText(line, order: order, date: "DATE")
+        let text = Format.lastRow(line, order: order, date: "DATE")
         #expect(text == "Dernier · T1 vs GEN · Terminé · DATE")
         #expect(!text.contains("3") && !text.contains("–"))
     }
@@ -88,8 +88,8 @@ struct MatchCardTextTests {
         let store = store(with: [event])
         store.reveal(matchId: event.id)
         let card = try #require(store.cards.first { $0.team.code == "T1" })
-        let text = lastRowText(store.scoreLine(event), order: store.follows.displayOrder(event.match.teams, preferring: card.team),
-                               date: "DATE")
+        let text = Format.lastRow(store.scoreLine(event), order: store.follows.displayOrder(event.match.teams, preferring: card.team),
+                                  date: "DATE")
         #expect(text == "Dernier · T1 3 – 1 GEN")
     }
 
@@ -100,7 +100,7 @@ struct MatchCardTextTests {
         let card = try #require(store.cards.first { $0.team.code == "GEN" })
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
         #expect(order == [1, 0])
-        #expect(lastRowText(store.scoreLine(event), order: order, date: "DATE") == "Dernier · GEN 3 – 0 HLE")
+        #expect(Format.lastRow(store.scoreLine(event), order: order, date: "DATE") == "Dernier · GEN 3 – 0 HLE")
     }
 }
 

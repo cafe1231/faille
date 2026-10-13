@@ -93,6 +93,17 @@ import Testing
                 == .hidden)
     }
 
+    @Test func nextMatchAgainstASpoilerFreeTeamIsHiddenOnTheOtherTeamsCard() throws {
+        let list = try follows()
+        let gen = try #require(list.teams.first { $0.code == "GEN" })
+        let next = makeEvent(id: "gen-t1", state: .unstarted, start: "2026-10-20T10:00:00Z",
+                             teams: [makeTeam("GEN", name: gen.name), makeTeam("T1", id: Self.t1Id)])
+        let card = TeamCard(team: gen, live: nil, next: next, last: nil)
+        #expect(Presenter.nextLine(for: card, follows: list, revealed: []) == .hidden)
+        #expect(Format.cardsSubtitle([card], follows: list, revealed: []) == "0 en direct · 0 à venir")
+        #expect(Presenter.nextLine(for: card, follows: list, revealed: ["gen-t1"]) == .match(next))
+    }
+
     // MARK: Tri et compte
 
     @Test func maskedCardIsNotOrderedByItsNextMatch() throws {

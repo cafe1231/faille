@@ -20,8 +20,9 @@ public struct TeamCard: Sendable, Equatable, Identifiable {
 
 public enum TeamCards {
     /// Cartes triées : équipes en direct d'abord (ordre de suivi), puis par date du prochain match, puis ordre de suivi.
-    /// Anti-spoiler (spec §8) : une carte dont la ligne « Prochain » est masquée (`Presenter.nextLine` = `.hidden`) est triée
-    /// comme une carte sans prochain match, pour que l'ordre ne trahisse pas l'existence de ce match.
+    /// Anti-spoiler (spec §8) : une carte dont la ligne « Prochain » est masquée (`Presenter.nextLine` = `.hidden` : dernier
+    /// match masqué, ou prochain match contre une autre équipe suivie en anti-spoiler) est triée comme une carte sans
+    /// prochain match, pour que l'ordre ne trahisse pas l'existence de ce match.
     /// - Parameter live: réponse de `getLive`, ou `nil` si elle est inconnue (erreur réseau). Connue, elle fait seule foi :
     ///   un match `inProgress` du calendrier absent de `live` n'est pas en direct (calendrier périmé). Inconnue,
     ///   un match `inProgress` du calendrier peut servir de repli.

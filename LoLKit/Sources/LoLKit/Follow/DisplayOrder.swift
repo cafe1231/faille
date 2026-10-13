@@ -18,3 +18,10 @@ extension FollowList {
         }
     }
 }
+
+/// Remet des valeurs d'un match (codes, score, stats) dans l'ordre d'affichage donné par `displayOrder` ;
+/// nil si les tailles ne correspondent pas ou si un index sort du tableau.
+public func reorder<T>(_ values: [T], _ order: [Int]) -> [T]? {
+    guard values.count == order.count, order.allSatisfy({ values.indices.contains($0) }) else { return nil }
+    return order.map { values[$0] }
+}

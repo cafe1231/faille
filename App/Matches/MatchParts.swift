@@ -1,12 +1,6 @@
 import LoLKit
 import SwiftUI
 
-/// Remet des valeurs d'un match (score, stats) dans l'ordre d'affichage ; nil si les tailles ne correspondent pas.
-func reorder<T>(_ values: [T], _ order: [Int]) -> [T]? {
-    guard values.count == order.count, order.allSatisfy({ values.indices.contains($0) }) else { return nil }
-    return order.map { values[$0] }
-}
-
 extension LiveMatchState {
     /// État à afficher dans une pastille. Un match que l'API donne pour terminé (`getLive` ou calendrier) est « Terminé »,
     /// même si ses victoires ou ses détails n'ont pas encore rattrapé la fin de la série (spec §8 : jamais « En direct »
@@ -39,12 +33,7 @@ struct LiveChipText: View {
 
     /// Texte d'un match masqué : seulement l'état (entre deux games, un match masqué reste « En direct »).
     static func maskedText(phase: LiveMatchState.Phase, opponent: String?) -> String {
-        let label: String
-        switch phase {
-        case .inGame, .betweenGames: label = "En direct"
-        case .finished: label = "Terminé"
-        case .upcoming: label = "À venir"
-        }
+        let label = Format.maskedStatus(phase)
         return opponent.map { "\(label) vs \($0)" } ?? label
     }
 
