@@ -130,4 +130,51 @@ struct MatchDetailModelTests {
         let betweenDetails = try #require(between.details[matchId])
         #expect(model.selectedGame(in: betweenDetails)?.number == 1) // entre deux games : la dernière jouée
     }
+
+    // MARK: Rechargement à l'ouverture
+
+    /// Calendrier où le match M1 est TERMINÉ (KC 2 – 0), au format de `getSchedule`.
+    private let completedScheduleJSON = """
+    {"data":{"schedule":{"events":[{"startTime":"2026-10-20T16:00:00Z","state":"completed","type":"match",\
+    "blockName":"Quarts de finale","league":{"name":"Mondial","slug":"worlds"},\
+    "match":{"id":"M1","teams":[{"name":"Karmine Corp","code":"KC","result":{"outcome":"win","gameWins":2}},\
+    {"name":"Cloud9 Kia","code":"C9","result":{"outcome":"loss","gameWins":0}}],\
+    "strategy":{"type":"bestOf","count":3}}}]}}}
+    """
+
+    /// Un match mis en cache « entre deux games » puis rouvert une fois terminé (l'événement est `completed`, plus
+    /// aucune game en cours) : l'ouverture relit toujours `getEventDetails`, sinon score, phase et pilules restent périmés.
+    @Test func openingAMatchAlwaysReloadsItsDetails() async throws {
+        let stale = detailsJSON(game2: "unstarted", stats: "enabled")
+        let schedule = completedScheduleJSON
+        let transport = ScriptedTransport(extra: { url in
+            if url.path.hasSuffix("/getEventDetails") { return HTTPResponse(status: 200, body: Data(stale.utf8)) }
+            if url.path.hasSuffix("/getSchedule") { return HTTPResponse(status: 200, body: Data(schedule.utf8)) }
+            return nil
+        })
+        let store = AppStore(transport: transport, files: TemporaryFiles.store())
+        await store.refreshDue(opening: true)
+        await store.loadDetails(matchId: matchId)
+        // Situation de départ : détails périmés (entre deux games, aucune game en cours) pour un match terminé.
+        #expect(store.event(id: matchId)?.state == .completed)
+        let details = try #require(store.details[matchId])
+        #expect(details.currentGame == nil)
+        let before = await detailsRequestCount(transport)
+        #expect(before == 1)
+
+        // La première passe de la boucle finit par la game affichée (g1, terminée) : le flux `window` est alors demandé.
+        let loop = Task { await MatchDetailModel(matchId: matchId).run(store: store) }
+        let deadline = ContinuousClock.now + .seconds(5)
+        while await windowRequests(transport).isEmpty, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        loop.cancel()
+        await loop.value
+        #expect(await windowRequests(transport).isEmpty == false, "la première passe n'est pas arrivée au flux `window`")
+        #expect(await detailsRequestCount(transport) == before + 1)
+    }
+
+    private func detailsRequestCount(_ transport: ScriptedTransport) async -> Int {
+        await transport.requests.filter { $0.path.hasSuffix("/getEventDetails") }.count
+    }
 }
