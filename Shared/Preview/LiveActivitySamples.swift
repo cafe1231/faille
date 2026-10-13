@@ -25,6 +25,14 @@ enum LiveActivitySamples {
                 .init(id: "sly", code: "SLY", name: "Solary", colorHex: nil)],
         primaryTeamIndex: nil)
 
+    /// Ligue au nom long et deux codes de largeurs différentes (« SGE », « MOUZ ») : la place du nom en tête et le centrage
+    /// du score.
+    static let primeLeague = LiveMatchAttributes(
+        matchId: "m-sge-mouz", leagueName: "Prime League Pro Division", bestOf: 3,
+        teams: [.init(id: "sge", code: "SGE", name: "Eintracht Frankfurt", colorHex: "#E0A030"),
+                .init(id: "mouz", code: "MOUZ", name: "MOUZ", colorHex: nil)],
+        primaryTeamIndex: 0)
+
     static let stats = [
         TeamStats(kills: 7, gold: 32_400, towers: 3, inhibitors: 0, barons: 0, dragons: ["infernal", "ocean"]),
         TeamStats(kills: 4, gold: 30_300, towers: 1, inhibitors: 0, barons: 0, dragons: ["cloud"]),
@@ -84,6 +92,19 @@ enum LiveActivitySamples {
     static var finished: LiveActivityDisplay {
         LiveActivityDisplay(attributes: kc, state: state(.finished, score: [3, 1], game: nil, winner: "KC"),
                             isStale: false)
+    }
+
+    /// Ligue au nom long, entre deux games : l'en-tête le plus chargé avec « entre deux games » à sa droite.
+    static var longLeagueBetweenGames: LiveActivityDisplay {
+        LiveActivityDisplay(attributes: primeLeague, state: state(.betweenGames, score: [1, 0], game: 2), isStale: false)
+    }
+
+    /// Ligue au nom long, pas fraîche depuis 1 h 5 min : l'état le plus long à droite de l'en-tête le plus long.
+    static var longLeagueStale: LiveActivityDisplay {
+        LiveActivityDisplay(attributes: primeLeague,
+                            state: state(.inGame, score: [1, 1], game: 3, clockStart: Date().addingTimeInterval(-1500),
+                                         stats: stats, updatedAt: Date().addingTimeInterval(-3900)),
+                            isStale: true)
     }
 
     /// Riot ne fournit pas les stats : score et chrono seulement.

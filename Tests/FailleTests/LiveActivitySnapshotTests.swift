@@ -22,7 +22,7 @@ extension ApercuTests {
     /// iOS tronque une Live Activity de plus de 160 pt ; chaque vue de la Dynamic Island dessine vraiment quelque chose.
     @Test func liveActivityFitsAndDraws() {
         var heights: [String: CGFloat] = [:]
-        for state in LiveBoardState.lockScreen {
+        for state in LiveBoardState.lockScreenChecked {
             let height = WidgetRender.idealHeight(LiveActivityLockView(display: state.display), width: 360)
             heights[state.caption] = height
             #expect(height > 40 && height <= 160, "\(state.caption) : \(height) pt")
@@ -45,7 +45,7 @@ extension ApercuTests {
     /// `expectNotBlank` comme le contrôle de hauteur. Chaque morceau de chaque état est rendu seul, sur fond
     /// transparent, et doit dessiner quelque chose.
     @Test func everyPieceOfEveryStateDrawsItsContent() {
-        for state in LiveBoardState.lockScreen {
+        for state in LiveBoardState.lockScreenChecked {
             let display = state.display
             let name = state.caption
             expectDrawn(LiveActivityScoreRow(display: display), CGSize(width: 340, height: 28), "score · \(name)")
@@ -90,5 +90,8 @@ struct LiveActivitySampleTests {
         #expect(LiveActivitySamples.finished.status == .victory("KC"))
         #expect(LiveActivitySamples.statsUnavailable.message == .statsUnavailable)
         #expect(LiveActivitySamples.statsUnavailable.tintHex == nil)
+        #expect(LiveActivitySamples.longLeagueBetweenGames.header == "Prime League Pro Division · Bo3 · Game 2")
+        #expect(LiveActivitySamples.longLeagueBetweenGames.status == .betweenGames)
+        if case .stale = LiveActivitySamples.longLeagueStale.status {} else { Issue.record("l'exemple « ligue longue pas fraîche » ne l'est pas") }
     }
 }

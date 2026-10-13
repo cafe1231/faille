@@ -34,10 +34,15 @@ struct LiveActivityLockView: View {
                     .tracking(0.8)
                     .textCase(.uppercase)
                     .foregroundStyle(Palette.secondary)
+                    // Un nom de ligue long (« Prime League Pro Division ») rétrécit puis se tronque au milieu : la fin
+                    // (« Bo3 · Game 2 ») reste lisible, et l'état à droite garde toute sa place.
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .truncationMode(.middle)
                 Spacer(minLength: 6)
                 LiveActivityStatusView(status: display.status)
                     .font(Sora.font(11.5, .semibold))
+                    .layoutPriority(1)
             }
             LiveActivityScoreRow(display: display)
             if !display.rows.isEmpty {
@@ -63,6 +68,9 @@ struct LiveActivityStatusView: View {
     let status: LiveActivityDisplay.Status
     /// « Game 2 · » devant le chrono (Dynamic Island déployée).
     var prefix: String? = nil
+    /// Largeur réservée au chrono qui tourne : fixe (il ne saute pas quand il gagne un chiffre), de quoi écrire
+    /// « 1:02:05 » à la taille du texte voisin. Le chrono s'y aligne à droite, collé au bord de l'en-tête.
+    var timerWidth: CGFloat = 48
 
     var body: some View {
         HStack(spacing: 4) {
@@ -75,7 +83,8 @@ struct LiveActivityStatusView: View {
                 // Largeur fixe : un minuteur natif occupe sinon toute la place disponible.
                 Text(since, style: .timer)
                     .monospacedDigit()
-                    .frame(width: 52, alignment: .leading)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: timerWidth, alignment: .trailing)
             case let .clock(.stopped(text)):
                 if let prefix {
                     Text(prefix)
@@ -83,8 +92,12 @@ struct LiveActivityStatusView: View {
                 Text(text)
                     .monospacedDigit()
             case let .stale(since):
-                Text("\(status.label ?? "") ")
-                Text(since, style: .relative)
+                // « màj il y a X min », sans les secondes que donne `.relative` : le format de référence d'iOS, limité
+                // aux heures et aux minutes, écrit lui-même « il y a » et se met à jour sans relance de la Live Activity.
+                Text("màj")
+                Text(.currentDate, format: .reference(to: since, allowedFields: [.hour, .minute]))
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 120, alignment: .trailing)
             default:
                 Text(status.label ?? "")
             }
@@ -110,19 +123,22 @@ struct LiveActivityStatusView: View {
     }
 }
 
-/// « [KC] KC   1 – 0   C9 [C9] » ; « vs » sans score (masqué).
+/// « [KC] KC   1 – 0   C9 [C9] » ; « vs » sans score (masqué). Le centre est fixe et chaque côté prend la même
+/// largeur : le score est exactement centré, quelle que soit la largeur des codes d'équipe.
 struct LiveActivityScoreRow: View {
     let display: LiveActivityDisplay
 
     var body: some View {
-        HStack(spacing: 7) {
-            if let left = display.teams.first {
-                MonogramBadge(code: left.code, tint: left.colorHex.map(Palette.team), size: 24)
-                Text(left.code)
-                    .font(Sora.font(15, .semibold))
-                    .lineLimit(1)
+        HStack(spacing: 6) {
+            HStack(spacing: 7) {
+                if let left = display.teams.first {
+                    MonogramBadge(code: left.code, tint: left.colorHex.map(Palette.team), size: 24)
+                    Text(left.code)
+                        .font(Sora.font(15, .semibold))
+                        .lineLimit(1)
+                }
             }
-            Spacer(minLength: 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
             if let score = display.score, score.count == 2 {
                 Text(Format.score(score))
                     .font(Sora.font(22, .bold))
@@ -132,18 +148,21 @@ struct LiveActivityScoreRow: View {
                     .font(Sora.font(12, .medium))
                     .foregroundStyle(Palette.secondary)
             }
-            Spacer(minLength: 6)
-            if display.teams.count > 1 {
-                Text(display.teams[1].code)
-                    .font(Sora.font(15, .semibold))
-                    .lineLimit(1)
-                MonogramBadge(code: display.teams[1].code, tint: display.teams[1].colorHex.map(Palette.team), size: 24)
+            HStack(spacing: 7) {
+                if display.teams.count > 1 {
+                    Text(display.teams[1].code)
+                        .font(Sora.font(15, .semibold))
+                        .lineLimit(1)
+                    MonogramBadge(code: display.teams[1].code, tint: display.teams[1].colorHex.map(Palette.team), size: 24)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
     }
 }
 
-/// Les 5 lignes de stats (spec §6.1) : « 7 · ⚔ KILLS · 4 » ; l'écart de gold à la couleur de l'équipe qui mène.
+/// Les 5 lignes de stats (spec §6.1) : « 7 · KILLS · 4 », une icône d'épées devant le libellé ; l'écart de gold à la
+/// couleur de l'équipe qui mène.
 struct LiveActivityStatRows: View {
     let rows: [LiveActivityDisplay.Row]
     let teams: [LiveActivityDisplay.Side]

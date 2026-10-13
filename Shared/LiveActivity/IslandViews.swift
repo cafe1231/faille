@@ -87,7 +87,9 @@ struct IslandCenterView: View {
                     .font(Sora.font(15, .medium))
                     .foregroundStyle(Palette.secondary)
             }
-            LiveActivityStatusView(status: display.status, prefix: display.gameNumber.map { "Game \($0) · " })
+            // Chrono de 10 pt : une réserve de 40 pt écrit « 1:02:05 » et laisse peu de vide entre « Game 2 · » et l'heure.
+            LiveActivityStatusView(status: display.status, prefix: display.gameNumber.map { "Game \($0) · " },
+                                   timerWidth: 40)
                 .font(Sora.font(10, .semibold))
         }
     }

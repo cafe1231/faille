@@ -21,6 +21,20 @@ struct LiveBoardState {
         ]
     }
 
+    /// Noms de ligue longs : mesurés et dessinés comme les états de l'écran verrouillé, mais pas sur la planche, qui est
+    /// pleine.
+    static var longLeague: [LiveBoardState] {
+        [
+            LiveBoardState(caption: "Ligue au nom long · entre deux games", display: LiveActivitySamples.longLeagueBetweenGames),
+            LiveBoardState(caption: "Ligue au nom long · pas fraîche", display: LiveActivitySamples.longLeagueStale),
+        ]
+    }
+
+    /// Tous les états de l'écran verrouillé que les tests de hauteur et de dessin parcourent.
+    static var lockScreenChecked: [LiveBoardState] {
+        lockScreen + longLeague
+    }
+
     /// Dynamic Island : en jeu, anti-spoiler, fin du match.
     static var island: [LiveBoardState] {
         [
