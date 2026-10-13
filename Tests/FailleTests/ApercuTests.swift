@@ -29,6 +29,9 @@ struct ApercuTests {
     @Test func designSheet() async throws {
         let url = try await Snapshot.write(DASampler(), named: "00-da")
         expectNotBlank(url)
+        // La planche dépasse l'écran : la seconde capture montre le bas (bandeau d'erreur et note).
+        let bottom = try await Snapshot.write(DASampler().defaultScrollAnchor(.bottom), named: "00-da-bas")
+        expectNotBlank(bottom)
     }
 }
 

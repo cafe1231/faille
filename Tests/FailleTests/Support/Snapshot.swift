@@ -40,7 +40,8 @@ enum Snapshot {
     static func write(_ view: some View, named name: String) async throws -> URL {
         let scene = try await hostScene()
         let window = UIWindow(windowScene: scene)
-        window.frame = scene.coordinateSpace.bounds
+        // `UIWindowScene.coordinateSpace` est obsolète depuis iOS 26 : `effectiveGeometry.coordinateSpace` le remplace.
+        window.frame = scene.effectiveGeometry.coordinateSpace.bounds
         window.overrideUserInterfaceStyle = .dark
         window.rootViewController = UIHostingController(rootView: AnyView(view))
         window.makeKeyAndVisible()
