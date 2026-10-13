@@ -40,4 +40,49 @@ import Testing
         #expect(plan.count == LiveActivityPlanner.maxConcurrent)
         #expect(plan == ["kc", "t1", "both"])
     }
+
+    // MARK: Live Activities déjà à l'écran (étape 4)
+
+    @Test func existingActivitiesKeepTheirPlaceAndCountTowardsTheLimit() throws {
+        let plan = LiveActivityPlanner.plan(live: [gen, t1, kc, other], follows: try follows(), mode: .automatic,
+                                            pinned: [], dismissed: [], active: ["other"])
+        #expect(plan == ["other", "kc", "t1"])
+    }
+
+    @Test func aFinishedMatchStillOnScreenTakesASlot() throws {
+        let plan = LiveActivityPlanner.plan(live: [gen, t1, kc], follows: try follows(), mode: .automatic,
+                                            pinned: [], dismissed: [], active: ["fini"])
+        #expect(plan == ["fini", "kc", "t1"])
+    }
+
+    @Test func nothingNewWhenThreeAreAlreadyShown() throws {
+        let plan = LiveActivityPlanner.plan(live: [gen, t1, kc], follows: try follows(), mode: .automatic,
+                                            pinned: ["kc"], dismissed: [], active: ["a", "b", "c"])
+        #expect(plan == ["a", "b", "c"])
+    }
+
+    @Test func pinnedGetTheFreeSlotsBeforeAutomatic() throws {
+        let plan = LiveActivityPlanner.plan(live: [gen, t1, kc, other], follows: try follows(), mode: .automatic,
+                                            pinned: ["other"], dismissed: [], active: ["kc"])
+        #expect(plan == ["kc", "other", "t1"])
+    }
+
+    @Test func manualModeOnlyAddsLivePinnedNextToExistingOnes() throws {
+        let plan = LiveActivityPlanner.plan(live: [gen, t1], follows: try follows(), mode: .manual,
+                                            pinned: ["gen"], dismissed: [], active: ["t1"])
+        #expect(plan == ["t1", "gen"])
+    }
+
+    /// Spec §6.4 : réveil en arrière-plan toutes les 15 min tant qu'un match suivi est en direct (ou qu'une Live
+    /// Activity est à l'écran, pour la terminer).
+    @Test func backgroundRefreshOnlyWhileAFollowedMatchIsLiveOrAnActivityIsShown() throws {
+        let now = date("2026-10-15T17:00:00Z")
+        let list = try follows()
+        let soon = now.addingTimeInterval(LiveActivityPlanner.backgroundInterval)
+        #expect(LiveActivityPlanner.nextBackgroundRefresh(now: now, live: [kc], follows: list, hasActivities: false) == soon)
+        #expect(LiveActivityPlanner.nextBackgroundRefresh(now: now, live: [other], follows: list, hasActivities: false) == nil)
+        #expect(LiveActivityPlanner.nextBackgroundRefresh(now: now, live: [other], follows: list, hasActivities: true) == soon)
+        #expect(LiveActivityPlanner.nextBackgroundRefresh(now: now, live: nil, follows: list, hasActivities: false) == nil)
+        #expect(LiveActivityPlanner.backgroundInterval == 900)
+    }
 }
