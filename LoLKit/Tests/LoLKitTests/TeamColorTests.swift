@@ -23,6 +23,12 @@ private func pixels(_ runs: [(r: UInt8, g: UInt8, b: UInt8, a: UInt8, count: Int
         #expect(TeamColor.dominant(rgba: logo) == RGB(r: 220, g: 20, b: 60))
     }
 
+    @Test func colourSplitAcrossTheRedWrapStillWins() {
+        // Rouge réparti sur les classes 35 (~358°) et 0 (~2°) ; le vert (classe 13) est plus petit en total.
+        let logo = pixels([(230, 30, 36, 255, 100), (230, 36, 30, 255, 100), (30, 200, 60, 255, 150)])
+        #expect(TeamColor.dominant(rgba: logo) == RGB(r: 230, g: 33, b: 33))
+    }
+
     @Test func noColourMeansAccent() {
         #expect(TeamColor.dominant(rgba: pixels([(0, 0, 0, 0, 50)])) == nil)
         #expect(TeamColor.dominant(rgba: pixels([(255, 255, 255, 255, 50), (10, 10, 10, 255, 50)])) == nil)

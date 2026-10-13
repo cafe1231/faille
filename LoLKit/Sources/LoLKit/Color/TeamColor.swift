@@ -61,11 +61,26 @@ public enum TeamColor {
             sums[bin].b += b
             sums[bin].count += 1
         }
-        guard let best = weights.indices.max(by: { weights[$0] < weights[$1] }), weights[best] > 0 else { return nil }
-        let sum = sums[best]
-        return RGB(r: UInt8((sum.r / sum.count).rounded()),
-                   g: UInt8((sum.g / sum.count).rounded()),
-                   b: UInt8((sum.b / sum.count).rounded()))
+        // Fenêtre circulaire de 3 classes (i-1, i, i+1) : une couleur à cheval sur une frontière
+        // de teinte (dont le repli 0°/360° des rouges) garde ainsi tout son poids.
+        let windowWeights: [Double] = (0..<36).map { i in
+            let before: Double = weights[(i + 35) % 36]
+            let after: Double = weights[(i + 1) % 36]
+            return before + weights[i] + after
+        }
+        guard let best = windowWeights.indices.max(by: { windowWeights[$0] < windowWeights[$1] }),
+              windowWeights[best] > 0 else { return nil }
+        let previous = (best + 35) % 36, next = (best + 1) % 36
+        var total = (r: 0.0, g: 0.0, b: 0.0, count: 0.0)
+        for bin in [previous, best, next] {
+            total.r += sums[bin].r
+            total.g += sums[bin].g
+            total.b += sums[bin].b
+            total.count += sums[bin].count
+        }
+        return RGB(r: UInt8((total.r / total.count).rounded()),
+                   g: UInt8((total.g / total.count).rounded()),
+                   b: UInt8((total.b / total.count).rounded()))
     }
 
     /// Éclaircit (mélange avec du blanc) jusqu'à atteindre `minLuminance`.
