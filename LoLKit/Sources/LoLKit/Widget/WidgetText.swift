@@ -83,7 +83,7 @@ public enum WidgetText {
         guard let line = content.headline else { return emptyMessage(content) }
         switch line.status {
         case let .live(score, gameNumber):
-            guard score != nil else { return "\(title(line)) · \(Format.maskedStatus(.inGame))" }
+            guard !line.isMasked, score != nil else { return "\(title(line)) · \(Format.maskedStatus(.inGame))" }
             let compact = title(line, compact: true)
             return gameNumber.map { "\(compact) · G\($0)" } ?? compact
         case let .upcoming(start):
@@ -134,7 +134,8 @@ public enum WidgetText {
     public static func row(_ line: WidgetLine, now: Date, timeZone: TimeZone = .current) -> Row {
         switch line.status {
         case let .live(_, gameNumber):
-            return Row(title: title(line), trailing: gameNumber.map { "Game \($0)" } ?? Format.maskedStatus(.inGame),
+            let game = line.isMasked ? nil : gameNumber
+            return Row(title: title(line), trailing: game.map { "Game \($0)" } ?? Format.maskedStatus(.inGame),
                        isLive: true, isMasked: line.isMasked)
         case let .upcoming(start):
             return Row(title: title(line), trailing: Format.shortDate(start, now: now, timeZone: timeZone),
@@ -173,18 +174,19 @@ public enum WidgetText {
         content.teams.contains { $0.next == .hidden }
     }
 
-    /// « KC 1 – 0 C9 » (« KC 1–0 C9 » en compact) ; sans score (masqué ou à venir) : « T1 vs FLY ».
+    /// « KC 1 – 0 C9 » (« KC 1–0 C9 » en compact) ; sans score (masqué ou à venir) : « T1 vs FLY ». Une ligne masquée
+    /// n'écrit jamais de score, même si on lui en a donné un (spec §8).
     static func title(_ line: WidgetLine, compact: Bool = false) -> String {
-        if case let .live(score?, _) = line.status, score.count == 2, line.codes.count == 2 {
+        if !line.isMasked, case let .live(score?, _) = line.status, score.count == 2, line.codes.count == 2 {
             let dash = compact ? "–" : " – "
             return "\(line.codes[0]) \(score[0])\(dash)\(score[1]) \(line.codes[1])"
         }
         return line.codes.joined(separator: " vs ")
     }
 
-    /// « Mondial · Game 2 » ; masqué : « Mondial » (spec §8 : pas de numéro de game).
+    /// « Mondial · Game 2 » ; masqué : « Mondial » (spec §8 : pas de numéro de game, même si la ligne en porte un).
     static func liveDetail(_ line: WidgetLine) -> String {
-        if case let .live(_, gameNumber?) = line.status {
+        if !line.isMasked, case let .live(_, gameNumber?) = line.status {
             return "\(line.leagueName) · Game \(gameNumber)"
         }
         return line.leagueName

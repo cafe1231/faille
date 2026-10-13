@@ -113,6 +113,27 @@ import Testing
         #expect(WidgetText.emptyMessage(onlyKC) == "Aucun match prévu")
     }
 
+    /// W6 : les aides écrivent elles-mêmes sans score ni game une ligne masquée, même si on leur en donne un
+    /// (défense en profondeur : `WidgetTimeline` ne construit jamais une telle ligne).
+    @Test func maskedLinesNeverWriteTheirScoreEvenWhenTheyCarryOne() {
+        let t1 = FollowedTeam(id: "t1", code: "T1", name: "T1", spoilerFree: true)
+        let leaky = line(["T1", "FLY"], .live(score: [2, 1], gameNumber: 4), masked: true)
+        #expect(WidgetText.inline(content([leaky]), timeZone: paris) == "T1 vs FLY · En direct")
+        #expect(WidgetText.rectangular(content([leaky]), timeZone: paris)
+                == WidgetText.Rectangular(label: "En direct", title: "T1 vs FLY", detail: "Mondial",
+                                          isLive: true, isMasked: true))
+        #expect(WidgetText.row(leaky, now: now, timeZone: paris)
+                == WidgetText.Row(title: "T1 vs FLY", trailing: "En direct", isLive: true, isMasked: true))
+        #expect(WidgetText.small(WidgetTeam(team: t1, next: .live(leaky)), timeZone: paris)
+                == WidgetText.Small(label: "En direct", title: "T1 vs FLY", day: nil, time: nil, note: "Mondial",
+                                    isLive: true, isMasked: true))
+        #expect(WidgetText.circular(content([leaky])) == .live(code: "T1"))
+        // La même ligne non masquée écrit bien son score : seul `isMasked` coupe.
+        let open = line(["T1", "FLY"], .live(score: [2, 1], gameNumber: 4))
+        #expect(WidgetText.inline(content([open]), timeZone: paris) == "T1 2–1 FLY · G4")
+        #expect(WidgetText.row(open, now: now, timeZone: paris).trailing == "Game 4")
+    }
+
     @Test func maskedTextsNeverCarryAScoreOrAGame() {
         let texts = [
             WidgetText.inline(content([maskedLive]), timeZone: paris),
