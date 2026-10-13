@@ -93,7 +93,7 @@ import Testing
         let details = makeDetails(wins: [1, 1], games: [(1, "a", .completed), (2, "b", .completed)], bestOf: 2)
         let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, follows: FollowList(), revealed: [], now: now)
         #expect(state.phase == .betweenGames)
-        #expect((state.gameNumber ?? 0) <= 2)
+        #expect(state.gameNumber == 2)
     }
 
     @Test func snapshotOfAnotherGameIsIgnored() throws {

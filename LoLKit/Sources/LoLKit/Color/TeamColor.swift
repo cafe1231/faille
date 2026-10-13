@@ -38,8 +38,9 @@ public enum TeamColor {
     /// Luminosité minimale pour rester lisible sur le fond abysse `#0b1020`.
     public static let minLuminance = 0.5
 
-    /// Couleur dominante saturée d'un logo. `rgba` : 4 octets par pixel.
+    /// Couleur dominante saturée d'un logo. `rgba` : octets RGBA non prémultipliés, 4 par pixel.
     /// Ignore les pixels transparents, quasi gris, quasi blancs et quasi noirs.
+    /// Le score de chaque teinte est calculé sur une fenêtre circulaire de 3 cases de teinte (de 10° chacune).
     public static func dominant(rgba: [UInt8]) -> RGB? {
         var weights = [Double](repeating: 0, count: 36)
         var sums = [(r: Double, g: Double, b: Double, count: Double)](repeating: (0, 0, 0, 0), count: 36)

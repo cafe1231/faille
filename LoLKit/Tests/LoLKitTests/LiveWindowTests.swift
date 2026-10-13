@@ -15,6 +15,8 @@ import Testing
         #expect(snap.gameId == "115565004607949430")
         #expect(snap.phase == .inGame)
         #expect(snap.timestamp == date("2026-10-04T20:38:29.593Z"))
+        // La première frame précède la dernière : `firstFrameTime` et `latestSnapshot` ne peuvent pas être confondus.
+        #expect(try window("window_ingame").firstFrameTime == date("2026-10-04T20:38:29.592Z"))
         #expect(snap.blueTeamId == tlaw)
         #expect(snap.blue == TeamStats(kills: 7, gold: 37442, towers: 3, inhibitors: 0, barons: 0, dragons: ["chemtech", "ocean"]))
         #expect(snap.red == TeamStats(kills: 6, gold: 35882, towers: 0, inhibitors: 0, barons: 0, dragons: ["cloud"]))
