@@ -6,10 +6,10 @@ enum Radius {
     static let inner: CGFloat = 22
 }
 
-/// Carte en verre : Liquid Glass d'iOS 26 (`glassEffect`) + dégradé Vitrail à 160° (couleur d'équipe → blanc 3 %)
-/// + arête lumineuse en haut + ombre profonde. `tint` = couleur de l'équipe suivie ; nil = verre neutre.
-/// API iOS 26 utilisée : `View.glassEffect(_ glass: Glass, in shape: some Shape)` et `Glass.regular.tint(_:)`.
-/// Si le SDK refuse ces noms, remplacer la ligne `.glassEffect(…)` par `.background(.ultraThinMaterial, in: shape)`.
+/// Carte en verre « matière » (comme Échap) : `.ultraThinMaterial` + dégradé Vitrail à 160° (couleur d'équipe → blanc 3 %)
+/// + reflet blanc en haut + arête lumineuse + ombre profonde. `tint` = couleur de l'équipe suivie ; nil = verre neutre.
+/// Pas de `glassEffect` ici : sa réfraction des bords répète le texte voisin en « écho » le long du haut des cartes.
+/// Le Liquid Glass du système reste réservé aux barres (onglets, barre d'outils).
 struct GlassCard: ViewModifier {
     var tint: Color?
     var radius: CGFloat
@@ -20,22 +20,32 @@ struct GlassCard: ViewModifier {
         content
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                LinearGradient(
-                    colors: [tint?.opacity(0.24) ?? Palette.glassFill, Color.white.opacity(0.03)],
-                    // ≈ linear-gradient(160deg, …) des maquettes
-                    startPoint: UnitPoint(x: 0.33, y: 0),
-                    endPoint: UnitPoint(x: 0.67, y: 1)
-                ),
-                in: shape
-            )
-            .glassEffect(tint.map { Glass.regular.tint($0.opacity(0.10)) } ?? .regular, in: shape)
-            .overlay(
+            .background {
+                ZStack {
+                    shape.fill(.ultraThinMaterial)
+                    shape.fill(
+                        LinearGradient(
+                            colors: [tint?.opacity(0.24) ?? Palette.glassFill, Color.white.opacity(0.03)],
+                            // ≈ linear-gradient(160deg, …) des maquettes
+                            startPoint: UnitPoint(x: 0.33, y: 0),
+                            endPoint: UnitPoint(x: 0.67, y: 1)
+                        )
+                    )
+                    shape.fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.08), Color.clear],
+                            startPoint: .top,
+                            endPoint: UnitPoint(x: 0.5, y: 0.35)
+                        )
+                    )
+                }
+            }
+            .overlay {
                 shape.strokeBorder(
                     LinearGradient(colors: [Palette.glassEdge, Palette.glassBorder.opacity(0.5)], startPoint: .top, endPoint: .bottom),
                     lineWidth: 1
                 )
-            )
+            }
             .shadow(color: .black.opacity(0.35), radius: 15, x: 0, y: 14)
     }
 }

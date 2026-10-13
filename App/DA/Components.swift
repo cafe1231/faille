@@ -169,7 +169,9 @@ struct ErrorBanner: View {
         .foregroundStyle(Palette.secondary)
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
-        .glassEffect(.regular, in: Capsule())
+        // Verre « matière » (pas de `glassEffect` : sa réfraction fait un écho du texte voisin).
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(Palette.glassBorder, lineWidth: 1))
         .frame(maxWidth: .infinity)
     }
 }
