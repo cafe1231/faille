@@ -500,26 +500,39 @@ final class AppStore {
 
     // MARK: Enregistrement
 
-    /// Avant la première modification de l'utilisateur : si `follows.json` n'avait pas pu être lu au lancement,
-    /// on retente, pour ne pas écraser la vraie liste par une liste réduite à la seule modification.
+    /// Avant chaque modification de l'utilisateur : si `follows.json` n'avait pas pu être lu au lancement, on retente,
+    /// pour ne pas écraser la vraie liste par une liste réduite à la seule modification. Le drapeau « illisible » ne
+    /// tombe qu'après une relecture réussie, ou si le fichier n'existe plus (mis de côté par `load`, supprimé) ; sinon
+    /// la modification reste en mémoire et `saveFollows` n'écrit rien (le fichier d'origine reste intact).
     private func syncFollowsBeforeChange() {
         guard followsUnreadable, let files else { return }
-        followsUnreadable = false
         if let saved = files.load(FollowList.self, from: .follows) {
             follows = saved
+            followsUnreadable = false
+        } else if !Self.exists(.follows, in: files) {
+            followsUnreadable = false
+        } else {
+            Self.log.error("follows.json toujours illisible : la modification reste en mémoire, le fichier n'est pas écrasé")
         }
     }
 
+    /// Même règle pour `settings.json`.
     private func syncSettingsBeforeChange() {
         guard settingsUnreadable, let files else { return }
-        settingsUnreadable = false
         if let saved = files.load(AppSettings.self, from: .settings) {
             settings = saved
+            settingsUnreadable = false
+        } else if !Self.exists(.settings, in: files) {
+            settingsUnreadable = false
+        } else {
+            Self.log.error("settings.json toujours illisible : la modification reste en mémoire, le fichier n'est pas écrasé")
         }
     }
 
     /// Écriture voulue par l'utilisateur (suivre, masquer, couleur…) : enregistre, puis prévient les widgets.
+    /// Rien n'est écrit tant que le fichier existant n'a pas pu être relu (il ne doit jamais être écrasé).
     private func saveFollows() {
+        guard !followsUnreadable else { return }
         files?.save(follows, to: .follows)
         if reloadsWidgets {
             // Le widget (sonde, puis les vrais à l'étape 3) relit les équipes suivies tout de suite.
@@ -536,6 +549,7 @@ final class AppStore {
     }
 
     private func saveSettings() {
+        guard !settingsUnreadable else { return }
         files?.save(settings, to: .settings)
     }
 }

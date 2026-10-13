@@ -114,6 +114,28 @@ import Testing
         #expect(team.autoColorHex == nil && team.colorOverrideHex == nil)
     }
 
+    @Test func wronglyTypedOptionalFieldsDoNotLoseTheTeam() throws {
+        // Un champ optionnel mal typé retombe sur sa valeur par défaut ; l'équipe (id, code, nom) est conservée.
+        let json = #"""
+        {"teams":[
+          {"id":"a","code":"KC","name":"Karmine Corp","image":42,"homeLeagueName":["LEC"],
+           "spoilerFree":"oui","autoColorHex":{"r":1},"colorOverrideHex":true},
+          {"id":"b","code":"T1","name":"T1","image":"https://img/t1.png","spoilerFree":true,"colorOverrideHex":"#FF5C7A"}
+        ]}
+        """#
+        let follows = try JSONDecoder().decode(FollowList.self, from: Data(json.utf8))
+        #expect(follows.teams.map(\.code) == ["KC", "T1"])
+        let kc = try #require(follows.team(id: "a"))
+        #expect(kc.image == nil && kc.homeLeagueName == nil)
+        #expect(kc.spoilerFree == false)
+        #expect(kc.autoColorHex == nil && kc.colorOverrideHex == nil)
+        // Les champs bien typés de l'autre équipe sont intacts.
+        let t1 = try #require(follows.team(id: "b"))
+        #expect(t1.image == "https://img/t1.png")
+        #expect(t1.spoilerFree)
+        #expect(t1.colorOverrideHex == "#FF5C7A")
+    }
+
     @Test func unreadableEntryIsDroppedAndOthersKept() throws {
         let json = #"""
         {"teams":[

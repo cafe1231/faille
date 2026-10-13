@@ -29,18 +29,18 @@ public struct FollowedTeam: Codable, Sendable, Equatable, Identifiable {
         case id, code, name, image, homeLeagueName, spoilerFree, autoColorHex, colorOverrideHex
     }
 
-    /// Décodage tolérant : seuls `id`, `code` et `name` sont indispensables, le reste a une valeur par défaut
-    /// (une liste enregistrée par une ancienne version ne doit pas être perdue).
+    /// Décodage tolérant : seuls `id`, `code` et `name` sont indispensables, le reste a une valeur par défaut, y compris
+    /// un champ optionnel d'un mauvais type (une liste enregistrée par une autre version ne doit pas perdre l'équipe).
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
         code = try container.decode(String.self, forKey: .code)
         name = try container.decode(String.self, forKey: .name)
-        image = try container.decodeIfPresent(String.self, forKey: .image)
-        homeLeagueName = try container.decodeIfPresent(String.self, forKey: .homeLeagueName)
-        spoilerFree = try container.decodeIfPresent(Bool.self, forKey: .spoilerFree) ?? false
-        autoColorHex = try container.decodeIfPresent(String.self, forKey: .autoColorHex)
-        colorOverrideHex = try container.decodeIfPresent(String.self, forKey: .colorOverrideHex)
+        image = try? container.decodeIfPresent(String.self, forKey: .image)
+        homeLeagueName = try? container.decodeIfPresent(String.self, forKey: .homeLeagueName)
+        spoilerFree = (try? container.decodeIfPresent(Bool.self, forKey: .spoilerFree)) ?? false
+        autoColorHex = try? container.decodeIfPresent(String.self, forKey: .autoColorHex)
+        colorOverrideHex = try? container.decodeIfPresent(String.self, forKey: .colorOverrideHex)
     }
 
     public init(team: Team) {

@@ -299,6 +299,67 @@ struct StoreRefreshTests {
         #expect(files.load(FollowList.self, from: .follows)?.teams.map(\.code) == ["KC", "T1", "G2"])
     }
 
+    /// F7 : tant que la relecture échoue encore, la modification de l'utilisateur est appliquée en mémoire mais ne
+    /// remplace pas le fichier (l'ancien drapeau « illisible » tombait avant la relecture, donc le fichier était écrasé).
+    @Test func userChangeWhileStillUnreadableDoesNotOverwriteTheFile() throws {
+        let files = TemporaryFiles.store()
+        let original = FollowList(teams: [FollowedTeam(id: "kc", code: "KC", name: "Karmine Corp")])
+        files.save(original, to: .follows)
+        let path = files.url(.follows).path(percentEncoded: false)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: path) }
+
+        let store = AppStore(transport: StubTransport(failing: true), files: files)
+        let g2 = Team(id: "g2", slug: "g2", name: "G2 Esports", code: "G2", image: nil, status: "active", homeLeague: nil)
+        store.toggleFollow(g2)                       // la relecture échoue encore (droits retirés)
+        #expect(store.follows.teams.map(\.code) == ["G2"])   // appliqué en mémoire
+        store.setSpoilerFree(true, id: "g2")         // une seconde modification n'écrit rien non plus
+        #expect(store.follows.team(id: "g2")?.spoilerFree == true)
+
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: path)
+        #expect(files.load(FollowList.self, from: .follows) == original)   // le fichier d'origine est intact
+
+        // Le fichier redevient lisible : la modification suivante relit la vraie liste, puis s'y applique.
+        store.setSpoilerFree(true, id: "kc")
+        let saved = files.load(FollowList.self, from: .follows)
+        #expect(saved?.teams.map(\.code) == ["KC"])
+        #expect(saved?.team(id: "kc")?.spoilerFree == true)
+        // Le drapeau est tombé : les modifications suivantes s'écrivent normalement.
+        store.unfollow(id: "kc")
+        #expect(files.load(FollowList.self, from: .follows)?.teams.isEmpty == true)
+    }
+
+    @Test func userChangeWhileSettingsStillUnreadableDoesNotOverwriteTheFile() throws {
+        let files = TemporaryFiles.store()
+        files.save(AppSettings(revealedMatchIds: ["ancien"]), to: .settings)
+        let path = files.url(.settings).path(percentEncoded: false)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: path) }
+
+        let store = AppStore(transport: StubTransport(failing: true), files: files)
+        store.reveal(matchId: "nouveau")             // la relecture échoue encore
+        #expect(store.settings.revealedMatchIds == ["nouveau"])   // appliqué en mémoire
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: path)
+        #expect(files.load(AppSettings.self, from: .settings)?.revealedMatchIds == ["ancien"])
+
+        store.reveal(matchId: "suivant")             // lisible de nouveau : relue, puis complétée
+        #expect(files.load(AppSettings.self, from: .settings)?.revealedMatchIds == ["ancien", "suivant"])
+    }
+
+    @Test func fileRemovedWhileUnreadableClearsTheFlagSoTheChangeIsSaved() throws {
+        let files = TemporaryFiles.store()
+        files.save(FollowList(teams: [FollowedTeam(id: "kc", code: "KC", name: "Karmine Corp")]), to: .follows)
+        let path = files.url(.follows).path(percentEncoded: false)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: path) }
+
+        let store = AppStore(transport: StubTransport(failing: true), files: files)
+        try FileManager.default.removeItem(atPath: path)   // le fichier n'existe plus
+        let g2 = Team(id: "g2", slug: "g2", name: "G2 Esports", code: "G2", image: nil, status: "active", homeLeague: nil)
+        store.toggleFollow(g2)
+        #expect(files.load(FollowList.self, from: .follows)?.teams.map(\.code) == ["G2"])
+    }
+
     @Test func unreadableSettingsKeepRevealedMatches() throws {
         let files = TemporaryFiles.store()
         files.save(AppSettings(revealedMatchIds: ["ancien"]), to: .settings)
