@@ -72,6 +72,30 @@ import Testing
         #expect(state.gameNumber == 2)
     }
 
+    @Test func deciderStaysInGameWhenFeedFinishesFirst() throws {
+        let details = makeDetails(wins: [2, 2], games: [(5, game1, .inProgress)])
+        let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_finished"), firstFrameTime: nil,
+                                           statsDisabled: false, spoilerFree: false, now: now)
+        #expect(state.phase == .inGame)
+        #expect(state.gameNumber == 5)
+        #expect(state.stats?.first?.kills == 14)
+    }
+
+    @Test func matchPointStaysInGame() throws {
+        let details = makeDetails(wins: [1, 0], games: [(1, "g1x", .completed), (2, game1, .inProgress), (3, "g3", .unstarted)], bestOf: 3)
+        let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_finished"), firstFrameTime: nil,
+                                           statsDisabled: false, spoilerFree: false, now: now)
+        #expect(state.phase == .inGame)
+        #expect(state.gameNumber == 2)
+    }
+
+    @Test func betweenGamesNeverExceedsBestOf() {
+        let details = makeDetails(wins: [1, 1], games: [(1, "a", .completed), (2, "b", .completed)], bestOf: 2)
+        let state = LiveMatchBuilder.state(details: details, snapshot: nil, firstFrameTime: nil, statsDisabled: false, spoilerFree: false, now: now)
+        #expect(state.phase == .betweenGames)
+        #expect((state.gameNumber ?? 0) <= 2)
+    }
+
     @Test func snapshotOfAnotherGameIsIgnored() throws {
         let details = makeDetails(wins: [1, 0], games: [(1, game1, .completed), (2, "g2", .inProgress)])
         let state = LiveMatchBuilder.state(details: details, snapshot: try snapshot("window_ingame"), firstFrameTime: nil,
