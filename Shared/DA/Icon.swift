@@ -20,7 +20,8 @@ extension Image {
     }
 }
 
-/// Une icône à la taille voulue (14 pt par défaut), teinte du texte courant.
+/// Une icône à la taille voulue (14 pt par défaut), teinte du texte courant. Décorative : VoiceOver ne la lit pas,
+/// c'est le texte voisin (ou le `accessibilityLabel` du bouton qui la contient) qui porte le sens.
 struct IconView: View {
     let icon: Icon
     var size: CGFloat = 14
@@ -31,5 +32,6 @@ struct IconView: View {
             .resizable()
             .scaledToFit()
             .frame(width: size, height: size)
+            .accessibilityHidden(true)
     }
 }

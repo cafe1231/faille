@@ -36,12 +36,13 @@ struct ApercuTests {
 }
 
 extension ApercuTests {
-    /// Le PNG existe et n'est pas une image vide : fond dégradé + contenu pèsent bien plus de 10 Ko.
+    /// Le PNG existe et n'est pas une image vide : le fond dégradé seul (sans aucun contenu) pèse déjà environ 54 Ko,
+    /// alors qu'un vrai écran (texte, verre, icônes) fait plusieurs Mo ; sous 100 000 octets, la capture est vide.
     /// À appeler après chaque `Snapshot.write` (les tests des écrans suivants le réutilisent).
     func expectNotBlank(_ url: URL, sourceLocation: SourceLocation = #_sourceLocation) {
         let path = url.path(percentEncoded: false)
         #expect(FileManager.default.fileExists(atPath: path), sourceLocation: sourceLocation)
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-        #expect(size > 10_000, "capture quasi vide : \(url.lastPathComponent), \(size) octets", sourceLocation: sourceLocation)
+        #expect(size > 100_000, "capture quasi vide : \(url.lastPathComponent), \(size) octets", sourceLocation: sourceLocation)
     }
 }
