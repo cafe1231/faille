@@ -21,20 +21,23 @@ struct FollowedTeamRow: View {
                     .foregroundStyle(Palette.secondary)
             }
             Spacer(minLength: 8)
-            Button(action: onToggleSpoiler) {
-                IconView(icon: team.spoilerFree ? .eyeOff : .eye, size: 20)
-                    .foregroundStyle(team.spoilerFree ? Palette.text : Palette.secondary)
-                    .frame(width: 36, height: 36)
-                    .contentShape(Rectangle())
+            // Deux cibles tactiles d'au moins 44 × 44 pt, côte à côte (le glyphe reste de 20 pt).
+            HStack(spacing: 0) {
+                Button(action: onToggleSpoiler) {
+                    IconView(icon: team.spoilerFree ? .eyeOff : .eye, size: 20)
+                        .foregroundStyle(team.spoilerFree ? Palette.text : Palette.secondary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel(team.spoilerFree ? "Afficher les scores" : "Masquer les scores")
+                Button(action: onUnfollow) {
+                    IconView(icon: .starFill, size: 20)
+                        .foregroundStyle(Palette.accent)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Ne plus suivre")
             }
-            .accessibilityLabel(team.spoilerFree ? "Afficher les scores" : "Masquer les scores")
-            Button(action: onUnfollow) {
-                IconView(icon: .starFill, size: 20)
-                    .foregroundStyle(Palette.accent)
-                    .frame(width: 36, height: 36)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel("Ne plus suivre")
         }
         .buttonStyle(.plain)
         .padding(.vertical, 2)
@@ -71,7 +74,7 @@ struct CatalogTeamRow: View {
             Button(action: onToggle) {
                 IconView(icon: followed ? .starFill : .star, size: 20)
                     .foregroundStyle(followed ? Palette.accent : Palette.secondary)
-                    .frame(width: 36, height: 36)
+                    .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)

@@ -60,16 +60,20 @@ struct TeamsView: View {
                 .autocorrectionDisabled()
                 .submitLabel(.search)
             if !query.isEmpty {
+                // Cible de 44 × 44 pt ; le retrait négatif garde le glyphe (16 pt) à sa place, au bord du champ.
                 Button { query = "" } label: {
                     IconView(icon: .off, size: 16)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Palette.secondary)
                 .accessibilityLabel("Effacer")
+                .padding(.trailing, -14)
             }
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 11)
+        .frame(minHeight: 44)
         .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous).strokeBorder(Palette.glassBorder, lineWidth: 1))
     }
