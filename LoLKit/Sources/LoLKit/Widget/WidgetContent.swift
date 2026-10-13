@@ -71,8 +71,8 @@ public struct WidgetTeam: Sendable, Equatable, Identifiable {
         /// Son prochain match (`Presenter.nextLine` = `.match`).
         case match(WidgetLine)
         /// Rien n'est annoncé, « Prochain · masqué » (`Presenter.nextLine` = `.hidden`, spec §8) : le dernier match de
-        /// l'équipe est masqué (règle F1), ou son prochain match l'oppose à une autre équipe suivie en anti-spoiler et
-        /// n'est pas révélé (règle C).
+        /// l'équipe est masqué (règle F1), ou son prochain match l'oppose à une autre équipe suivie en anti-spoiler dont
+        /// le dernier match est masqué, et n'est pas révélé (règle C).
         case hidden
         /// Aucun match à venir connu. (Pas `.none` : on le confondrait avec `Optional.none`.)
         case noMatch

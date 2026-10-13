@@ -28,6 +28,7 @@ public enum WidgetTimeline {
         let source = liveSource(at: date, input: input)
         let schedule = presumed(input.schedule?.value.events ?? [], at: date, source: source)
         let cards = TeamCards.build(follows: follows, schedule: schedule, live: source.live, revealed: revealed)
+        let maskedLatest = Presenter.maskedLatestTeamIds(cards, follows: follows, revealed: revealed)
 
         var liveLines: [WidgetLine] = []
         var upcoming: [WidgetLine] = []
@@ -42,7 +43,7 @@ public enum WidgetTimeline {
             }
             // Jamais `card.next` directement : la ligne « Prochain » passe par LoLKit (anti-spoiler, spec §8).
             let shown: WidgetTeam.Next
-            switch Presenter.nextLine(for: card, follows: follows, revealed: revealed) {
+            switch Presenter.nextLine(for: card, follows: follows, revealed: revealed, maskedLatestTeamIds: maskedLatest) {
             case .hidden:
                 shown = .hidden
             case .none:

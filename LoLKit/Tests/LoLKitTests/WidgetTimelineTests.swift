@@ -226,7 +226,7 @@ import Testing
         #expect(genLine.codes == ["GEN", "KC"])              // le petit widget de GEN met GEN à gauche
     }
 
-    /// Décision du contrôleur : « GEN vs T1 » n'est annoncé nulle part tant que ce match n'est pas révélé.
+    /// Règle C : « GEN vs T1 » n'est annoncé nulle part tant que le dernier match de T1 (masqué) n'est pas révélé.
     @Test func aNextMatchAgainstASpoilerFreeTeamIsNotAnnounced() {
         let t1Last = match("t1-fly-done", .completed, "2026-10-14T17:00:00Z", "T1", "FLY", wins: [3, 1])
         let content = WidgetTimeline.content(at: date("2026-10-15T12:00:00Z"),
@@ -234,6 +234,35 @@ import Testing
         #expect(content.team(id: "gen")?.next == .hidden)
         #expect(content.team(id: "t1")?.next == .hidden)
         #expect(!content.lines.contains { $0.matchId == "t1-gen" })
+    }
+
+    /// Règle C affinée (W5) : T1 est en anti-spoiler mais n'a aucun dernier match masqué, « GEN vs T1 » ne trahit rien.
+    @Test func aNextMatchAgainstASpoilerFreeTeamWithNothingMaskedIsAnnounced() throws {
+        let content = WidgetTimeline.content(at: date("2026-10-15T12:00:00Z"),
+                                             input: input([t1Gen], fetchedAt: "2026-10-15T11:00:00Z"))
+        #expect(content.lines.map(\.matchId) == ["t1-gen"])
+        let line = try #require(content.headline)
+        #expect(line.codes == ["T1", "GEN"] && line.isMasked)   // carte de T1 (suivie avant GEN)
+        #expect(content.team(id: "t1")?.next == .match(line))
+        guard case let .match(genLine)? = content.team(id: "gen")?.next else {
+            Issue.record("GEN devrait annoncer son match contre T1")
+            return
+        }
+        #expect(genLine.matchId == "t1-gen" && genLine.codes == ["GEN", "T1"])
+    }
+
+    /// Révéler le dernier match masqué de T1 lève la règle C : GEN annonce de nouveau « GEN vs T1 ».
+    @Test func revealingTheSpoilerFreeTeamsLastMatchAnnouncesTheNextMatchAgain() {
+        let t1Last = match("t1-fly-done", .completed, "2026-10-14T17:00:00Z", "T1", "FLY", wins: [3, 1])
+        let content = WidgetTimeline.content(
+            at: date("2026-10-15T12:00:00Z"),
+            input: input([t1Last, t1Gen], fetchedAt: "2026-10-15T11:00:00Z", revealed: ["t1-fly-done"]))
+        #expect(content.lines.map(\.matchId) == ["t1-gen"])
+        guard case let .match(genLine)? = content.team(id: "gen")?.next else {
+            Issue.record("GEN devrait de nouveau annoncer son match contre T1")
+            return
+        }
+        #expect(genLine.matchId == "t1-gen" && genLine.codes == ["GEN", "T1"])
     }
 
     @Test func smallWidgetDefaultsToTheFirstFollowedTeam() {

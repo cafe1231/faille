@@ -21,8 +21,8 @@ public struct TeamCard: Sendable, Equatable, Identifiable {
 public enum TeamCards {
     /// Cartes triées : équipes en direct d'abord (ordre de suivi), puis par date du prochain match, puis ordre de suivi.
     /// Anti-spoiler (spec §8) : une carte dont la ligne « Prochain » est masquée (`Presenter.nextLine` = `.hidden` : dernier
-    /// match masqué, ou prochain match contre une autre équipe suivie en anti-spoiler) est triée comme une carte sans
-    /// prochain match, pour que l'ordre ne trahisse pas l'existence de ce match.
+    /// match masqué, ou prochain match contre une autre équipe suivie en anti-spoiler au dernier match masqué) est triée
+    /// comme une carte sans prochain match, pour que l'ordre ne trahisse pas l'existence de ce match.
     /// - Parameter live: réponse de `getLive`, ou `nil` si elle est inconnue (erreur réseau). Connue, elle fait seule foi :
     ///   un match `inProgress` du calendrier absent de `live` n'est pas en direct (calendrier périmé). Inconnue,
     ///   un match `inProgress` du calendrier peut servir de repli.
@@ -45,9 +45,11 @@ public enum TeamCards {
                 .max { $0.startTime < $1.startTime }
             return TeamCard(team: team, live: liveMatch, next: next, last: last)
         }
+        let maskedLatest = Presenter.maskedLatestTeamIds(cards, follows: follows, revealed: revealed)
         return cards.enumerated().map { offset, card -> (offset: Int, element: TeamCard, nextStart: Date?) in
             var nextStart: Date?
-            if case let .match(event) = Presenter.nextLine(for: card, follows: follows, revealed: revealed) {
+            if case let .match(event) = Presenter.nextLine(for: card, follows: follows, revealed: revealed,
+                                                           maskedLatestTeamIds: maskedLatest) {
                 nextStart = event.startTime
             }
             return (offset, card, nextStart)

@@ -140,10 +140,14 @@ final class AppStore {
     }
 
     /// Ligne « Prochain » d'une carte : `.hidden` tant que le dernier match de l'équipe est masqué, ou que son prochain
-    /// match l'oppose à une autre équipe suivie en anti-spoiler (spec §8, règle C ; jamais `card.next` directement :
-    /// l'existence ou l'adversaire du prochain match trahirait un résultat).
+    /// match l'oppose à une autre équipe suivie en anti-spoiler dont le dernier match est masqué (spec §8, règle C ;
+    /// jamais `card.next` directement : l'existence ou l'adversaire du prochain match trahirait un résultat). La règle C
+    /// se juge sur toutes les cartes de l'écran.
     func nextLine(for card: TeamCard) -> NextLine {
-        Presenter.nextLine(for: card, follows: follows, revealed: settings.revealedMatchIds)
+        let revealed = settings.revealedMatchIds
+        return Presenter.nextLine(for: card, follows: follows, revealed: revealed,
+                                  maskedLatestTeamIds: Presenter.maskedLatestTeamIds(cards, follows: follows,
+                                                                                     revealed: revealed))
     }
 
     /// Sous-titre de l'onglet Matchs ; les cartes à « Prochain » masqué ne comptent pas dans « à venir ».

@@ -156,6 +156,32 @@ struct NextRowPrivacyTests {
         #expect(store().cards.map(\.team.code) == ["GEN", "KC", "T1"])
     }
 
+    /// Règle C affinée (W5) : « GEN vs T1 » n'est caché sur la carte de GEN que si le dernier match de T1 est masqué.
+    @Test func aNextMatchAgainstASpoilerFreeTeamIsHiddenOnlyWhileItsLatestMatchIsMasked() throws {
+        let genT1 = upcoming("gen-t1", start: "2026-10-16T09:00:00Z", ("GEN", "Gen.G"), ("T1", "T1"))
+        // T1 est en anti-spoiler mais n'a rien de masqué : le match s'annonce sur sa carte comme sur celle de GEN.
+        let open = AppStore(preview: PreviewData(follows: SampleData.follows, schedule: [genT1], live: []))
+        let openGen = try #require(open.cards.first { $0.team.code == "GEN" })
+        let openT1 = try #require(open.cards.first { $0.team.code == "T1" })
+        #expect(open.nextLine(for: openGen) == .match(genT1))
+        #expect(open.nextLine(for: openT1) == .match(genT1))
+        #expect(open.cardsSubtitle(open.cards) == "0 en direct · 2 à venir")
+
+        // Dernier match de T1 masqué : le prochain match de GEN contre T1 est caché aussi.
+        let masked = AppStore(preview: PreviewData(follows: SampleData.follows,
+                                                   schedule: [finished("t1-done", start: "2026-10-11T09:00:00Z"), genT1],
+                                                   live: []))
+        let maskedGen = try #require(masked.cards.first { $0.team.code == "GEN" })
+        #expect(maskedGen.next?.id == "gen-t1")                    // la donnée existe...
+        #expect(masked.nextLine(for: maskedGen) == .hidden)         // ...mais la carte n'a pas le droit de l'annoncer
+        #expect(masked.cardsSubtitle(masked.cards) == "0 en direct · 0 à venir")
+
+        // Révéler le dernier match de T1 le ramène.
+        masked.reveal(matchId: "t1-done")
+        let revealedGen = try #require(masked.cards.first { $0.team.code == "GEN" })
+        #expect(masked.nextLine(for: revealedGen) == .match(genT1))
+    }
+
     @Test func revealingTheLastMatchBringsTheNextLineBack() throws {
         let store = store()
         store.reveal(matchId: "t1-done")
