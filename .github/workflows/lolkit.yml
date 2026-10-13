@@ -1,0 +1,29 @@
+name: LoLKit
+
+on:
+  push:
+    paths: ["LoLKit/**", ".github/workflows/lolkit.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests LoLKit
+        run: swift test --package-path LoLKit
+
+  # Foundation d'Apple (celle de l'appli) se comporte parfois autrement que swift-corelibs-foundation sous Linux.
+  test-macos:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Tests LoLKit (macOS)
+        run: swift test --package-path LoLKit

@@ -23,7 +23,7 @@
 | Contrainte | Conséquence |
 |---|---|
 | Développement sur Windows, pas de Mac | Logique en Swift pur testable sur Windows ; compilation iOS sur un Mac cloud (GitHub Actions) ; projet Xcode généré par XcodeGen depuis `project.yml`. |
-| Compte Apple gratuit d'abord | Installation par Sideloadly, re-signature tous les 7 jours, pas de push : la Live Activity se met à jour quand l'appli tourne. |
+| Compte Apple gratuit d'abord | Installation par **AltServer** (Sideloadly ne signe pas les extensions avec un compte gratuit, vérifié le 13/10), re-signature tous les 7 jours, pas de push : la Live Activity se met à jour quand l'appli tourne. |
 | Compte payant plus tard (99 €/an) | Le format de données de la Live Activity est figé dès la v1 pour que le serveur de push (phase 2) s'y branche sans changer l'appli. |
 | API lolesports non officielle | Usage strictement personnel, jamais publié. Toute la dépendance à l'API est isolée dans une seule couche de `LoLKit`. |
 | Dépôt GitHub public | Aucun secret dans le code, jamais. Git configuré avec l'adresse `noreply` de GitHub. Passage en privé + Xcode Cloud au moment du compte payant. |
@@ -99,22 +99,28 @@ Le décodage est **tolérant** : tout champ non essentiel est optionnel. Un cham
 
 Le même JSON sert à l'appli (v1) et au serveur de push (phase 2). Taille cible < 1 Ko (limite Apple : 4 Ko).
 
-- **Attributs fixes** (au démarrage) : `matchId`, ligue, `bestOf`, pour chaque équipe : code, nom, couleur (hex).
-- **État dynamique** :
-  - `phase` : `upcoming | inGame | betweenGames | finished`
+- **Attributs fixes** (au démarrage, construits depuis `getEventDetails`, qui donne toujours les ids d'équipe) : `matchId`, ligue, `bestOf`, pour chaque équipe : **id**, code, nom, couleur (hex, si suivie) ; `primaryTeamIndex` = l'équipe suivie la plus anciennement suivie (fond de la Live Activity, Dynamic Island minimale). Jamais de code d'équipe à la place d'un id.
+- **État dynamique** (scores et stats dans l'ordre de `attributes.teams`) :
+  - `phase` : `upcoming | inGame | betweenGames | finished` (valeur inconnue lue comme `inGame`)
   - `seriesScore` : [a, b]
   - `gameNumber`
-  - `gameClockStart` : date de début estimée de la game (sert au chrono qui tourne seul)
+  - `gameClockStart` : date de début estimée de la game (sert au chrono qui tourne seul) ; calculée même si les stats sont désactivées
+  - `gameClockStoppedAt` : rempli quand la game est en pause ou finie dans le flux ; le chrono s'arrête à cette date
   - `stats` : `TeamStats` des deux équipes, ou `nil` si indisponibles
   - `statsAvailable: Bool`
   - `spoilerFree: Bool`
+  - `winnerCode` (si terminé)
   - `updatedAt`
 
-Le chrono est affiché avec un minuteur natif d'iOS à partir de `gameClockStart` : il avance sans aucune mise à jour.
+Le chrono est affiché avec un minuteur natif d'iOS à partir de `gameClockStart` (et `gameClockStoppedAt` s'il est rempli) : il avance sans aucune mise à jour.
+
+**Format du JSON** : `JSONEncoder` par défaut — dates en secondes depuis le 1er janvier 2001 (`deferredToDate`), champs nil omis. Une fixture dorée (`LoLKit/Tests/LoLKitTests/Fixtures/live_contract.json`) fige ce format ; le serveur de la phase 2 l'utilisera dans ses propres tests. Côté iOS : `extension LiveMatchAttributes: ActivityAttributes { typealias ContentState = LiveMatchState }`, pour que le JSON des push soit exactement celui de la fixture.
 
 ### 4.4 Stockage
 
 - **App Group** (partagé appli ↔ extension) : équipes suivies et leurs réglages, couleurs d'équipe, calendrier en cache, dernier état connu des matchs en direct. Stockage par fichiers JSON.
+  - **Le nom du groupe est lu à l'exécution, jamais écrit en dur** : les outils de signature le renomment (AltServer : `group.com.cafe1231.faille.<TEAMID>`, et les bundle IDs deviennent `com.cafe1231.faille.<TEAMID>`). Ordre : groupes du `embedded.mobileprovision` du bundle courant, puis la clé `ALTAppGroups` de l'Info.plist, puis le nom configuré ; on garde le premier dont `containerURL` n'est pas nil. Même règle dans l'appli et l'extension. Aucun code ne suppose un bundle ID fixe.
+  - La liste des équipes suivies se décode de façon tolérante (champs nouveaux optionnels, entrée illisible ignorée) : une mise à jour de l'appli ne doit jamais faire perdre les équipes suivies.
 - **Cache réseau** : réponses `getLeagues`, `getTeams` et `getSchedule` gardées sur disque avec leur date, et réutilisées si l'API ne répond pas.
 - **Logos** : téléchargés et mis en cache par l'appli. Live Activity et widgets **n'affichent pas les logos** mais un monogramme (le code de l'équipe dans un badge à sa couleur), comme sur les maquettes. Ça évite les images dans la Live Activity et réduit la dépendance à l'App Group.
 
@@ -214,10 +220,10 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
 - **Un match est masqué si au moins une des deux équipes est en anti-spoiler.**
 - Un match masqué n'affiche :
   - ni score de série, ni numéro de game, ni stats, ni vainqueur, ni résultat dans « Dernier » ;
-  - que « En direct », « Terminé » ou « À venir », avec la date.
+  - que « En direct », « Terminé » ou « À venir », avec la date. Entre deux games, un match masqué reste « En direct » (sinon le nombre de pauses trahit la longueur de la série).
 - Partout, sans exception : appli, Live Activity, Dynamic Island, widgets.
 - **Révéler** : dans l'appli seulement, « toucher pour révéler » sur la carte ou le Détail. La révélation est mémorisée pour ce match. Live Activity et widgets suivent cette révélation à leur prochaine mise à jour.
-- La règle est une **fonction unique** de `LoLKit/Presentation` qui transforme un match en « ce qui est affichable ». Toutes les surfaces passent par elle.
+- La règle est une **fonction unique** de `LoLKit/Presentation` (`SpoilerPolicy.isMasked`) ; `Presenter.scoreLine` (appli, widgets) et `LiveMatchBuilder.state` (Live Activity) l'appellent eux-mêmes à partir des équipes suivies et des matchs révélés. Toutes les surfaces passent par elles.
 
 ## 9. Direction artistique (reprise d'Échap Hub)
 
@@ -243,7 +249,8 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
 | JSON inattendu | Décodage tolérant ; si un objet entier est illisible, il est ignoré et logué, le reste s'affiche. |
 | Live Activities désactivées par l'utilisateur dans iOS | Le bouton « Épingler » explique où les réactiver. |
 | Plus de 3 matchs suivis en direct | Les 3 premières équipes suivies ont une Live Activity ; les autres restent dans l'appli. |
-| App Group indisponible (Sideloadly) | Plan B : le widget lit l'API lui-même et l'équipe se choisit dans sa configuration (voir §13, étape 0). |
+| App Group renommé ou indisponible | Nom résolu à l'exécution (§4.4). S'il n'y a vraiment aucun groupe : plan B, le widget lit l'API lui-même et l'équipe se choisit dans sa configuration. |
+| Un match quitte `getLive` | Rafraîchir aussitôt `getSchedule` ; tant que `getLive` répond, il fait foi pour « en direct » (pas de repli sur un calendrier périmé). |
 
 ## 11. Tests
 
@@ -284,7 +291,7 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
 
 | Étape | Contenu | Terminé quand |
 |---|---|---|
-| **0. Chaîne de bout en bout** | Appli vide + extension widget + App Group, `project.yml`, workflow iOS, `.ipa` installée avec Sideloadly | Le widget affiche sur l'iPhone une valeur écrite par l'appli dans l'App Group. Sinon, on bascule sur le plan B du §10 avant d'aller plus loin. |
+| **0. Chaîne de bout en bout** | Appli vide + extension widget + App Group, `project.yml`, workflow iOS, `.ipa` installée avec AltServer | Le widget affiche sur l'iPhone une valeur écrite par l'appli dans l'App Group. Sinon, on bascule sur le plan B du §10 avant d'aller plus loin. |
 | **1. LoLKit** | Modèles, clients API, fixtures, présentation/anti-spoiler, machine d'états, couleur, CLI | `swift test` vert sur Windows ; `lolkit live` affiche un match des Worlds |
 | **2. Appli** | DA (tokens, Sora, verre), Équipes, Matchs (B), Détail, Réglages, cache | Suivre une équipe et voir ses matchs sur l'iPhone |
 | **3. Widgets** | 3 widgets écran verrouillé + 2 écran d'accueil | Widgets justes sur l'iPhone, aperçus PNG en CI |
@@ -295,7 +302,7 @@ Plans : `docs/superpowers/plans/2026-10-13-etape-0-chaine.md` et `docs/superpowe
 ## 14. Risques et points ouverts
 
 - **L'API lolesports change** (des indices montrent une migration vers GraphQL côté site) : toute la dépendance est dans `LoLKit/API`, et les fixtures permettent de voir tout de suite ce qui a cassé.
-- **Sideloadly et l'App Group** : non vérifié, d'où l'étape 0 en premier.
+- **Signature avec un compte gratuit (étape 0, 13/10)** : Sideloadly 0.70.1 laisse l'extension sans profil (widget et Live Activity invisibles) ; **AltServer** signe l'appli et l'extension avec le groupe `group.com.cafe1231.faille.TA6JYZWPU9`, conteneur OK des deux côtés. Outil retenu : AltServer. Repli : Impactor, puis compte payant.
 - **Compte gratuit** : appli à réinstaller tous les 7 jours, 3 applis sideloadées maximum, 10 identifiants d'app par semaine (l'appli en consomme 2).
 - **Retard des stats** : environ 1 min derrière le direct, ce qui est normal pour ce flux.
 - **Confirmé par Dan (13/10/2026)** :
