@@ -109,41 +109,47 @@ struct PillButton<Content: View>: View {
     }
 }
 
-/// Logo d'une équipe (fichier en cache, sinon téléchargé en https), ou à défaut son monogramme :
-/// le code dans un badge bordé de sa couleur (verre neutre si l'équipe n'est pas suivie).
+/// Logo d'une équipe : sa vignette en cache (fichier de `logos/`, décodé hors du `body` par `LogoImages`), ou à défaut
+/// son monogramme : le code dans un badge bordé de sa couleur (verre neutre si l'équipe n'est pas suivie).
+/// Aucun téléchargement : seules les équipes suivies ont une vignette (le pipeline des couleurs la produit).
 struct TeamBadge: View {
     let code: String
-    var image: String? = nil
     var logoFile: URL? = nil
     var tint: Color? = nil
     var size: CGFloat = 28
+    @State private var loaded: (file: URL, image: UIImage)?
+
+    /// Vignette à afficher : celle déjà décodée pour ce fichier, sinon celle de la mémoire, sinon nil (monogramme).
+    private var logo: UIImage? {
+        guard let logoFile else { return nil }
+        if let loaded, loaded.file == logoFile { return loaded.image }
+        return LogoImages.shared.cached(logoFile)
+    }
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: size * 0.33, style: .continuous)
         ZStack {
             shape.fill(Palette.chipFill)
-            if let logo = logoFile.flatMap({ UIImage(contentsOfFile: $0.path(percentEncoded: false)) }) {
+            if let logo {
                 Image(uiImage: logo)
                     .resizable()
                     .scaledToFit()
                     .padding(size * 0.14)
-            } else if let url = ImageURL.secure(image) {
-                AsyncImage(url: url) { phase in
-                    if let loaded = phase.image {
-                        loaded
-                            .resizable()
-                            .scaledToFit()
-                            .padding(size * 0.14)
-                    } else {
-                        monogram
-                    }
-                }
             } else {
                 monogram
             }
         }
         .frame(width: size, height: size)
         .overlay(shape.strokeBorder(tint ?? Palette.glassBorder, lineWidth: 1))
+        .task(id: logoFile) {
+            guard let logoFile else {
+                loaded = nil
+                return
+            }
+            if let image = await LogoImages.shared.load(logoFile) {
+                loaded = (logoFile, image)
+            }
+        }
     }
 
     private var monogram: some View {

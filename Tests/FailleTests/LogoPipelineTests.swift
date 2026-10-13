@@ -68,4 +68,22 @@ struct LogoPipelineTests {
         #expect(store.follows.teams.first?.autoColorHex == RGB.accent.hex)
         #expect(store.logoFile(for: raw) == nil)
     }
+
+    /// Les badges n'ouvrent plus de fichier dans `body` : la vignette est décodée hors du fil principal, puis gardée en mémoire.
+    @Test func thumbnailIsDecodedOnceThenServedFromMemory() async throws {
+        let files = TemporaryFiles.store()
+        files.saveLogo(Self.redSquarePNG(), named: "logo-test.png")
+        let file = files.logoURL(named: "logo-test.png")
+
+        #expect(LogoImages.shared.cached(file) == nil)
+        let loaded = try #require(await LogoImages.shared.load(file))
+        #expect(loaded.size.width > 0 && loaded.size.height > 0)
+        #expect(LogoImages.shared.cached(file) === loaded)
+        #expect(await LogoImages.shared.load(file) === loaded)
+
+        // Pas de vignette (équipe non suivie) : rien à décoder, le badge reste sur son monogramme.
+        let missing = files.logoURL(named: "absent.png")
+        #expect(await LogoImages.shared.load(missing) == nil)
+        #expect(LogoImages.shared.cached(missing) == nil)
+    }
 }

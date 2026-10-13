@@ -10,7 +10,7 @@ struct FollowedTeamRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            TeamBadge(code: team.code, image: team.image, logoFile: logoFile, tint: Palette.team(team.colorHex), size: 34)
+            TeamBadge(code: team.code, logoFile: logoFile, tint: Palette.team(team.colorHex), size: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(team.name)
                     .font(Typo.bodyMedium)
@@ -55,7 +55,7 @@ struct CatalogTeamRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            TeamBadge(code: team.code, image: team.image, logoFile: logoFile, size: 34)
+            TeamBadge(code: team.code, logoFile: logoFile, size: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(team.name)
                     .font(Typo.bodyMedium)

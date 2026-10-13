@@ -83,7 +83,7 @@ struct ScoreRow: View {
     }
 
     private func badge(_ team: MatchTeam, tint: Color?) -> some View {
-        TeamBadge(code: team.code, image: team.image, logoFile: store.logoFile(for: team.image), tint: tint,
+        TeamBadge(code: team.code, logoFile: store.logoFile(for: team.image), tint: tint,
                   size: large ? 38 : 30)
     }
 }

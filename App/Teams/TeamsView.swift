@@ -128,8 +128,9 @@ struct TeamsView: View {
         }
     }
 
+    /// Équipes non suivies du catalogue ou de la recherche (plusieurs centaines) : rangées créées à la demande.
     private func teamList(_ teams: [Team]) -> some View {
-        VStack(spacing: 4) {
+        LazyVStack(spacing: 4) {
             ForEach(teams) { team in
                 CatalogTeamRow(team: team, followed: store.follows.contains(id: team.id),
                                logoFile: store.logoFile(for: team.image)) {
