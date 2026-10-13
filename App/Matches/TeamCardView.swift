@@ -84,7 +84,8 @@ struct TeamCardView: View {
         }
     }
 
-    /// Dernier match masqué (spec §8) : ligne fixe, qu'un prochain match existe ou non. Pas un lien : rien à ouvrir.
+    /// `NextLine.hidden` (spec §8) : dernier match masqué, ou prochain match contre une autre équipe suivie en
+    /// anti-spoiler (règle C) ; ligne fixe, qu'un prochain match existe ou non. Pas un lien : rien à ouvrir.
     private var hiddenNextRow: some View {
         HStack(spacing: 6) {
             IconView(icon: .eyeOff, size: 13)

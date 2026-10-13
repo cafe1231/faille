@@ -42,7 +42,7 @@ final class AppStore {
     private let transport: any HTTPTransport
     private let files: FileStore?
     private let isPreview: Bool
-    /// Recharger les widgets quand les équipes suivies changent (jamais en aperçu ni dans les tests hébergés).
+    /// Appeler WidgetKit pour recharger les widgets (jamais en aperçu ni dans les tests hébergés).
     private let reloadsWidgets: Bool
     @ObservationIgnored private var lastAttempt: [DataKind: Date] = [:]
     @ObservationIgnored private var scheduleLeagueIds: [String]? = nil
@@ -54,6 +54,8 @@ final class AppStore {
     /// modification de l'utilisateur, on retente la lecture.
     @ObservationIgnored private var followsUnreadable = false
     @ObservationIgnored private var settingsUnreadable = false
+    /// Demandes de rechargement des widgets (lu par les tests ; WidgetKit n'est appelé que si `reloadsWidgets`).
+    @ObservationIgnored private(set) var widgetReloadRequests = 0
 
     private static let log = Logger(subsystem: "Faille", category: "données")
 
@@ -137,8 +139,9 @@ final class AppStore {
         TeamCards.build(follows: follows, schedule: schedule, live: live, revealed: settings.revealedMatchIds)
     }
 
-    /// Ligne « Prochain » d'une carte : `.hidden` tant que le dernier match de l'équipe est masqué (spec §8, jamais
-    /// `card.next` directement : l'existence ou l'adversaire du prochain match trahirait un résultat).
+    /// Ligne « Prochain » d'une carte : `.hidden` tant que le dernier match de l'équipe est masqué, ou que son prochain
+    /// match l'oppose à une autre équipe suivie en anti-spoiler (spec §8, règle C ; jamais `card.next` directement :
+    /// l'existence ou l'adversaire du prochain match trahirait un résultat).
     func nextLine(for card: TeamCard) -> NextLine {
         Presenter.nextLine(for: card, follows: follows, revealed: settings.revealedMatchIds)
     }
@@ -309,13 +312,17 @@ final class AppStore {
         }
         isRefreshing = true
         defer { isRefreshing = false }
+        // Les widgets relisent le calendrier et le direct qui viennent d'être enregistrés (spec §7) : une fois par
+        // cycle, et même si la tâche est annulée juste après un chargement réussi (le fichier est déjà écrit).
+        var liveFetched = false
+        var scheduleFetched = false
+        defer { if liveFetched || scheduleFetched { reloadWidgets() } }
         if pullToRefresh {
             for kind in DataKind.allCases where kind == .live || kind == .schedule || lastSuccess[kind] == nil {
                 lastAttempt[kind] = nil
             }
         }
         let due = RefreshPolicy.due(refreshInput(opening: opening))
-        var liveFetched = false
         for kind in [DataKind.leagues, .teams, .live] where due.contains(kind) {
             let succeeded = await fetch(kind)
             if Task.isCancelled { return }
@@ -323,7 +330,7 @@ final class AppStore {
         }
         // Le calendrier dépend des ligues (peut-être tout juste chargées) et des matchs sortis du direct : on redemande.
         if RefreshPolicy.due(refreshInput(opening: opening)).contains(.schedule) {
-            await fetch(.schedule)
+            scheduleFetched = await fetch(.schedule)
             if Task.isCancelled { return }
         }
         // Un direct qui vient d'échouer n'est pas une raison de demander les stats de ses matchs (ils échoueraient aussi).
@@ -534,10 +541,7 @@ final class AppStore {
     private func saveFollows() {
         guard !followsUnreadable else { return }
         files?.save(follows, to: .follows)
-        if reloadsWidgets {
-            // Le widget (sonde, puis les vrais à l'étape 3) relit les équipes suivies tout de suite.
-            WidgetCenter.shared.reloadAllTimelines()
-        }
+        reloadWidgets()
     }
 
     /// Écriture déclenchée par un rafraîchissement (renommage d'équipe, couleur du logo) : seulement si la liste a
@@ -548,8 +552,19 @@ final class AppStore {
         saveFollows()
     }
 
+    /// Réglages (mode Live Activity, matchs révélés) : une révélation se voit tout de suite dans les widgets (spec §8).
     private func saveSettings() {
         guard !settingsUnreadable else { return }
         files?.save(settings, to: .settings)
+        reloadWidgets()
+    }
+
+    /// Les widgets relisent les fichiers du groupe d'apps (spec §7). Demandés au premier plan, ces rechargements ne
+    /// sont pas décomptés du budget de WidgetKit.
+    private func reloadWidgets() {
+        widgetReloadRequests += 1
+        if reloadsWidgets {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 }
