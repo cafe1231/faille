@@ -71,18 +71,31 @@ jobs:
           brew install xcodegen
           xcodegen generate
 
-      - name: Choisir un simulateur iPhone sous iOS 26 ou plus
+      - name: Choisir un simulateur iPhone sous le dernier iOS (26 au minimum)
         id: sim
         run: |
-          UDID=$(xcrun simctl list --json devices available | jq -r '
-            [.devices | to_entries[] | select(.key | test("iOS-(2[6-9]|[3-9][0-9])")) | .value[]
-             | select(.name | startswith("iPhone"))] | first | .udid // empty')
-          if [ -z "$UDID" ]; then
+          xcrun simctl list runtimes
+          # Runtime iOS le plus récent disponible : tri par version numérique (26-10 après 26-2), pas le premier de la
+          # liste ; toujours iOS 26 au minimum. Une ligne : UDID, runtime, nom de l'appareil (séparés par des tabulations).
+          CHOICE=$(xcrun simctl list --json devices available | jq -r '
+            [.devices | to_entries[]
+             | (.key | capture("SimRuntime[.]iOS-(?<v>[0-9]+(-[0-9]+)*)$")) as $m
+             | ($m.v | split("-") | map(tonumber)) as $version
+             | select($version[0] >= 26)
+             | .key as $runtime
+             | .value[] | select(.name | startswith("iPhone"))
+             | {runtime: $runtime, version: $version, name: .name, udid: .udid}]
+            | sort_by(.version) | (last // empty)
+            | "\(.udid)\t\(.runtime)\t\(.name)"')
+          if [ -z "$CHOICE" ]; then
             xcrun simctl list devices available
             echo "Aucun simulateur iPhone iOS 26+ disponible" >&2
             exit 1
           fi
-          echo "Simulateur : $UDID"
+          UDID=$(printf '%s' "$CHOICE" | cut -f1)
+          RUNTIME=$(printf '%s' "$CHOICE" | cut -f2)
+          NAME=$(printf '%s' "$CHOICE" | cut -f3)
+          echo "Runtime choisi : ${RUNTIME#com.apple.CoreSimulator.SimRuntime.} · $NAME · $UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
       - name: Tests et aperçus
