@@ -64,6 +64,8 @@ struct SmallWidgetView: View {
         }
         .foregroundStyle(Palette.text)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // WidgetKit anime le passage d'une entrée à l'autre : les chiffres défilent (spec finitions §4).
+        .numericTransition()
     }
 
     /// Monogrammes : les deux équipes du match (couleur des équipes suivies), sinon l'équipe seule.
@@ -125,6 +127,7 @@ struct MediumWidgetView: View {
         }
         .foregroundStyle(Palette.text)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .numericTransition()
     }
 
     /// « ● KC 1 – 0 C9   [en direct Game 2] » ; à venir : « ● GEN vs FUR   jeu. 11:00 » ;

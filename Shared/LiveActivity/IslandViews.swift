@@ -26,6 +26,7 @@ struct IslandCompactView: View {
         .font(Sora.font(14, .bold))
         .monospacedDigit()
         .foregroundStyle(Color.white)
+        .numericTransition()
     }
 }
 
@@ -44,6 +45,7 @@ struct IslandMinimalView: View {
                         .font(Sora.font(11, .bold))
                         .monospacedDigit()
                         .foregroundStyle(Color.white)
+                        .numericTransition()
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
@@ -82,6 +84,7 @@ struct IslandCenterView: View {
                     .font(Sora.font(26, .bold))
                     .monospacedDigit()
                     .foregroundStyle(Color.white)
+                    .numericTransition()
             } else {
                 Text("vs")
                     .font(Sora.font(15, .medium))
@@ -121,6 +124,7 @@ struct IslandBottomView: View {
             .font(Sora.font(11, .semibold))
             .monospacedDigit()
             .opacity(display.faded ? 0.55 : 1)
+            .numericTransition()
         }
     }
 

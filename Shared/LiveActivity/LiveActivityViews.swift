@@ -91,6 +91,7 @@ struct LiveActivityStatusView: View {
                 }
                 Text(text)
                     .monospacedDigit()
+                    .numericTransition()
             case let .stale(since):
                 // « màj il y a 9 minutes », sans les secondes que donne `.relative` : le format de référence d'iOS,
                 // limité à une unité (minutes, puis heures), écrit lui-même « il y a » (d'où le `label` du statut :
@@ -142,9 +143,12 @@ struct LiveActivityScoreRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             if let score = display.score, score.count == 2 {
+                // Score non masqué (`display.score` est nil pour un match masqué) : ses chiffres défilent d'une mise à
+                // jour à l'autre (spec finitions §4).
                 Text(Format.score(score))
                     .font(Sora.font(22, .bold))
                     .monospacedDigit()
+                    .numericTransition()
             } else {
                 Text("vs")
                     .font(Sora.font(12, .medium))
@@ -201,6 +205,7 @@ struct LiveActivityStatRows: View {
         }
         .font(Sora.font(11.5, .bold))
         .monospacedDigit()
+        .numericTransition()
     }
 
     private func leadText(_ text: String, leader: Int) -> some View {

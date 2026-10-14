@@ -14,6 +14,7 @@ struct InlineWidgetView: View {
         } icon: {
             InlineIcon.image(content.headline?.isLive == true ? .live : .clock)
         }
+        .numericTransition()
     }
 }
 
@@ -51,6 +52,7 @@ struct RectangularWidgetView: View {
             .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .numericTransition()
     }
 }
 
@@ -90,6 +92,7 @@ struct CircularWidgetView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .numericTransition()
     }
 
     /// Piste pâle et arc plein jusqu'à `progress` (0 : 24 h ou plus avant le match ; 1 : il commence ou il est en direct).
