@@ -48,7 +48,7 @@ public struct LiveMatchState: Codable, Sendable, Equatable, Hashable {
         }
     }
 
-    /// Au-delà, la Live Activity affiche « màj il y a X min ».
+    /// Au-delà, la Live Activity affiche « màj il y a X minutes ».
     public static let staleAfter: TimeInterval = 180
 
     public var phase: Phase

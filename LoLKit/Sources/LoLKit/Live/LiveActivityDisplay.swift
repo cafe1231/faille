@@ -36,10 +36,11 @@ public struct LiveActivityDisplay: Sendable, Equatable {
         case victory(String)
         /// « Terminé » : match masqué, ou vainqueur inconnu (forfait, Bo2).
         case finished
-        /// « màj il y a X min » à la place du chrono : rien de frais depuis `since` (spec §6.3).
+        /// « màj il y a X minutes » à la place du chrono : rien de frais depuis `since` (spec §6.3).
         case stale(since: Date)
 
-        /// Texte fixe ; nil pour le chrono (minuteur natif). Pour `.stale`, la vue ajoute la durée (minuteur natif).
+        /// Texte fixe ; nil pour le chrono (minuteur natif). Pour `.stale` : « màj », la vue y ajoute la durée avec le
+        /// texte système « il y a X minutes » (minuteur natif) — le libellé ne la contient donc pas.
         public var label: String? {
             switch self {
             case .clock: return nil
@@ -47,7 +48,7 @@ public struct LiveActivityDisplay: Sendable, Equatable {
             case .betweenGames: return "entre deux games"
             case let .victory(code): return "Victoire \(code)"
             case .finished: return "Terminé"
-            case .stale: return "màj il y a"
+            case .stale: return "màj"
             }
         }
     }

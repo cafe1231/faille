@@ -63,7 +63,7 @@ struct LiveActivityLockView: View {
 }
 
 /// Droite de l'en-tête : chrono natif (il tourne sans mise à jour), chrono figé, « En direct », « entre deux games »,
-/// « Victoire KC », « Terminé », ou « màj il y a X min » quand la Live Activity n'est plus fraîche (spec §6.3).
+/// « Victoire KC », « Terminé », ou « màj il y a X minutes » quand la Live Activity n'est plus fraîche (spec §6.3).
 struct LiveActivityStatusView: View {
     let status: LiveActivityDisplay.Status
     /// « Game 2 · » devant le chrono (Dynamic Island déployée).
@@ -93,11 +93,11 @@ struct LiveActivityStatusView: View {
                     .monospacedDigit()
             case let .stale(since):
                 // « màj il y a 9 minutes », sans les secondes que donne `.relative` : le format de référence d'iOS,
-                // limité à une unité (minutes, puis heures), écrit lui-même « il y a » (d'où « màj » seul, et non le
-                // `label` du statut) et se met à jour sans relance de la Live Activity. Comme un minuteur natif, il
-                // occupe toute la largeur proposée : largeur fixe, de quoi écrire « màj il y a 59 minutes », alignée
-                // à droite pour que le bord de l'en-tête reste net.
-                Text("màj \(Text(.currentDate, format: .reference(to: since, allowedFields: [.hour, .minute], maxFieldCount: 1)))")
+                // limité à une unité (minutes, puis heures), écrit lui-même « il y a » (d'où le `label` du statut :
+                // « màj » seul, une seule fois) et se met à jour sans relance de la Live Activity. Comme un minuteur
+                // natif, il occupe toute la largeur proposée : largeur fixe, de quoi écrire « màj il y a 59 minutes »,
+                // alignée à droite pour que le bord de l'en-tête reste net.
+                Text("\(status.label ?? "") \(Text(.currentDate, format: .reference(to: since, allowedFields: [.hour, .minute], maxFieldCount: 1)))")
                     .multilineTextAlignment(.trailing)
                     .frame(width: 124, alignment: .trailing)
             default:

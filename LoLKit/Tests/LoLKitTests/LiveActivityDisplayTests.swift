@@ -63,7 +63,7 @@ import Testing
         #expect(shown.status == .stale(since: now))
         #expect(shown.faded)
         #expect(shown.rows.count == 5)
-        #expect(LiveActivityDisplay.Status.stale(since: now).label == "màj il y a")
+        #expect(LiveActivityDisplay.Status.stale(since: now).label == "màj")
     }
 
     @Test func maskedShowsOnlyThatItIsLive() {
