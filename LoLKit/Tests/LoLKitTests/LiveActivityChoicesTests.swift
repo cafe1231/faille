@@ -62,6 +62,34 @@ import Testing
         #expect(choices.started.isEmpty)
     }
 
+    @Test func aJustStartedActivityIsRecentForTheGracePeriod() {
+        var choices = LiveActivityChoices()
+        choices.markStarted("a", now: now)
+        #expect(LiveActivityChoices.reconcileGrace == 30)
+        #expect(choices.recentlyStarted("a", now: now))
+        #expect(choices.recentlyStarted("a", now: now.addingTimeInterval(10)))
+        // Pile au délai : encore récente, et `reconcile` ne la retire pas non plus (pas de trou entre les deux).
+        #expect(choices.recentlyStarted("a", now: now.addingTimeInterval(LiveActivityChoices.reconcileGrace)))
+        var atTheLimit = choices
+        atTheLimit.reconcile(running: [], now: now.addingTimeInterval(LiveActivityChoices.reconcileGrace))
+        #expect(atTheLimit.dismissedIds.isEmpty)
+        #expect(!choices.recentlyStarted("a", now: now.addingTimeInterval(31)))
+        #expect(!choices.recentlyStarted("a", now: now.addingTimeInterval(3600)))
+    }
+
+    @Test func anUnknownEndedOrDismissedMatchIsNotRecentlyStarted() {
+        var choices = LiveActivityChoices()
+        #expect(!choices.recentlyStarted("a", now: now))
+        choices.markStarted("a", now: now)
+        choices.markStarted("b", now: now)
+        choices.markStarted("c", now: now)
+        choices.markEnded("a")
+        choices.dismiss("b", now: now)
+        #expect(!choices.recentlyStarted("a", now: now.addingTimeInterval(5)))
+        #expect(!choices.recentlyStarted("b", now: now.addingTimeInterval(5)))
+        #expect(choices.recentlyStarted("c", now: now.addingTimeInterval(5)))
+    }
+
     @Test func marksOlderThanADayAreForgotten() {
         var choices = LiveActivityChoices()
         choices.pin("old", now: now)

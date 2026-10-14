@@ -105,7 +105,11 @@ final class LiveActivityController {
         }
 
         if canStart, verified, enabled, let live {
-            let visible = ActivityGateway.running().filter(\.isVisible).map(\.matchId)
+            let listed = ActivityGateway.running().filter(\.isVisible).map(\.matchId)
+            // Démarrée il y a moins de 30 s mais pas encore listée par iOS : elle existe quand même. Ni doublon, et elle
+            // garde sa place parmi les 3 (`LiveActivityChoices.recentlyStarted`).
+            let unlisted = choices.started.keys.filter { !listed.contains($0) && choices.recentlyStarted($0, now: now) }
+            let visible = listed + unlisted.sorted()
             let target = LiveActivityPlanner.plan(live: live, follows: follows, mode: mode, pinned: choices.pinnedIds,
                                                   dismissed: choices.dismissedIds, active: visible)
             for matchId in target where !visible.contains(matchId) {

@@ -10,8 +10,9 @@ import Foundation
 public struct LiveActivityChoices: Codable, Sendable, Equatable {
     public static let retention: TimeInterval = 24 * 3600
     /// Délai après le démarrage pendant lequel une Live Activity absente de la liste « en cours » est encore neuve :
-    /// iOS peut ne pas la lister tout de suite, elle n'est pas pour autant retirée à la main.
-    private static let reconcileGrace: TimeInterval = 30
+    /// iOS peut ne pas la lister tout de suite, elle n'est pas pour autant retirée à la main (`reconcile`), et l'appli
+    /// ne la redémarre pas non plus (`recentlyStarted`).
+    public static let reconcileGrace: TimeInterval = 30
 
     public private(set) var pinned: [String: Date]
     public private(set) var dismissed: [String: Date]
@@ -72,6 +73,14 @@ public struct LiveActivityChoices: Codable, Sendable, Equatable {
     /// L'appli termine elle-même cette Live Activity (match fini, mode manuel) : ce n'est pas un retrait à la main.
     public mutating func markEnded(_ matchId: String) {
         started[matchId] = nil
+    }
+
+    /// L'appli a démarré la Live Activity de ce match il y a au plus `reconcileGrace` (30 s) : si iOS ne la liste pas
+    /// encore, elle existe quand même, et l'appli n'en démarre pas une seconde (doublon). C'est exactement le
+    /// complément de `reconcile` : à 30 s pile, elle n'est ni retirée à la main ni à redémarrer.
+    public func recentlyStarted(_ matchId: String, now: Date) -> Bool {
+        guard let startedAt = started[matchId] else { return false }
+        return now.timeIntervalSince(startedAt) <= Self.reconcileGrace
     }
 
     /// Les Live Activities démarrées par l'appli depuis plus de 30 s (`reconcileGrace`) qui ne sont plus en cours
