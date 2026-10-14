@@ -46,7 +46,9 @@ struct LiveChipText: View {
                 if state.phase == .inGame, let start = state.gameClockStart {
                     Text(" · ")
                     if let stopped = state.gameClockStoppedAt {
+                        // Chrono figé (pause, fin de game) : ses chiffres défilent quand il change (spec finitions §4).
                         Text(Format.clock(stopped.timeIntervalSince(start)))
+                            .numericChange(stopped.timeIntervalSince(start))
                     } else {
                         Text(start, style: .timer)
                     }
@@ -78,6 +80,7 @@ struct ScoreRow: View {
     let score: [Int]?
     let tints: [Color?]
     var large = false
+    @ReduceMotion var reduceMotion
 
     var body: some View {
         HStack(spacing: 8) {
@@ -89,9 +92,13 @@ struct ScoreRow: View {
             }
             Spacer(minLength: 8)
             if let score {
+                // Score non masqué (nil quand masqué : rien ne peut défiler) ; à la révélation, il sort d'un flou
+                // (spec finitions §4, §8).
                 Text(Format.score(score))
                     .font(large ? Typo.scoreLarge : Typo.score)
                     .monospacedDigit()
+                    .numericChange(score)
+                    .transition(Motion.revealTransition(reduceMotion: reduceMotion))
             } else {
                 Text("vs")
                     .font(Typo.bodyMedium)
@@ -114,6 +121,7 @@ struct ScoreRow: View {
 }
 
 /// Ligne de stats d'une carte (spec §5.1) : kills, écart de gold, drakes, tours ; équipe de gauche d'abord.
+/// Les chiffres défilent quand ils changent (spec finitions §4) ; cette ligne n'existe que pour un match non masqué.
 struct MiniStats: View {
     let stats: [TeamStats]
     let tint: Color
@@ -128,6 +136,7 @@ struct MiniStats: View {
                     Text(Format.goldDiff(diff))
                         .font(Sora.font(12, .bold))
                         .foregroundStyle(diff > 0 ? tint : Palette.secondary)
+                        .numericChange(diff)
                 }
                 item(.drake, "\(stats[0].dragons.count) – \(stats[1].dragons.count)")
                 item(.tower, "\(stats[0].towers) – \(stats[1].towers)")
@@ -141,6 +150,7 @@ struct MiniStats: View {
         HStack(spacing: 4) {
             IconView(icon: icon, size: 13)
             Text(text)
+                .numericChange(text)
         }
     }
 }
@@ -163,6 +173,6 @@ struct RevealButton: View {
             .padding(.vertical, 4)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
     }
 }

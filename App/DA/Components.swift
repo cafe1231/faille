@@ -20,9 +20,12 @@ struct ScreenHeader<Trailing: View>: View {
                     .font(Typo.title)
                     .tracking(Typo.titleTracking)
                     .foregroundStyle(Palette.text)
+                // « N en direct · N à venir », « N équipes suivies » : les chiffres défilent (spec finitions §4) ; les
+                // comptes viennent de LoLKit (une carte à « Prochain » masqué ne compte pas).
                 Text(subtitle)
                     .font(Typo.secondary)
                     .foregroundStyle(Palette.secondary)
+                    .numericChange(subtitle)
             }
             Spacer(minLength: 12)
             trailing

@@ -3,21 +3,35 @@ import SwiftUI
 
 /// Carte Vitrail d'une équipe suivie (spec §5.1) : en direct, prochain, dernier.
 /// Chaque match est un lien vers son Détail ; l'anti-spoiler (§8) vient de LoLKit.
+/// Finitions : lignes qui s'enfoncent au toucher, chiffres qui défilent, halo « en direct », lueur d'équipe pour un
+/// match en direct non masqué, révélation qui sort d'un flou avec un retour haptique.
 struct TeamCardView: View {
     @Environment(AppStore.self) private var store
     let card: TeamCard
+    @ReduceMotion var reduceMotion
+    /// Retours haptiques de la carte : elle reste à l'écran quand « toucher pour révéler » disparaît.
+    @State private var haptics = HapticTrigger()
 
     private var tint: Color {
         Palette.team(card.team.colorHex)
     }
 
+    /// Lueur d'équipe (spec finitions §12) : seulement pour un match en direct (en jeu ou entre deux games) que LoLKit
+    /// n'a pas masqué. `state` est déjà passé par `displayed(for:)` : un match que l'API donne pour terminé ne brille pas.
+    static func glows(_ state: LiveMatchState?) -> Bool {
+        guard let state, !state.spoilerFree else { return false }
+        return state.phase == .inGame || state.phase == .betweenGames
+    }
+
     var body: some View {
         // Jamais `card.next` directement : la ligne « Prochain » passe par LoLKit (anti-spoiler, spec §8).
         let nextLine = store.nextLine(for: card)
+        // Un match que `getLive` donne pour terminé est « Terminé », jamais « En direct » (spec §8).
+        let liveState = card.live.map { store.liveState(for: $0).displayed(for: $0) }
         VStack(alignment: .leading, spacing: 10) {
             SectionLabel(text: header, dot: tint)
-            if let live = card.live {
-                liveBlock(live)
+            if let live = card.live, let liveState {
+                liveBlock(live, state: liveState)
             }
             switch nextLine {
             case let .match(next):
@@ -38,15 +52,23 @@ struct TeamCardView: View {
         }
         .foregroundStyle(Palette.text)
         .glassCard(tint: tint)
+        .teamGlow(tint, active: Self.glows(liveState))
+        .haptics(haptics)
     }
 
     private var header: String {
         [card.team.name, card.team.homeLeagueName].compactMap { $0 }.joined(separator: " · ")
     }
 
-    @ViewBuilder private func liveBlock(_ event: MatchEvent) -> some View {
-        // Un match que `getLive` donne pour terminé est « Terminé », jamais « En direct » (spec §8).
-        let state = store.liveState(for: event).displayed(for: event)
+    /// « Toucher pour révéler » (spec §8) : le score sort d'un flou en fondu (`Motion.reveal`), avec un retour haptique.
+    private func reveal(_ matchId: String) {
+        haptics.play(.reveal)
+        withAnimation(Motion.animation(.reveal, reduceMotion: reduceMotion)) {
+            store.reveal(matchId: matchId)
+        }
+    }
+
+    @ViewBuilder private func liveBlock(_ event: MatchEvent, state: LiveMatchState) -> some View {
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
         let teams = order.map { event.match.teams[$0] }
         let icon = LiveChipText.icon(for: state.phase)
@@ -54,7 +76,7 @@ struct TeamCardView: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     Chip(muted: icon != .live) {
-                        IconView(icon: icon, size: 12)
+                        ChipIcon(icon: icon, size: 12)
                         LiveChipText(state: state, opponent: teams.count == 2 ? teams[1].code : nil)
                     }
                     if state.spoilerFree {
@@ -65,22 +87,27 @@ struct TeamCardView: View {
                     }
                 }
                 if !state.spoilerFree {
-                    ScoreRow(teams: teams, score: state.seriesScore.flatMap { reorder($0, order) },
-                             tints: teams.map { store.tint(for: $0) })
-                    if let stats = state.stats.flatMap({ reorder($0, order) }) {
-                        MiniStats(stats: stats, tint: tint)
-                    } else if !state.statsAvailable {
-                        Text("Stats live non fournies par Riot")
-                            .font(Typo.secondary)
-                            .foregroundStyle(Palette.secondary)
+                    // Jamais rendus tant que le match est masqué ; à la révélation, ils sortent d'un flou (spec
+                    // finitions §8). Même espacement que le bloc : la mise en page ne change pas.
+                    VStack(alignment: .leading, spacing: 8) {
+                        ScoreRow(teams: teams, score: state.seriesScore.flatMap { reorder($0, order) },
+                                 tints: teams.map { store.tint(for: $0) })
+                        if let stats = state.stats.flatMap({ reorder($0, order) }) {
+                            MiniStats(stats: stats, tint: tint)
+                        } else if !state.statsAvailable {
+                            Text("Stats live non fournies par Riot")
+                                .font(Typo.secondary)
+                                .foregroundStyle(Palette.secondary)
+                        }
                     }
+                    .transition(Motion.revealTransition(reduceMotion: reduceMotion))
                 }
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         if state.spoilerFree {
-            RevealButton { store.reveal(matchId: event.id) }
+            RevealButton { reveal(event.id) }
         }
     }
 
@@ -124,7 +151,7 @@ struct TeamCardView: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
     }
 
     /// « Dernier · GEN 3 – 0 HLE » ; masqué : « Dernier · T1 vs GEN · Terminé · sam. 11 oct. · 09:00 » (aucun résultat, spec §8).
@@ -139,6 +166,6 @@ struct TeamCardView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
     }
 }
