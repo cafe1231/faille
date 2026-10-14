@@ -37,6 +37,23 @@ struct LiveActivityControllerTests {
         #expect(store.liveActivities.choices.isPinned("m1"))
     }
 
+    /// Démarrage au lancement à froid : la première passe ne diffère que si l'appli a noté des Live Activities
+    /// démarrées ET qu'iOS n'en liste aucune ; sinon ouvrir Faille puis verrouiller aussitôt laisserait le match sans
+    /// Live Activity (l'arrière-plan ne peut pas en démarrer).
+    @Test func theFirstPassOnlyWaitsWhenThereIsSomethingToConfuse() {
+        typealias Controller = LiveActivityController
+        // Lancement à froid, rien de noté, iOS ne liste rien : on démarre tout de suite.
+        #expect(Controller.isListVerified(hasSynced: false, iosListsAny: false, appStartedAny: false))
+        // Lancement à froid, des Live Activities notées mais iOS n'en liste aucune : « retirées » ou « pas encore
+        // listées » ? La passe suivante tranchera.
+        #expect(!Controller.isListVerified(hasSynced: false, iosListsAny: false, appStartedAny: true))
+        // iOS en liste : la liste est remplie.
+        #expect(Controller.isListVerified(hasSynced: false, iosListsAny: true, appStartedAny: true))
+        // Plus la première passe : la liste est sûre, même vide.
+        #expect(Controller.isListVerified(hasSynced: true, iosListsAny: false, appStartedAny: true))
+        #expect(Controller.isListVerified(hasSynced: true, iosListsAny: false, appStartedAny: false))
+    }
+
     @Test func previewStoreShowsTheKcActivity() {
         #expect(AppStore(preview: .standard).liveActivities.shownMatchIds == [SampleData.kcMatchId])
         #expect(AppStore(preview: .empty).liveActivities.shownMatchIds.isEmpty)

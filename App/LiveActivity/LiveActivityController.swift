@@ -60,10 +60,12 @@ final class LiveActivityController {
     ///    appelé que pour ce qui a changé ;
     /// 3. si `canStart` (premier plan) et si le direct est connu : démarrage des nouvelles, dans les places libres.
     ///
-    /// La première passe après le lancement, si iOS ne liste encore aucune Live Activity, ne peut pas distinguer « toutes
-    /// retirées » de « liste pas encore remplie » : elle ne réconcilie pas (un faux retrait serait définitif) et ne
-    /// démarre rien (elle recréerait une Live Activity que l'utilisateur vient de retirer, ou en doublon) ; la passe du
-    /// tour suivant, 10 s plus tard, fait les deux.
+    /// La première passe après le lancement ne peut pas distinguer « toutes retirées » de « liste pas encore remplie »
+    /// quand l'appli a noté des Live Activities qu'elle a démarrées (`choices.started`) et qu'iOS n'en liste aucune :
+    /// elle ne réconcilie pas (un faux retrait serait définitif) et ne démarre rien (elle recréerait une Live Activity
+    /// que l'utilisateur vient de retirer, ou en doublon) ; la passe du tour suivant, 10 s plus tard, fait les deux.
+    /// Sans rien de noté, il n'y a rien à confondre : la première passe démarre tout de suite (ouvrir Faille puis
+    /// verrouiller aussitôt ne laisse pas le match sans Live Activity — l'arrière-plan ne peut pas en démarrer).
     /// - Parameter content: contenu actuel d'un match (`AppStore.activityContent`), nil s'il n'y a rien de neuf.
     func sync(live: [MatchEvent]?, follows: FollowList, mode: LiveActivityMode, canStart: Bool, now: Date,
               content: (String) -> LiveActivityContent?) async {
@@ -75,7 +77,8 @@ final class LiveActivityController {
         let before = choices
 
         let running = ActivityGateway.running()
-        let verified = hasSynced || !running.isEmpty
+        let verified = Self.isListVerified(hasSynced: hasSynced, iosListsAny: !running.isEmpty,
+                                           appStartedAny: !choices.started.isEmpty)
         hasSynced = true
         if verified {
             choices.reconcile(running: Set(running.filter(\.isRunning).map(\.matchId)), now: now)
@@ -130,6 +133,14 @@ final class LiveActivityController {
         if choices != before {
             save()
         }
+    }
+
+    /// La liste d'iOS est-elle assez sûre pour réconcilier et démarrer ? Oui dès qu'un `sync` a déjà eu lieu, qu'iOS
+    /// liste quelque chose, ou que l'appli n'a noté aucune Live Activity démarrée (rien à réconcilier, aucun retrait à
+    /// la main possible). Seul cas « non » : le lancement, quand l'appli a des Live Activities notées et qu'iOS n'en
+    /// liste aucune.
+    nonisolated static func isListVerified(hasSynced: Bool, iosListsAny: Bool, appStartedAny: Bool) -> Bool {
+        hasSynced || iosListsAny || !appStartedAny
     }
 
     /// « Épingler sur l'écran verrouillé » (spec §5.3) : enregistré tout de suite ; la Live Activity démarre au `sync`
