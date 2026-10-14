@@ -19,6 +19,8 @@ struct HomeView: View {
     @State private var cascaded = false
     /// Dernière publication de `content` (M16 : au plus une toutes les 30 s pendant la collecte).
     @State private var lastPublished: Date?
+    /// Clé de la dernière publication : le délai ne retient que les ticks de lecture de games (`shouldThrottle`).
+    @State private var lastKey: HomeKey?
     @ReduceMotion var reduceMotion
 
     var body: some View {
@@ -52,8 +54,11 @@ struct HomeView: View {
         .haptics(haptics)
         .onAppear { cascaded = true }
         .task(id: key(now: now, calendar: calendar)) {
-            // M16 : pendant une passe de collecte, au plus une publication toutes les 30 s (une game lue relance la clé).
-            if store.season.progress.running, let last = lastPublished {
+            // M16 : pendant une passe de collecte, au plus une publication toutes les 30 s pour les games lues ; un
+            // suivi, une révélation ou un changement de jour se publie sans attendre (anti-spoiler).
+            let taskKey = key(now: now, calendar: calendar)
+            if HomeKey.shouldThrottle(old: lastKey, new: taskKey, running: store.season.progress.running),
+               let last = lastPublished {
                 let wait = 30 - Date().timeIntervalSince(last)
                 if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
                 guard !Task.isCancelled else { return }
@@ -63,6 +68,7 @@ struct HomeView: View {
             guard !Task.isCancelled else { return }
             content = computed
             lastPublished = Date()
+            lastKey = taskKey
         }
         .abyssBackground()
         .navigationTitle(String(localized: "Accueil"))

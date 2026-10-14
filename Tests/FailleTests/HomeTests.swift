@@ -58,6 +58,49 @@ struct HomeModelTests {
     }
 }
 
+/// M16 : le délai de 30 s ne retient que les lectures de games ; un suivi ou une révélation passe tout de suite.
+struct HomeThrottleTests {
+    private func key(version: Int = 1, follows: FollowList = FollowList(), revealed: Set<String> = [],
+                     standings: Set<String> = [], day: Date = now, running: Bool = true) -> HomeKey {
+        HomeKey(version: version, follows: follows, revealed: revealed, day: day, updated: nil, liveIds: nil,
+                loaded: true, running: running, revealedStandings: standings)
+    }
+
+    @Test func gameReadTicksAreThrottledDuringACrawl() {
+        #expect(HomeKey.shouldThrottle(old: key(), new: key(version: 2), running: true))
+    }
+
+    @Test func nothingIsThrottledOutsideACrawlOrBeforeTheFirstPublication() {
+        #expect(!HomeKey.shouldThrottle(old: key(), new: key(version: 2), running: false))
+        #expect(!HomeKey.shouldThrottle(old: nil, new: key(), running: true))
+    }
+
+    @Test func followsRevealsAndDayChangesPublishAtOnce() {
+        let old = key()
+        #expect(!HomeKey.shouldThrottle(old: old, new: key(follows: SampleData.follows), running: true))
+        #expect(!HomeKey.shouldThrottle(old: old, new: key(revealed: ["m-t1-blg"]), running: true))
+        #expect(!HomeKey.shouldThrottle(old: old, new: key(standings: ["s1"]), running: true))
+        #expect(!HomeKey.shouldThrottle(old: old, new: key(day: now.addingTimeInterval(86_400)), running: true))
+    }
+}
+
+/// « Regarder » : absent d'un match en direct masqué, présent sinon ; les clés des joueurs en forme sont distinctes.
+struct HomeLiveWatchTests {
+    @Test func maskedLiveItemHasNoWatchLink() {
+        let kc = SampleData.kcLive
+        #expect(WatchLinks.live(kc.streams, inProgress: true, masked: false) != nil)
+        #expect(WatchLinks.live(kc.streams, inProgress: true, masked: true) == nil)
+    }
+
+    @Test func hotPlayersKeysAreSixDistinct() {
+        let keys = Set(HomeModel.periods.flatMap { period in
+            PlayerMetric.allCases.map { HotPlayersKey(period: period, metric: $0) }
+        })
+        #expect(keys.count == HomeModel.periods.count * PlayerMetric.allCases.count)
+        #expect(HotPlayersKey(period: .week, metric: .kda) != HotPlayersKey(period: .season, metric: .kda))
+    }
+}
+
 /// Textes de l'Accueil (spec saison §2.2, §3.6) : LoLKit donne des valeurs, l'appli formule.
 struct HomeTextsTests {
     @Test func reasonsAndExplanation() {

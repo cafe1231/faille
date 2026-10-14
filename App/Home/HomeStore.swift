@@ -37,4 +37,13 @@ struct HomeKey: Equatable {
     let loaded: Bool
     let running: Bool
     let revealedStandings: Set<String>
+
+    /// M16 : pendant une passe de collecte, seules les lectures de games (version, mise à jour, direct, état de la
+    /// collecte) sont retenues 30 s. Un suivi, une révélation ou un changement de jour se publie tout de suite, sinon
+    /// l'écran garderait des stats calculées avant le suivi (fuite anti-spoiler) ou semblerait ignorer le geste.
+    static func shouldThrottle(old: HomeKey?, new: HomeKey, running: Bool) -> Bool {
+        guard running, let old else { return false }
+        return old.follows == new.follows && old.revealed == new.revealed
+            && old.revealedStandings == new.revealedStandings && old.day == new.day
+    }
 }
