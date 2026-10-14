@@ -1,20 +1,22 @@
 import SwiftUI
 
-/// Onglets de l'appli (spec §5). Barre flottante en Liquid Glass : style par défaut de `TabView` sous iOS 26.
+/// Onglets de l'appli (spec §5, spec saison §2.1) : Accueil (par défaut), Matchs, Équipes. Barre flottante en Liquid
+/// Glass : style par défaut de `TabView` sous iOS 26.
 enum AppTab: Hashable {
-    case matches, teams
+    case home, matches, teams
 }
 
 struct RootView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: AppTab
-    /// Pile de l'onglet Matchs : toucher une notification de début de match y pousse le Détail du match (spec
-    /// fonctionnalités §2).
-    @State private var matchesPath: [MatchRoute] = []
+    /// Piles des onglets (spec saison §2.1). Toucher une notification de début de match pousse le Détail du match dans
+    /// celle de Matchs (spec fonctionnalités §2, inchangé).
+    @State private var homePath = NavigationPath()
+    @State private var matchesPath = NavigationPath()
+    @State private var teamsPath = NavigationPath()
     /// Notifications touchées (l'appli) ; nil : aperçus et tests.
     private let router: NotificationRouter?
-    @ReduceMotion var reduceMotion
     /// Zoom carte → Détail (spec finitions §6) : les lignes des cartes en sont les sources, l'écran Détail la destination.
     @Namespace private var zoom
 
@@ -26,31 +28,35 @@ struct RootView: View {
         let active: Bool
     }
 
-    init(tab: AppTab = .matches, router: NotificationRouter? = nil) {
+    init(tab: AppTab = .home, router: NotificationRouter? = nil) {
         _tab = State(initialValue: tab)
         self.router = router
     }
 
     var body: some View {
         TabView(selection: $tab) {
+            Tab("Accueil", image: Icon.home.assetName, value: AppTab.home) {
+                NavigationStack(path: $homePath) {
+                    HomeView(zoom: zoom, openTeams: { tab = .teams })
+                        .failleDestinations(zoom: zoom)
+                }
+            }
             Tab("Matchs", image: Icon.trophy.assetName, value: AppTab.matches) {
                 NavigationStack(path: $matchesPath) {
                     MatchesView(openTeams: { tab = .teams }, zoom: zoom)
-                        .navigationDestination(for: MatchRoute.self) { route in
-                            // Sans ligne source, ou sous « Réduire les animations » : transition standard d'iOS.
-                            MatchDetailView(matchId: route.matchId)
-                                .zoomTransition(route.sourceID, in: zoom,
-                                                enabled: Motion.runs(.zoom, reduceMotion: reduceMotion))
-                        }
+                        .failleDestinations(zoom: zoom)
                 }
             }
             Tab("Équipes", image: Icon.star.assetName, value: AppTab.teams) {
-                NavigationStack {
+                NavigationStack(path: $teamsPath) {
                     TeamsView()
+                        .failleDestinations(zoom: zoom)
                 }
             }
         }
         .tint(Palette.accent)
+        // Icônes de champions des écrans de saison (`ChampionIcon`) : le store Data Dragon de l'appli.
+        .environment(\.dataDragon, store.dataDragon)
         .onChange(of: router?.pendingMatchId, initial: true) { _, _ in
             openPendingMatch()
         }
@@ -66,8 +72,9 @@ struct RootView: View {
     /// de carte n'en est la source).
     private func openPendingMatch() {
         guard let matchId = router?.consume() else { return }
-        tab = .matches
-        matchesPath = [MatchRoute(matchId: matchId)]
+        let link = RootNavigation.deepLink(matchId: matchId)
+        tab = link.tab
+        matchesPath = NavigationPath([link.route])
     }
 }
 

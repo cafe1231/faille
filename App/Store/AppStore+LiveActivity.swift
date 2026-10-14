@@ -107,6 +107,8 @@ extension AppStore {
     /// Passage en arrière-plan (spec §6.4) : une dernière mise à jour des Live Activities et des notifications avec ce que
     /// l'appli sait, puis la demande du premier réveil.
     func enterBackground() async {
+        // Un vrai passage en arrière-plan : la prochaine session de collecte repart d'un budget neuf (I-2).
+        noteBackgroundPassage()
         await syncLiveActivities(canStart: false)
         await syncReminders(center: reminderCenter)
         scheduleBackgroundRefresh()
