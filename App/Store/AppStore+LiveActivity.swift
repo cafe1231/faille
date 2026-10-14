@@ -48,19 +48,28 @@ extension AppStore {
     }
 
     /// Après un masquage (œil) ou une révélation (spec §8) : la Live Activity suit tout de suite, avec ce que le store
-    /// sait déjà (le masquage ne doit pas attendre le réseau), puis une seconde fois avec les stats relues (celles d'un
-    /// match qui vient d'être révélé).
+    /// sait déjà (le masquage ne doit pas attendre le réseau), puis les stats sont relues. La seconde passe
+    /// (`canStart: true`) ne renvoie pas ces stats à la Live Activity : après une révélation elle rend `.keep` (même
+    /// `updatedAt`, même `spoilerFree`, voir `LiveActivityPlanner.decision`). Les stats d'un match qui vient d'être révélé
+    /// n'y arrivent qu'à la prochaine relecture réussie du direct (60 s au plus), qui change `updatedAt`.
     func refreshActivitiesAfterSpoilerChange() async {
         await syncLiveActivities(canStart: false)
         await refreshLiveStats()
+        guard !Task.isCancelled else { return }
         await syncLiveActivities(canStart: true)
     }
 
     /// « Épingler sur l'écran verrouillé » (spec §5.3) : enregistré tout de suite, la Live Activity démarre aussitôt.
+    /// Si elle ne peut pas démarrer faute de direct (inconnu, ou sans ce match), le journal le dit.
     func pinActivity(matchId: String) -> PinOutcome {
         let outcome = liveActivities.pin(matchId: matchId)
         if outcome == .pinned {
-            runWithScene { await self.syncLiveActivities(canStart: true) }
+            runWithScene {
+                await self.syncLiveActivities(canStart: true)
+                // Une scène qui quitte le premier plan pendant la passe : on ne sait pas si elle a abouti.
+                guard !Task.isCancelled else { return }
+                self.liveActivities.reportPinWithoutActivity(matchId: matchId, live: self.live)
+            }
         }
         return outcome
     }

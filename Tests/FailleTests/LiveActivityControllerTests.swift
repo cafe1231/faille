@@ -42,6 +42,15 @@ struct LiveActivityControllerTests {
         #expect(AppStore(preview: .empty).liveActivities.shownMatchIds.isEmpty)
     }
 
+    /// « Épingler » sans direct : la cause qui reste au journal (le reste est journalisé par `sync` lui-même).
+    @Test func aPinWithoutLiveIsExplainedByTheLiveList() {
+        typealias Controller = LiveActivityController
+        #expect(Controller.pinFailureReason(matchId: SampleData.kcMatchId, live: nil) == "direct inconnu")
+        #expect(Controller.pinFailureReason(matchId: "inconnu", live: SampleData.live) == "absent du direct")
+        #expect(Controller.pinFailureReason(matchId: "inconnu", live: []) == "absent du direct")
+        #expect(Controller.pinFailureReason(matchId: SampleData.kcMatchId, live: SampleData.live) == nil)
+    }
+
     // MARK: Relecture des matchs qui ont une Live Activity (`refreshLiveStats`)
 
     /// Un match épinglé d'équipes non suivies n'a de stats que si sa Live Activity est à l'écran.

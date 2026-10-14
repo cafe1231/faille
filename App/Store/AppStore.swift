@@ -258,6 +258,7 @@ final class AppStore {
         // Une équipe d'une autre ligue change les ligues du calendrier : la politique le voit tout de suite.
         runWithScene {
             await self.refreshDue(opening: false)
+            guard !Task.isCancelled else { return }
             await self.syncLiveActivities(canStart: true)
         }
     }

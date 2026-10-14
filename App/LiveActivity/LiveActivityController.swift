@@ -159,6 +159,22 @@ final class LiveActivityController {
         files?.save(choices, to: .liveActivities)
     }
 
+    /// Pourquoi un match épinglé n'a pas démarré faute de direct : `sync` ne démarre que les matchs que le direct liste
+    /// et n'a donc rien à journaliser dans ces deux cas. nil : le direct liste le match (si rien ne s'affiche, la cause
+    /// est un échec déjà journalisé par `sync`, ou la première passe après le lancement, qui reporte son démarrage).
+    nonisolated static func pinFailureReason(matchId: String, live: [MatchEvent]?) -> String? {
+        guard let live else { return "direct inconnu" }
+        return live.contains { $0.id == matchId } ? nil : "absent du direct"
+    }
+
+    /// À appeler après le `sync` qui suit un « Épingler » : si le match épinglé n'est pas à l'écran à cause du direct,
+    /// l'écrit au journal (niveau error, comme les autres échecs de démarrage ; pas d'écran pour le dire).
+    func reportPinWithoutActivity(matchId: String, live: [MatchEvent]?) {
+        guard usesActivityKit, !shownMatchIds.contains(matchId),
+              let reason = Self.pinFailureReason(matchId: matchId, live: live) else { return }
+        logStartFailure(matchId, reason)
+    }
+
     /// Un démarrage qui échoue (pas d'ids d'équipe, `Activity.request` qui lève : limite d'iOS, autorisation retirée…)
     /// est journalisé une fois par match et par cause : sans écran pour le dire, le journal est la seule trace.
     private func logStartFailure(_ matchId: String, _ reason: String) {
