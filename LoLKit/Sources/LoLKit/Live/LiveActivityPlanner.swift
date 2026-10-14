@@ -67,7 +67,9 @@ public enum LiveActivityPlanner {
     /// neuf sur ce match). `latest` est d'abord remis dans l'ordre des équipes de la Live Activity (fixé au démarrage).
     /// - mode manuel et match pas épinglé : fin tout de suite (spec §6.4 « uniquement via le bouton du Détail ») ;
     /// - match terminé : contenu final, retrait 1 h plus tard (spec §6.3) ;
-    /// - une donnée plus ancienne que celle affichée ne la remplace jamais ; à relecture égale, seul un changement
+    /// - un masquage (œil) est toujours envoyé, même avec une donnée plus ancienne que celle affichée : l'anti-spoiler
+    ///   (spec §8) passe avant la fraîcheur, et l'état masqué n'a ni score ni stats à faire reculer ;
+    /// - sinon, une donnée plus ancienne que celle affichée ne la remplace jamais ; à relecture égale, seul un changement
     ///   d'anti-spoiler (révélation, œil) est envoyé — un contenu recalculé avec moins d'informations (stats pas encore
     ///   rechargées après un relancement) n'efface pas ce qui est affiché ;
     /// - sinon, mise à jour.
@@ -83,6 +85,7 @@ public enum LiveActivityPlanner {
         guard let latest else { return .keep }
         let state = latest.state.aligned(from: latest.teams, to: attributes)
         if state.phase == .finished { return .end(state, dismissAt: now.addingTimeInterval(finishedDisplay)) }
+        if state.spoilerFree && !current.spoilerFree { return .update(state) }
         if state.updatedAt < current.updatedAt { return .keep }
         if state.updatedAt == current.updatedAt && state.spoilerFree == current.spoilerFree { return .keep }
         return .update(state)

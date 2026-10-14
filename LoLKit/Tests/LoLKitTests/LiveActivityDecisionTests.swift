@@ -53,6 +53,20 @@ import Testing
         #expect(decide(revealed, content(masked)) == .update(masked))
     }
 
+    @Test func aMaskIsNeverIgnoredEvenWithOlderData() {
+        // Anti-spoiler (spec §8) : le masquage passe avant la garde « contenu plus ancien ».
+        let revealed = state(updatedAt: now)
+        let masked = state(updatedAt: now.addingTimeInterval(-120)).masked()
+        #expect(masked.spoilerFree)
+        #expect(decide(revealed, content(masked)) == .update(masked))
+    }
+
+    @Test func aRevealWithOlderDataIsKeptUntilFresherData() {
+        let masked = state(updatedAt: now).masked()
+        let revealed = state(updatedAt: now.addingTimeInterval(-120))
+        #expect(decide(masked, content(revealed)) == .keep)
+    }
+
     @Test func nothingNewKeepsTheActivityAsItIs() {
         #expect(decide(state(updatedAt: now), nil) == .keep)
     }
