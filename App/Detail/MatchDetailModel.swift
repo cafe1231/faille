@@ -14,6 +14,10 @@ final class MatchDetailModel {
     var playersTeamIndex = 0
     /// Un premier appel à `getEventDetails` a été tenté.
     private(set) var attempted = false
+    /// Games dont le premier chargement est fini (réponse reçue, refus connu ou échec) : sans stats à ce moment-là,
+    /// l'écran peut dire qu'elles sont indisponibles ; avant, il montre un squelette. Jamais renseigné pour un match
+    /// masqué (aucun chargement, spec §8) ni pour un chargement interrompu par l'annulation.
+    private(set) var loadedGameIds: Set<String> = []
 
     /// Nombre de cycles entre deux relectures de `getEventDetails` tant que le match est en cours : cadence du direct
     /// (60 s) sur cadence de l'écran (10 s), soit 6.
@@ -69,5 +73,13 @@ final class MatchDetailModel {
         default:
             break
         }
+        if !Task.isCancelled {
+            loadedGameIds.insert(game.id)
+        }
+    }
+
+    /// Le premier chargement de cette game est-il fini ? Faux : l'écran affiche un squelette plutôt que « indisponibles ».
+    func hasLoaded(_ game: GameRef) -> Bool {
+        loadedGameIds.contains(game.id)
     }
 }

@@ -26,10 +26,14 @@ struct MatchDetailModelTests {
     }
 
     /// Store branché sur un faux réseau qui sert ces détails et répond 404 au flux `window` ; détails déjà chargés.
-    private func makeStore(game2: String, stats: String, spoilerFree: Bool = false) async -> (AppStore, ScriptedTransport) {
+    private func makeStore(game2: String, stats: String, spoilerFree: Bool = false,
+                           windowFails: Bool = false) async -> (AppStore, ScriptedTransport) {
         let json = detailsJSON(game2: game2, stats: stats)
         let transport = ScriptedTransport(extra: { url in
             url.path.hasSuffix("/getEventDetails") ? HTTPResponse(status: 200, body: Data(json.utf8)) : nil
+        }, failure: { url in
+            // Erreur réseau (et non 404) sur le flux `window` : le chargement échoue sans refus connu.
+            windowFails && url.path.contains("/window/") ? URLError(.notConnectedToInternet) : nil
         })
         let files = TemporaryFiles.store()
         if spoilerFree {
@@ -105,6 +109,73 @@ struct MatchDetailModelTests {
         #expect(store.isMasked(teams, matchId: matchId) == false)
         await model.loadSelectedGame(store: store)
         #expect(await windowRequests(transport).contains { $0.path.hasSuffix("/window/g2") })
+    }
+
+    // MARK: Premier chargement de la game affichée
+
+    /// M6 : tant que la game affichée n'a pas fini son premier chargement, l'écran montre un squelette et non
+    /// « indisponibles » ; elle est « chargée » une fois la réponse reçue, même refusée (404).
+    @Test func aGameIsLoadedOnceItsFirstLoadIsDone() async throws {
+        let (store, transport) = await makeStore(game2: "completed", stats: "enabled")
+        let details = try #require(store.details[matchId])
+        let model = MatchDetailModel(matchId: matchId)
+        let game = try #require(model.selectedGame(in: details))
+        #expect(!model.hasLoaded(game))
+        await model.loadSelectedGame(store: store)
+        #expect(await windowRequests(transport).isEmpty == false)
+        #expect(model.hasLoaded(game))
+        // Les autres games ne sont pas chargées pour autant.
+        let other = try #require(details.match.games.first { $0.number == 1 })
+        #expect(!model.hasLoaded(other))
+    }
+
+    /// Un échec réseau finit aussi le premier chargement : pas de squelette éternel ; la boucle de 10 s réessaie.
+    @Test func aFailedFirstLoadStillEndsTheSkeleton() async throws {
+        let (store, _) = await makeStore(game2: "completed", stats: "enabled", windowFails: true)
+        let details = try #require(store.details[matchId])
+        let model = MatchDetailModel(matchId: matchId)
+        let game = try #require(model.selectedGame(in: details))
+        await model.loadSelectedGame(store: store)
+        #expect(store.snapshots[game.id] == nil)
+        #expect(!store.statsUnavailable.contains(game.id))
+        #expect(model.hasLoaded(game))
+    }
+
+    /// Une game sans stats annoncées (aucune requête) est elle aussi « chargée » : l'écran sait déjà quoi dire.
+    @Test func aGameWithoutStatsIsLoadedWithoutAnyRequest() async throws {
+        let (store, transport) = await makeStore(game2: "completed", stats: "disabled")
+        let details = try #require(store.details[matchId])
+        let model = MatchDetailModel(matchId: matchId)
+        let game = try #require(model.selectedGame(in: details))
+        await model.loadSelectedGame(store: store)
+        #expect(await windowRequests(transport).isEmpty)
+        #expect(model.hasLoaded(game))
+    }
+
+    /// Anti-spoiler (spec §8) : un match masqué n'est jamais chargé, donc aucune game n'est « chargée » avant la
+    /// révélation ; elle l'est dès que la révélation l'a chargée.
+    @Test func aMaskedMatchLoadsNothingUntilRevealed() async throws {
+        let (store, _) = await makeStore(game2: "inProgress", stats: "enabled", spoilerFree: true)
+        let details = try #require(store.details[matchId])
+        let model = MatchDetailModel(matchId: matchId)
+        let game = try #require(model.selectedGame(in: details))
+        await model.loadSelectedGame(store: store)
+        #expect(!model.hasLoaded(game))
+        store.reveal(matchId: matchId)
+        await model.loadSelectedGame(store: store)
+        #expect(model.hasLoaded(game))
+    }
+
+    /// Un chargement interrompu (autre game choisie, écran quitté) n'est pas un premier chargement fini.
+    @Test func aCancelledLoadIsNotALoadedGame() async throws {
+        let (store, _) = await makeStore(game2: "completed", stats: "enabled")
+        let details = try #require(store.details[matchId])
+        let model = MatchDetailModel(matchId: matchId)
+        let game = try #require(model.selectedGame(in: details))
+        let task = Task { await model.loadSelectedGame(store: store) }
+        task.cancel()
+        await task.value
+        #expect(!model.hasLoaded(game))
     }
 
     // MARK: Game affichée

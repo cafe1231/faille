@@ -217,8 +217,9 @@ struct MatchDetailView: View {
                 TeamStatsPanel(left: left, right: right, tint: store.tint(for: teams[0]) ?? Palette.accent)
                 PlayersPanel(teams: teams, snapshot: snapshot,
                              selection: $model.playersTeamIndex.animation(Motion.animation(.snappy, reduceMotion: reduceMotion)))
-            } else if game.state == .inProgress {
-                // Première frame pas encore arrivée (spec finitions §10) : le gabarit des panneaux.
+            } else if game.state == .inProgress || !model.hasLoaded(game) {
+                // Première frame (game en cours) ou première réponse (game jouée) pas encore arrivée (spec finitions §10) :
+                // le gabarit des panneaux. « Indisponibles » n'apparaît qu'une fois le chargement fini sans stats.
                 GameStatsSkeleton()
             } else {
                 NoteCard(icon: .refresh, text: "Stats de cette game indisponibles")
