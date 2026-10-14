@@ -1,0 +1,1036 @@
+{
+ "data": {
+  "standings": [
+   {
+    "stages": [
+     {
+      "id": "113475482880934048",
+      "name": "Play-ins",
+      "type": null,
+      "slug": "play_ins",
+      "sections": [
+       {
+        "name": "Play-ins",
+        "matches": [
+         {
+          "id": "113475493522079909",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991853197861",
+            "name": "T1",
+            "code": "T1",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           },
+           {
+            "id": "99566404848691211",
+            "name": "Invictus Gaming",
+            "code": "IG",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           }
+          ]
+         }
+        ],
+        "rankings": []
+       }
+      ]
+     },
+     {
+      "id": "113475482880934049",
+      "name": "Système suisse",
+      "type": null,
+      "slug": "swiss",
+      "sections": [
+       {
+        "name": "Système suisse",
+        "matches": [
+         {
+          "id": "113475798006599034",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566408219409348",
+            "name": "Vivo Keyd Stars",
+            "code": "VKS",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "113661839307879869",
+            "name": "Team Secret Whales",
+            "code": "TSW",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664572",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991866488695",
+            "name": "Fnatic",
+            "code": "FNC",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "107700199633958891",
+            "name": "CTBC Flying Oyster",
+            "code": "CFO",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664574",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "103461966965149786",
+            "name": "Movistar KOI",
+            "code": "MKOI",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "99566404579461230",
+            "name": "kt Rolster",
+            "code": "KT",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664576",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99294153828264740",
+            "name": "100 Thieves",
+            "code": "100T",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "99566404853854212",
+            "name": "BILIBILI GAMING",
+            "code": "BLG",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664578",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991853197861",
+            "name": "T1",
+            "code": "T1",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "98926509892121852",
+            "name": "FlyQuest",
+            "code": "FLY",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664580",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566404856367466",
+            "name": "Anyone's Legend",
+            "code": "AL",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "100205573496804586",
+            "name": "Hanwha Life Esports",
+            "code": "HLE",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664582",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566404854685458",
+            "name": "TOP ESPORTS",
+            "code": "TES",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "98767991926151025",
+            "name": "G2 Esports",
+            "code": "G2",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664584",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "104367068120825486",
+            "name": "PSG Talon",
+            "code": "PSG",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "100205573495116443",
+            "name": "Gen.G Esports",
+            "code": "GEN",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664586",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "113661839307879869",
+            "name": "Team Secret Whales",
+            "code": "TSW",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "99566404579461230",
+            "name": "kt Rolster",
+            "code": "KT",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664588",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99294153828264740",
+            "name": "100 Thieves",
+            "code": "100T",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "99566404854685458",
+            "name": "TOP ESPORTS",
+            "code": "TES",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664590",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991853197861",
+            "name": "T1",
+            "code": "T1",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "107700199633958891",
+            "name": "CTBC Flying Oyster",
+            "code": "CFO",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664592",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566404856367466",
+            "name": "Anyone's Legend",
+            "code": "AL",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "100205573495116443",
+            "name": "Gen.G Esports",
+            "code": "GEN",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664594",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98926509892121852",
+            "name": "FlyQuest",
+            "code": "FLY",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "99566408219409348",
+            "name": "Vivo Keyd Stars",
+            "code": "VKS",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664596",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991926151025",
+            "name": "G2 Esports",
+            "code": "G2",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "103461966965149786",
+            "name": "Movistar KOI",
+            "code": "MKOI",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664598",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991866488695",
+            "name": "Fnatic",
+            "code": "FNC",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "99566404853854212",
+            "name": "BILIBILI GAMING",
+            "code": "BLG",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664600",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "104367068120825486",
+            "name": "PSG Talon",
+            "code": "PSG",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "100205573496804586",
+            "name": "Hanwha Life Esports",
+            "code": "HLE",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664602",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566404854685458",
+            "name": "TOP ESPORTS",
+            "code": "TES",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "99566404579461230",
+            "name": "kt Rolster",
+            "code": "KT",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664606",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566404856367466",
+            "name": "Anyone's Legend",
+            "code": "AL",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           },
+           {
+            "id": "107700199633958891",
+            "name": "CTBC Flying Oyster",
+            "code": "CFO",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664610",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "113661839307879869",
+            "name": "Team Secret Whales",
+            "code": "TSW",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "98926509892121852",
+            "name": "FlyQuest",
+            "code": "FLY",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664612",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991853197861",
+            "name": "T1",
+            "code": "T1",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "100205573495116443",
+            "name": "Gen.G Esports",
+            "code": "GEN",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664614",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991926151025",
+            "name": "G2 Esports",
+            "code": "G2",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "99566404853854212",
+            "name": "BILIBILI GAMING",
+            "code": "BLG",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664616",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99294153828264740",
+            "name": "100 Thieves",
+            "code": "100T",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "100205573496804586",
+            "name": "Hanwha Life Esports",
+            "code": "HLE",
+            "result": {
+             "outcome": "win",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664618",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991866488695",
+            "name": "Fnatic",
+            "code": "FNC",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "103461966965149786",
+            "name": "Movistar KOI",
+            "code": "MKOI",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664622",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566408219409348",
+            "name": "Vivo Keyd Stars",
+            "code": "VKS",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           },
+           {
+            "id": "104367068120825486",
+            "name": "PSG Talon",
+            "code": "PSG",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664626",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "100205573496804586",
+            "name": "Hanwha Life Esports",
+            "code": "HLE",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           },
+           {
+            "id": "107700199633958891",
+            "name": "CTBC Flying Oyster",
+            "code": "CFO",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664630",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991926151025",
+            "name": "G2 Esports",
+            "code": "G2",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           },
+           {
+            "id": "98926509892121852",
+            "name": "FlyQuest",
+            "code": "FLY",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664634",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566404854685458",
+            "name": "TOP ESPORTS",
+            "code": "TES",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "100205573495116443",
+            "name": "Gen.G Esports",
+            "code": "GEN",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664638",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "113661839307879869",
+            "name": "Team Secret Whales",
+            "code": "TSW",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "103461966965149786",
+            "name": "Movistar KOI",
+            "code": "MKOI",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664642",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566408219409348",
+            "name": "Vivo Keyd Stars",
+            "code": "VKS",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "99566404853854212",
+            "name": "BILIBILI GAMING",
+            "code": "BLG",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664646",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991853197861",
+            "name": "T1",
+            "code": "T1",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           },
+           {
+            "id": "99294153828264740",
+            "name": "100 Thieves",
+            "code": "100T",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664650",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98926509892121852",
+            "name": "FlyQuest",
+            "code": "FLY",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "107700199633958891",
+            "name": "CTBC Flying Oyster",
+            "code": "CFO",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664654",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566404853854212",
+            "name": "BILIBILI GAMING",
+            "code": "BLG",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "99566404854685458",
+            "name": "TOP ESPORTS",
+            "code": "TES",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475798006664658",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991853197861",
+            "name": "T1",
+            "code": "T1",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           },
+           {
+            "id": "103461966965149786",
+            "name": "Movistar KOI",
+            "code": "MKOI",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         }
+        ],
+        "rankings": []
+       }
+      ]
+     },
+     {
+      "id": "113475493521227939",
+      "name": "Phase finale",
+      "type": null,
+      "slug": "knockouts",
+      "sections": [
+       {
+        "name": "Phase finale",
+        "matches": [
+         {
+          "id": "113475871523985211",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991853197861",
+            "name": "T1",
+            "code": "T1",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           },
+           {
+            "id": "99566404856367466",
+            "name": "Anyone's Legend",
+            "code": "AL",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 2
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475871523985217",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991926151025",
+            "name": "G2 Esports",
+            "code": "G2",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "99566404854685458",
+            "name": "TOP ESPORTS",
+            "code": "TES",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475871523985223",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "100205573496804586",
+            "name": "Hanwha Life Esports",
+            "code": "HLE",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           },
+           {
+            "id": "100205573495116443",
+            "name": "Gen.G Esports",
+            "code": "GEN",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475871523985229",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "107700199633958891",
+            "name": "CTBC Flying Oyster",
+            "code": "CFO",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "99566404579461230",
+            "name": "kt Rolster",
+            "code": "KT",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475871523985235",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566404854685458",
+            "name": "TOP ESPORTS",
+            "code": "TES",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "98767991853197861",
+            "name": "T1",
+            "code": "T1",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475871523985241",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "99566404579461230",
+            "name": "kt Rolster",
+            "code": "KT",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           },
+           {
+            "id": "100205573495116443",
+            "name": "Gen.G Esports",
+            "code": "GEN",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 1
+            }
+           }
+          ]
+         },
+         {
+          "id": "113475871524050783",
+          "state": "completed",
+          "teams": [
+           {
+            "id": "98767991853197861",
+            "name": "T1",
+            "code": "T1",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           },
+           {
+            "id": "99566404579461230",
+            "name": "kt Rolster",
+            "code": "KT",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 2
+            }
+           }
+          ]
+         }
+        ],
+        "rankings": []
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
