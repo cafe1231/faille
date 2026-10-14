@@ -1,17 +1,14 @@
 import LoLKit
 import SwiftUI
 
-/// Destination de navigation : le Détail d'un match (branchée dans `RootView` à la Task 11).
-struct MatchRoute: Hashable {
-    let matchId: String
-}
-
 /// Onglet Matchs, version B (spec §5.1) : « Mes équipes », une carte Vitrail par équipe suivie, tirer pour rafraîchir.
 /// Finitions : cartes qui arrivent en cascade à la première apparition, insertions, retraits et changements d'ordre
 /// animés, bandeau d'erreur qui glisse du haut, retour haptique à la fin du tirer-pour-rafraîchir.
 struct MatchesView: View {
     @Environment(AppStore.self) private var store
     let openTeams: () -> Void
+    /// Espace de noms du zoom carte → Détail (`RootView`) ; nil (aperçus Xcode) : pas de zoom.
+    var zoom: Namespace.ID? = nil
     @ReduceMotion var reduceMotion
     /// Retour haptique du tirer-pour-rafraîchir.
     @State private var haptics = HapticTrigger()
@@ -34,7 +31,7 @@ struct MatchesView: View {
                     WelcomeCard(action: openTeams)
                 } else {
                     ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
-                        TeamCardView(card: card)
+                        TeamCardView(card: card, zoom: zoom)
                             .cascadeIn(index: index, shown: cardsShown)
                             .transition(Motion.listTransition(reduceMotion: reduceMotion))
                     }

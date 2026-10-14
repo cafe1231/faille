@@ -8,6 +8,8 @@ import SwiftUI
 struct TeamCardView: View {
     @Environment(AppStore.self) private var store
     let card: TeamCard
+    /// Espace de noms du zoom carte → Détail ; nil : transition standard.
+    var zoom: Namespace.ID? = nil
     @ReduceMotion var reduceMotion
     /// Retours haptiques de la carte : elle reste à l'écran quand « toucher pour révéler » disparaît.
     @State private var haptics = HapticTrigger()
@@ -72,7 +74,8 @@ struct TeamCardView: View {
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
         let teams = order.map { event.match.teams[$0] }
         let icon = LiveChipText.icon(for: state.phase)
-        NavigationLink(value: MatchRoute(matchId: event.id)) {
+        let route = MatchRoute(teamId: card.team.id, row: .live, matchId: event.id)
+        NavigationLink(value: route) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     Chip(muted: icon != .live) {
@@ -104,6 +107,7 @@ struct TeamCardView: View {
                 }
             }
             .contentShape(Rectangle())
+            .zoomSource(route.sourceID, in: zoom)
         }
         .buttonStyle(.pressable)
         if state.spoilerFree {
@@ -130,7 +134,8 @@ struct TeamCardView: View {
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
         let codes = reorder(line.teamCodes, order) ?? line.teamCodes
         let date = Format.matchDate(event.startTime)
-        return NavigationLink(value: MatchRoute(matchId: event.id)) {
+        let route = MatchRoute(teamId: card.team.id, row: .next, matchId: event.id)
+        return NavigationLink(value: route) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     if card.live == nil {
@@ -150,6 +155,7 @@ struct TeamCardView: View {
                     .foregroundStyle(Palette.secondary)
             }
             .contentShape(Rectangle())
+            .zoomSource(route.sourceID, in: zoom)
         }
         .buttonStyle(.pressable)
     }
@@ -159,12 +165,14 @@ struct TeamCardView: View {
         let line = store.scoreLine(event)
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
         let text = Format.lastRow(line, order: order, date: Format.matchDate(event.startTime))
-        return NavigationLink(value: MatchRoute(matchId: event.id)) {
+        let route = MatchRoute(teamId: card.team.id, row: .last, matchId: event.id)
+        return NavigationLink(value: route) {
             Text(text)
                 .font(Typo.secondary)
                 .foregroundStyle(Palette.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
+                .zoomSource(route.sourceID, in: zoom)
         }
         .buttonStyle(.pressable)
     }
