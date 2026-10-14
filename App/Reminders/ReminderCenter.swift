@@ -1,5 +1,6 @@
 import Foundation
 import LoLKit
+import os
 
 /// Autorisation des notifications, telle que l'appli la lit.
 enum ReminderAuthorization: Sendable, Equatable {
@@ -28,6 +29,12 @@ struct InertReminderCenter: ReminderCenter {
     func add(_ reminder: MatchReminder) async throws {}
 }
 
+extension Logger {
+    /// Journal des notifications de début de match : le journal d'iOS est la seule trace d'un refus de `add` ou de
+    /// `requestAuthorization` (comme pour `live-activity` et `arrière-plan`), le code d'iOS ne tournant que sur la CI.
+    static let notifications = Logger(subsystem: "Faille", category: "notifications")
+}
+
 /// Ce qu'une notification de Faille transporte : l'id du match à ouvrir quand on la touche (spec fonctionnalités §2).
 enum ReminderPayload {
     static let matchIdKey = "matchId"
@@ -51,6 +58,10 @@ enum ReminderSync {
     /// - Parameters:
     ///   - reminders: plan de LoLKit (au plus 60, les plus proches d'abord).
     ///   - enabled: réglage « Notifications de début de match ».
+    ///
+    /// Au mieux : un refus d'iOS pour une notification est journalisé et ne lève rien, la passe suivante réessaie. Une
+    /// passe annulée (la tâche de la scène est relancée dès que le plan change, sans attendre la précédente) ne touche plus
+    /// à rien : sa fin tardive ne doit pas défaire ce que la nouvelle passe vient de programmer ou de retirer.
     static func apply(_ reminders: [MatchReminder], enabled: Bool, center: any ReminderCenter) async {
         let ours = await center.pendingIdentifiers().filter { $0.hasPrefix(identifierPrefix) }
         var allowed = false
@@ -60,11 +71,18 @@ enum ReminderSync {
         let wanted = allowed ? reminders : []
         let wantedIds = Set(wanted.map(\.id))
         let stale = ours.filter { !wantedIds.contains($0) }
+        guard !Task.isCancelled else { return }
         if !stale.isEmpty {
             await center.remove(identifiers: stale)
         }
         for reminder in wanted {
-            try? await center.add(reminder)
+            guard !Task.isCancelled else { return }
+            do {
+                try await center.add(reminder)
+            } catch {
+                Logger.notifications.error(
+                    "Notification de \(reminder.matchId, privacy: .public) non programmée : \(String(describing: error), privacy: .public)")
+            }
         }
     }
 }

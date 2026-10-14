@@ -1,10 +1,51 @@
 import LoLKit
 import SwiftUI
 
+/// Ce que la section des notifications décide, sans vue (testé) : l'état de l'interrupteur et l'avertissement « refusées
+/// par iOS » d'après l'autorisation d'iOS.
+enum MatchRemindersFlow {
+    struct Outcome: Equatable, Sendable {
+        /// Valeur à donner au réglage ; nil : on n'y touche pas.
+        let enabled: Bool?
+        /// Faut-il dire que iOS refuse les notifications (et où les autoriser) ?
+        let denied: Bool
+    }
+
+    /// L'utilisateur bascule l'interrupteur. Activer demande d'abord l'autorisation d'iOS (la première fois seulement) ;
+    /// refusée, l'interrupteur reste coupé et l'avertissement s'affiche.
+    static func toggle(to on: Bool, center: any ReminderCenter) async -> Outcome {
+        guard on else { return Outcome(enabled: false, denied: false) }
+        let granted: Bool
+        switch await center.authorization() {
+        case .authorized: granted = true
+        case .denied: granted = false
+        case .notDetermined: granted = await center.requestAuthorization()
+        }
+        return Outcome(enabled: granted, denied: !granted)
+    }
+
+    /// Au premier plan, l'autorisation d'iOS a pu changer sans l'appli (Réglages d'iOS, sauvegarde restaurée sur un autre
+    /// iPhone : le réglage de Faille revient, pas l'autorisation).
+    /// - Autorisée : plus d'avertissement (l'utilisateur vient peut-être de l'autoriser).
+    /// - Refusée : l'avertissement s'affiche si le réglage est activé (rien ne sera programmé) ou s'il l'était déjà.
+    /// - Jamais demandée alors que le réglage est activé : il n'a aucun effet, on le coupe pour que le prochain
+    ///   basculement demande l'autorisation. Réglage coupé : rien ne change.
+    static func reconcile(enabled: Bool, denied: Bool, authorization: ReminderAuthorization) -> Outcome {
+        switch authorization {
+        case .authorized:
+            return Outcome(enabled: nil, denied: false)
+        case .denied:
+            return Outcome(enabled: nil, denied: denied || enabled)
+        case .notDetermined:
+            return enabled ? Outcome(enabled: false, denied: false) : Outcome(enabled: nil, denied: denied)
+        }
+    }
+}
+
 /// Réglage « Notifications de début de match » (spec fonctionnalités §2) : interrupteur (désactivé par défaut ; l'activer
 /// demande l'autorisation d'iOS) et délai de 5, 15 ou 30 min. Une seule source de vérité : les valeurs viennent du store
 /// et y retournent par `setEnabled` / `setLead`, rien n'est recopié dans la vue. Si iOS refuse, l'interrupteur reste coupé
-/// et la section dit où l'autoriser.
+/// et la section dit où l'autoriser (`MatchRemindersFlow`).
 struct MatchRemindersSection: View {
     let enabled: Bool
     let lead: TimeInterval
@@ -12,8 +53,10 @@ struct MatchRemindersSection: View {
     let setEnabled: (Bool) -> Void
     let setLead: (TimeInterval) -> Void
     @State private var denied: Bool
+    @Environment(\.scenePhase) private var scenePhase
 
-    /// - Parameter denied: état initial « refusé par iOS » (aperçus) ; l'écran le vérifie lui-même à l'affichage.
+    /// - Parameter denied: état initial « refusé par iOS » (aperçus) ; l'écran le vérifie lui-même à l'affichage et à
+    ///   chaque retour au premier plan.
     init(enabled: Bool, lead: TimeInterval, center: any ReminderCenter, denied: Bool = false,
          setEnabled: @escaping (Bool) -> Void, setLead: @escaping (TimeInterval) -> Void) {
         self.enabled = enabled
@@ -55,11 +98,8 @@ struct MatchRemindersSection: View {
             }
         }
         .glassCard(radius: Radius.inner, padding: 14)
-        .task {
-            if enabled, await center.authorization() == .denied {
-                denied = true
-            }
-        }
+        // À l'affichage et à chaque retour au premier plan (l'utilisateur revient des Réglages d'iOS).
+        .task(id: scenePhase) { await refresh() }
     }
 
     private var explanation: String {
@@ -68,20 +108,22 @@ struct MatchRemindersSection: View {
             : "Désactivées : aucune notification. Les activer demande l'autorisation d'iOS."
     }
 
-    /// Activer : autorisation d'iOS d'abord (demandée la première fois) ; refusée, l'interrupteur reste coupé.
+    /// Relit l'autorisation d'iOS (`MatchRemindersFlow.reconcile`) quand la scène est au premier plan.
+    private func refresh() async {
+        guard scenePhase == .active else { return }
+        let authorization = await center.authorization()
+        apply(MatchRemindersFlow.reconcile(enabled: enabled, denied: denied, authorization: authorization))
+    }
+
     private func toggle(_ on: Bool) async {
-        guard on else {
-            denied = false
-            setEnabled(false)
-            return
+        let outcome = await MatchRemindersFlow.toggle(to: on, center: center)
+        apply(outcome)
+    }
+
+    private func apply(_ outcome: MatchRemindersFlow.Outcome) {
+        denied = outcome.denied
+        if let value = outcome.enabled {
+            setEnabled(value)
         }
-        var granted = false
-        switch await center.authorization() {
-        case .authorized: granted = true
-        case .denied: granted = false
-        case .notDetermined: granted = await center.requestAuthorization()
-        }
-        denied = !granted
-        setEnabled(granted)
     }
 }
