@@ -1,0 +1,2229 @@
+{
+ "data": {
+  "schedule": {
+   "events": [
+    {
+     "startTime": "2026-07-24T14:30:00Z",
+     "blockName": "Semaine 1",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406275",
+      "teams": [
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406276"
+      },
+      {
+       "id": "115548681803406277"
+      },
+      {
+       "id": "115548681803406278"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-07-24T17:30:00Z",
+     "blockName": "Semaine 1",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406199",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406200"
+      },
+      {
+       "id": "115548681803406201"
+      },
+      {
+       "id": "115548681803406202"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-07-25T14:30:00Z",
+     "blockName": "Semaine 1",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406203",
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406204"
+      },
+      {
+       "id": "115548681803406205"
+      },
+      {
+       "id": "115548681803406206"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-07-25T17:30:00Z",
+     "blockName": "Semaine 1",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406271",
+      "teams": [
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406272"
+      },
+      {
+       "id": "115548681803406273"
+      },
+      {
+       "id": "115548681803406274"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-07-26T14:30:00Z",
+     "blockName": "Semaine 1",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406191",
+      "teams": [
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406192"
+      },
+      {
+       "id": "115548681803406193"
+      },
+      {
+       "id": "115548681803406194"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-07-26T17:30:00Z",
+     "blockName": "Semaine 1",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406287",
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406288"
+      },
+      {
+       "id": "115548681803406289"
+      },
+      {
+       "id": "115548681803406290"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-07-31T15:00:00Z",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406115",
+      "teams": [
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406116"
+      },
+      {
+       "id": "115548681803406117"
+      },
+      {
+       "id": "115548681803406118"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-07-31T17:15:00Z",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406215",
+      "teams": [
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Shifters",
+        "code": "SHFT",
+        "result": {
+         "gameWins": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406216"
+      },
+      {
+       "id": "115548681803406217"
+      },
+      {
+       "id": "115548681803406218"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-01T15:00:00Z",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406231",
+      "teams": [
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "SK Gaming",
+        "code": "SK",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406232"
+      },
+      {
+       "id": "115548681803406233"
+      },
+      {
+       "id": "115548681803406234"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-01T17:15:00Z",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406171",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406172"
+      },
+      {
+       "id": "115548681803406173"
+      },
+      {
+       "id": "115548681803406174"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-02T15:00:00Z",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406263",
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "SK Gaming",
+        "code": "SK",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406264"
+      },
+      {
+       "id": "115548681803406265"
+      },
+      {
+       "id": "115548681803406266"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-02T17:15:00Z",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406267",
+      "teams": [
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Fnatic",
+        "code": "FNC",
+        "result": {
+         "gameWins": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406268"
+      },
+      {
+       "id": "115548681803406269"
+      },
+      {
+       "id": "115548681803406270"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-03T15:00:00Z",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406151",
+      "teams": [
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Shifters",
+        "code": "SHFT",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406152"
+      },
+      {
+       "id": "115548681803406153"
+      },
+      {
+       "id": "115548681803406154"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-03T17:15:00Z",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406139",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406140"
+      },
+      {
+       "id": "115548681803406141"
+      },
+      {
+       "id": "115548681803406142"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-07T15:00:00Z",
+     "blockName": "Semaine 3",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406207",
+      "teams": [
+       {
+        "name": "Shifters",
+        "code": "SHFT",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406208"
+      },
+      {
+       "id": "115548681803406209"
+      },
+      {
+       "id": "115548681803406210"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-07T17:15:00Z",
+     "blockName": "Semaine 3",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406135",
+      "teams": [
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Fnatic",
+        "code": "FNC",
+        "result": {
+         "gameWins": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406136"
+      },
+      {
+       "id": "115548681803406137"
+      },
+      {
+       "id": "115548681803406138"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-08T15:00:00Z",
+     "blockName": "Semaine 3",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406159",
+      "teams": [
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "SK Gaming",
+        "code": "SK",
+        "result": {
+         "gameWins": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406160"
+      },
+      {
+       "id": "115548681803406161"
+      },
+      {
+       "id": "115548681803406162"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-08T17:15:00Z",
+     "blockName": "Semaine 3",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406235",
+      "teams": [
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406236"
+      },
+      {
+       "id": "115548681803406237"
+      },
+      {
+       "id": "115548681803406238"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-09T15:00:00Z",
+     "blockName": "Semaine 3",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406143",
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406144"
+      },
+      {
+       "id": "115548681803406145"
+      },
+      {
+       "id": "115548681803406146"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-09T17:15:00Z",
+     "blockName": "Semaine 3",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406279",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Fnatic",
+        "code": "FNC",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406280"
+      },
+      {
+       "id": "115548681803406281"
+      },
+      {
+       "id": "115548681803406282"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-10T15:00:00Z",
+     "blockName": "Semaine 3",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406187",
+      "teams": [
+       {
+        "name": "SK Gaming",
+        "code": "SK",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406188"
+      },
+      {
+       "id": "115548681803406189"
+      },
+      {
+       "id": "115548681803406190"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-10T17:15:00Z",
+     "blockName": "Semaine 3",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406175",
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406176"
+      },
+      {
+       "id": "115548681803406177"
+      },
+      {
+       "id": "115548681803406178"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-14T15:00:00Z",
+     "blockName": "Semaine 4",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406211",
+      "teams": [
+       {
+        "name": "SK Gaming",
+        "code": "SK",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Shifters",
+        "code": "SHFT",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406212"
+      },
+      {
+       "id": "115548681803406213"
+      },
+      {
+       "id": "115548681803406214"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-14T17:15:00Z",
+     "blockName": "Semaine 4",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406183",
+      "teams": [
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406184"
+      },
+      {
+       "id": "115548681803406185"
+      },
+      {
+       "id": "115548681803406186"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-15T15:00:00Z",
+     "blockName": "Semaine 4",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406255",
+      "teams": [
+       {
+        "name": "Fnatic",
+        "code": "FNC",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "SK Gaming",
+        "code": "SK",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406256"
+      },
+      {
+       "id": "115548681803406257"
+      },
+      {
+       "id": "115548681803406258"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-15T17:15:00Z",
+     "blockName": "Semaine 4",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406227",
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Shifters",
+        "code": "SHFT",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406228"
+      },
+      {
+       "id": "115548681803406229"
+      },
+      {
+       "id": "115548681803406230"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-16T15:00:00Z",
+     "blockName": "Semaine 4",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406163",
+      "teams": [
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406164"
+      },
+      {
+       "id": "115548681803406165"
+      },
+      {
+       "id": "115548681803406166"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-16T17:15:00Z",
+     "blockName": "Semaine 4",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406283",
+      "teams": [
+       {
+        "name": "Fnatic",
+        "code": "FNC",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406284"
+      },
+      {
+       "id": "115548681803406285"
+      },
+      {
+       "id": "115548681803406286"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-17T15:00:00Z",
+     "blockName": "Semaine 4",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803340575",
+      "teams": [
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803340576"
+      },
+      {
+       "id": "115548681803340577"
+      },
+      {
+       "id": "115548681803406114"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-17T17:15:00Z",
+     "blockName": "Semaine 4",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406243",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406244"
+      },
+      {
+       "id": "115548681803406245"
+      },
+      {
+       "id": "115548681803406246"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-21T15:00:00Z",
+     "blockName": "Semaine 5",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406127",
+      "teams": [
+       {
+        "name": "SK Gaming",
+        "code": "SK",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406128"
+      },
+      {
+       "id": "115548681803406129"
+      },
+      {
+       "id": "115548681803406130"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-21T17:15:00Z",
+     "blockName": "Semaine 5",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406147",
+      "teams": [
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406148"
+      },
+      {
+       "id": "115548681803406149"
+      },
+      {
+       "id": "115548681803406150"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-22T15:00:00Z",
+     "blockName": "Semaine 5",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406219",
+      "teams": [
+       {
+        "name": "Fnatic",
+        "code": "FNC",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Shifters",
+        "code": "SHFT",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406220"
+      },
+      {
+       "id": "115548681803406221"
+      },
+      {
+       "id": "115548681803406222"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-22T17:15:00Z",
+     "blockName": "Semaine 5",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406251",
+      "teams": [
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "SK Gaming",
+        "code": "SK",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406252"
+      },
+      {
+       "id": "115548681803406253"
+      },
+      {
+       "id": "115548681803406254"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-23T15:00:00Z",
+     "blockName": "Semaine 5",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406123",
+      "teams": [
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406124"
+      },
+      {
+       "id": "115548681803406125"
+      },
+      {
+       "id": "115548681803406126"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-23T17:15:00Z",
+     "blockName": "Semaine 5",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406223",
+      "teams": [
+       {
+        "name": "Shifters",
+        "code": "SHFT",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406224"
+      },
+      {
+       "id": "115548681803406225"
+      },
+      {
+       "id": "115548681803406226"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-24T15:00:00Z",
+     "blockName": "Semaine 5",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406167",
+      "teams": [
+       {
+        "name": "Fnatic",
+        "code": "FNC",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406168"
+      },
+      {
+       "id": "115548681803406169"
+      },
+      {
+       "id": "115548681803406170"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-24T17:15:00Z",
+     "blockName": "Semaine 5",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406247",
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406248"
+      },
+      {
+       "id": "115548681803406249"
+      },
+      {
+       "id": "115548681803406250"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-28T15:00:00Z",
+     "blockName": "Semaine 6",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406119",
+      "teams": [
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Shifters",
+        "code": "SHFT",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406120"
+      },
+      {
+       "id": "115548681803406121"
+      },
+      {
+       "id": "115548681803406122"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-28T17:15:00Z",
+     "blockName": "Semaine 6",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406195",
+      "teams": [
+       {
+        "name": "Fnatic",
+        "code": "FNC",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406196"
+      },
+      {
+       "id": "115548681803406197"
+      },
+      {
+       "id": "115548681803406198"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-29T15:00:00Z",
+     "blockName": "Semaine 6",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406259",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "SK Gaming",
+        "code": "SK",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406260"
+      },
+      {
+       "id": "115548681803406261"
+      },
+      {
+       "id": "115548681803406262"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-29T17:15:00Z",
+     "blockName": "Semaine 6",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406155",
+      "teams": [
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406156"
+      },
+      {
+       "id": "115548681803406157"
+      },
+      {
+       "id": "115548681803406158"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-30T12:00:00Z",
+     "blockName": "Semaine 6",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406179",
+      "teams": [
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Shifters",
+        "code": "SHFT",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406180"
+      },
+      {
+       "id": "115548681803406181"
+      },
+      {
+       "id": "115548681803406182"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-30T14:15:00Z",
+     "blockName": "Semaine 6",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406131",
+      "teams": [
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 2
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406132"
+      },
+      {
+       "id": "115548681803406133"
+      },
+      {
+       "id": "115548681803406134"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-08-30T16:30:00Z",
+     "blockName": "Semaine 6",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406239",
+      "teams": [
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Fnatic",
+        "code": "FNC",
+        "result": {
+         "gameWins": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406240"
+      },
+      {
+       "id": "115548681803406241"
+      },
+      {
+       "id": "115548681803406242"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-09-05T10:00:00Z",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406297",
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 3
+        }
+       },
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406298"
+      },
+      {
+       "id": "115548681803406299"
+      },
+      {
+       "id": "115548681803406300"
+      },
+      {
+       "id": "115548681803406301"
+      },
+      {
+       "id": "115548681803406302"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-09-05T15:00:00Z",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406291",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 3
+        }
+       },
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406292"
+      },
+      {
+       "id": "115548681803406293"
+      },
+      {
+       "id": "115548681803406294"
+      },
+      {
+       "id": "115548681803406295"
+      },
+      {
+       "id": "115548681803406296"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-09-06T15:00:00Z",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406303",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 3
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406304"
+      },
+      {
+       "id": "115548681803406305"
+      },
+      {
+       "id": "115548681803406306"
+      },
+      {
+       "id": "115548681803406307"
+      },
+      {
+       "id": "115548681803406308"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-09-11T15:00:00Z",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406309",
+      "teams": [
+       {
+        "name": "GIANTX",
+        "code": "GX",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 3
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406310"
+      },
+      {
+       "id": "115548681803406311"
+      },
+      {
+       "id": "115548681803406312"
+      },
+      {
+       "id": "115548681803406313"
+      },
+      {
+       "id": "115548681803406314"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-09-12T15:00:00Z",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406315",
+      "teams": [
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 3
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406316"
+      },
+      {
+       "id": "115548681803406317"
+      },
+      {
+       "id": "115548681803406318"
+      },
+      {
+       "id": "115548681803406319"
+      },
+      {
+       "id": "115548681803406320"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-09-18T15:00:00Z",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406321",
+      "teams": [
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 3
+        }
+       },
+       {
+        "name": "Natus Vincere",
+        "code": "NAVI",
+        "result": {
+         "gameWins": 1
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406322"
+      },
+      {
+       "id": "115548681803406323"
+      },
+      {
+       "id": "115548681803406324"
+      },
+      {
+       "id": "115548681803406325"
+      },
+      {
+       "id": "115548681803406326"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-09-19T15:00:00Z",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406327",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "result": {
+         "gameWins": 0
+        }
+       },
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 3
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406328"
+      },
+      {
+       "id": "115548681803406329"
+      },
+      {
+       "id": "115548681803406330"
+      },
+      {
+       "id": "115548681803406331"
+      },
+      {
+       "id": "115548681803406332"
+      }
+     ]
+    },
+    {
+     "startTime": "2026-09-20T15:00:00Z",
+     "blockName": "Finale",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406333",
+      "teams": [
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "result": {
+         "gameWins": 3
+        }
+       },
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406334"
+      },
+      {
+       "id": "115548681803406335"
+      },
+      {
+       "id": "115548681803406336"
+      },
+      {
+       "id": "115548681803406337"
+      },
+      {
+       "id": "115548681803406338"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

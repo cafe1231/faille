@@ -98,7 +98,8 @@ public struct LoLClient: Sendable {
         throw LoLAPIError.http(status: 400)
     }
 
-    private func api<T: Decodable>(_ endpoint: String, query: [URLQueryItem] = [], as type: T.Type) async throws -> T {
+    /// Lecture d'une route de l'API (clé publique, `hl`) ; interne pour les extensions (`LoLClient+Season`).
+    func api<T: Decodable>(_ endpoint: String, query: [URLQueryItem] = [], as type: T.Type) async throws -> T {
         var components = URLComponents(string: "\(Self.apiBase)/\(endpoint)")!
         components.queryItems = [URLQueryItem(name: "hl", value: language)] + query
         let response = try await transport.get(components.url!, headers: ["x-api-key": Self.publicAPIKey])
