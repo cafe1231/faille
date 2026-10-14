@@ -7,9 +7,9 @@
 | 2 — L'appli (Matchs, Équipes, Détail, Réglages, anti-spoiler) | **Faite et testée en CI** ; reste ton test sur l'iPhone (section A de la checklist) | [iOS 38454317932](https://github.com/cafe1231/faille/actions/runs/38454317932) ; la nouvelle IPA la remplace |
 | 3 — Les widgets (écran verrouillé : en ligne, rectangulaire, rond ; accueil : petit configurable, moyen) | **Faite et testée en CI** ; relecture finale + 9 corrections (matchs en retard, widget moyen à 4 lignes, anti-spoiler renforcé) | CI [iOS 38479473851](https://github.com/cafe1231/faille/actions/runs/38479473851), [LoLKit 38479473818](https://github.com/cafe1231/faille/actions/runs/38479473818) |
 | 4 — La Live Activity (écran verrouillé + Dynamic Island, auto/manuel, bouton « Épingler », arrière-plan) | **Faite et testée en CI** ; relecture finale + corrections (démarrage au lancement, diagnostic, anti-doublon) ; reste le test pendant un vrai match | CI [iOS 38498941347](https://github.com/cafe1231/faille/actions/runs/38498941347), LoLKit [38498941332](https://github.com/cafe1231/faille/actions/runs/38498941332) |
-| Worlds : capture d'une vraie fenêtre « live » | **Pas possible cette nuit** : aucun match en direct (premier match des Worlds : jeudi 15/10 à 20 h, C9 vs KC) | — |
+| Worlds : flux en direct | **En partie** : `lolkit live` lancé (« Aucun match en direct » cette nuit) ; une **vraie frame en pause** capturée sur KC vs MKOI (LEC, 19/09) → fixture `window_paused.json` + 2 tests ; la capture du **vrai direct** est programmée pour jeudi 15/10 à 20 h 20 (voir 6.4) | [LoLKit 38501202196](https://github.com/cafe1231/faille/actions/runs/38501202196) |
 
-Tests automatiques : 251 tests LoLKit (Linux + macOS), 118 tests sur simulateur iOS, captures PNG de chaque écran.
+Tests automatiques : 253 tests LoLKit (Linux + macOS), 118 tests sur simulateur iOS, captures PNG de chaque écran.
 
 ## 2. Installer
 
@@ -69,5 +69,5 @@ Envoyées avec ce message : Live Activity (tous les états), Dynamic Island, wid
 1. **Tester sur l'iPhone** (checklist), surtout pendant **C9 vs KC jeudi 15/10 à 20 h**.
 2. **Anti-spoiler strict ou pas ?** Aujourd'hui, la ligne « prochain match » d'une équipe normale n'est cachée que contre une équipe anti-spoiler dont le dernier match est masqué. Variante stricte : aucune équipe n'annonce son prochain adversaire tant qu'un match anti-spoiler est masqué (plus sûr, moins d'infos).
 3. **Live Activity pas fraîche** : garder « màj il y a X minutes » à la place du chrono (spec) ou montrer le chrono + un petit « màj » ? À décider après l'avoir vue en vrai.
-4. **Capture « live » des Worlds** : pendant un match, je peux lancer `bash scripts/lolkit.sh run lolkit live` et enregistrer une fenêtre de stats réelle (avec une pause) comme test — il suffit que la session tourne pendant un match (ou dis-le-moi et je le fais).
+4. **Capture du vrai direct** : une tâche planifiée unique (« Faille — capture du direct des Worlds », section « Scheduled » de l'appli Claude) se lance jeudi 15/10 à 20 h 20 : elle enregistre une fenêtre réelle de C9 vs KC comme fixture testée et la pousse. **Laisse l'appli Claude ouverte** sur le PC à ce moment-là (sinon elle se lance au prochain démarrage) ; tu peux la supprimer si tu n'en veux pas. Détails : `docs/superpowers/notes/2026-10-14-worlds-capture.md`.
 5. **Plus tard** : compte développeur payant (99 €/an) pour garder l'appli plus de 7 jours et ajouter le push (Live Activity à jour même téléphone verrouillé) — phase 2.
