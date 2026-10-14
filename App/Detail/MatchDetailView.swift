@@ -153,6 +153,12 @@ struct MatchDetailView: View {
             // Chargement (spec finitions §10) : le gabarit des pilules et des stats, à la place d'un `ProgressView`.
             DetailLoadingSkeleton()
         }
+        // Duel (spec saison §3.3), match à venir ou joué : masqué → stats de saison seulement (ni composition ni ligne
+        // « Cette game » de ce match) ; sinon la composition de la game affichée si elle est jouée.
+        DuelSection(matchId: model.matchId, teams: ordered,
+                    selectedGameId: details.flatMap { model.selectedGame(in: $0) }
+                        .flatMap { $0.state == .completed ? $0.id : nil },
+                    masked: masked)
         if showsPinButton(event: event) {
             LiveActivityPinButton(matchId: model.matchId, onHaptic: { haptics.play($0) })
         }
@@ -208,6 +214,8 @@ struct MatchDetailView: View {
             }
             ScoreRow(teams: teams, score: seriesScore(event: event, state: state, order: order, masked: masked),
                      tints: teams.map { store.tint(for: $0) }, large: true)
+                // Toucher une équipe → sa page (spec saison §2.1) ; le score, au centre, reste inerte.
+                .overlay { TeamTapZones(teams: teams) }
         }
         .foregroundStyle(Palette.text)
         .glassCard(tint: tint)

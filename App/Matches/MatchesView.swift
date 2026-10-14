@@ -27,6 +27,8 @@ struct MatchesView: View {
                     ErrorBanner(text: banner)
                         .transition(Motion.bannerTransition(reduceMotion: reduceMotion))
                 }
+                // « À ne pas rater » (spec saison §3.6) : 5 au plus, en tête de Matchs.
+                MustWatchSection(picks: store.mustWatchPicks(limit: 5), style: .list)
                 if cards.isEmpty {
                     WelcomeCard(action: openTeams)
                 } else {
@@ -36,6 +38,8 @@ struct MatchesView: View {
                             .transition(Motion.listTransition(reduceMotion: reduceMotion))
                     }
                 }
+                // Ligues suivies (spec saison §3.5) : prochain match, classement.
+                LeaguesSection(rows: LeaguesSection.rows(store: store))
             }
             // Bandeau (spec finitions §11) et cartes (§7) : seules ces deux valeurs animent l'écran.
             .animation(Motion.animation(.snappy, reduceMotion: reduceMotion), value: store.isFailing)

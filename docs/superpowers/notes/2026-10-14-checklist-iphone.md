@@ -121,3 +121,11 @@ Quand la Live Activity n'a pas été mise à jour depuis 3 min (téléphone verr
 16. **Icônes hors ligne** : après avoir vu un Détail en ligne, sans fermer Faille : mode avion, revenir aux matchs, rouvrir le Détail → icônes de champions, d'objets et de runes toujours là. (Après une relance de Faille en mode avion, les icônes ne sont pas garanties : suite possible, hors de ce lot.)
 17. **Anti-spoiler (Détail)** : Détail d'un match masqué : ni draft, ni joueurs, ni fil, ni courbe, ni « Revoir », ni « Regarder » — seulement l'en-tête et « toucher pour révéler ».
 18. **Fluidité** : pendant un match, faire défiler le Détail (draft, courbe, joueurs, fil) : aucun à-coup ; le téléphone ne chauffe pas plus qu'avant.
+
+## F. Saison (page équipe, duel, ligues, onboarding)
+
+19. **Page équipe** : toucher une équipe depuis une carte de Matchs, le Détail (logo ou code), une ligne de « Mes équipes » ou du catalogue ouvre sa page ; l'œil et l'étoile restent des boutons ; le score du Détail ne s'ouvre pas.
+20. **Duel** : Détail d'un match joué et révélé : section « Duel » sous les stats (composition de la game, ligne « Cette game ») ; match masqué : stats de saison seulement, ni composition ni « Cette game ».
+21. **Ligues** : Équipes > Toutes les ligues : « Suivre la ligue », « Suivre ses N équipes » et l'interrupteur de notifications de début (désactivé par défaut) ; une ligue suivie apparaît dans la section « Ligues » de Matchs (prochain match anti-spoiler, classement).
+22. **À ne pas rater** : en tête de Matchs, 5 choix au plus ; aucun match masqué ne trahit son score ni son issue.
+23. **Premier lancement** : installation neuve (rien de suivi) : l'onboarding s'ouvre en plein écran ; suivre une équipe ne le ferme pas ; « Terminer » le ferme et il ne revient pas au lancement suivant.
