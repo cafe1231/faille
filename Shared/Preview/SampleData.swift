@@ -17,6 +17,9 @@ struct PreviewData {
     var lastUpdate: Date?
     /// Matchs dont la Live Activity est à l'écran (bouton du Détail).
     var activityMatchIds: Set<String> = []
+    /// Saison d'exemple (spec saison), traduite par `AppStore(preview:)` en `SeasonSamples` (dans l'appli) ; aucune par
+    /// défaut : les planches existantes ne changent pas.
+    var season: SeasonSample = .none
 
     /// Comme les maquettes : KC en direct avec stats, T1 en direct masqué (anti-spoiler), GEN à venir.
     static var standard: PreviewData {
@@ -48,6 +51,39 @@ struct PreviewData {
         data.isFailing = true
         return data
     }
+
+    /// Comme `standard`, avec la saison d'exemple complète (KC, GEN ; T1 en anti-spoiler, ses matchs masqués).
+    static var withSeason: PreviewData {
+        var data = standard
+        data.season = .standard
+        return data
+    }
+
+    /// Collecte en cours : seules les games du Mondial sont lues.
+    static var withSeasonCollecting: PreviewData {
+        var data = standard
+        data.season = .collecting
+        return data
+    }
+
+    /// Disque de la saison pas encore lu : squelettes.
+    static var withSeasonLoading: PreviewData {
+        var data = standard
+        data.season = .loading
+        return data
+    }
+
+    /// Aucune équipe suivie, saison connue (Accueil « Suis tes équipes », premier lancement).
+    static var withSeasonNoFollows: PreviewData {
+        var data = empty
+        data.season = .standard
+        return data
+    }
+}
+
+/// Saison d'exemple d'un `AppStore` d'aperçu (les données vivent dans l'appli : `SeasonSamples`).
+enum SeasonSample: Sendable {
+    case none, standard, collecting, loading
 }
 
 /// Matchs, équipes et stats d'exemple, construits uniquement avec les inits publics de LoLKit.
@@ -73,9 +109,17 @@ enum SampleData {
     ]
 
     static let catalog: [Team] = [
-        team("kc", "KC", "Karmine Corp", "LEC"),
-        team("g2", "G2", "G2 Esports", "LEC"),
-        team("t1", "T1", "T1", "LCK"),
+        team("kc", "KC", "Karmine Corp", "LEC", players: roster([("p-canna", "Canna", "top"), ("p-yike", "Yike", "jungle"),
+                                                                 ("p-kyeahoo", "kyeahoo", "mid"),
+                                                                 ("p-caliste", "Caliste", "bottom"),
+                                                                 ("p-busio", "Busio", "support")])),
+        team("g2", "G2", "G2 Esports", "LEC", players: roster([("p-bb", "BrokenBlade", "top"),
+                                                               ("p-skewmond", "SkewMond", "jungle"),
+                                                               ("p-caps", "Caps", "mid"), ("p-hans", "Hans Sama", "bottom"),
+                                                               ("p-labrov", "Labrov", "support")])),
+        team("t1", "T1", "T1", "LCK", players: roster([("p-doran", "Doran", "top"), ("p-oner", "Oner", "jungle"),
+                                                       ("p-faker", "Faker", "mid"), ("p-gumayusi", "Gumayusi", "bottom"),
+                                                       ("p-keria", "Keria", "support")])),
         team("gen", "GEN", "Gen.G", "LCK"),
         team("hle", "HLE", "Hanwha Life Esports", "LCK"),
         team("kcb", "KCB", "Karmine Corp Blue", "La Ligue Française"),
@@ -228,9 +272,15 @@ enum SampleData {
         ]
     )
 
-    private static func team(_ id: String, _ code: String, _ name: String, _ home: String?) -> Team {
+    private static func team(_ id: String, _ code: String, _ name: String, _ home: String?,
+                             players: [TeamPlayer]? = nil) -> Team {
         Team(id: id, slug: id, name: name, code: code, image: nil, status: "active",
-             homeLeague: home.map { Team.HomeLeague(name: $0) })
+             homeLeague: home.map { Team.HomeLeague(name: $0) }, players: players)
+    }
+
+    /// Effectif d'exemple (spec saison §3.1) : mêmes ids que les games de `SeasonSamples`.
+    private static func roster(_ players: [(id: String, name: String, role: String)]) -> [TeamPlayer] {
+        players.map { TeamPlayer(id: $0.id, summonerName: $0.name, image: nil, role: $0.role) }
     }
 
     /// Équipe d'un match : avec id comme `getLive`, ou sans id comme `getSchedule`.

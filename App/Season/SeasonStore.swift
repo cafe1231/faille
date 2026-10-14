@@ -227,6 +227,11 @@ final class SeasonStore {
         wakeRequested = true
     }
 
+    /// Un réveil est demandé et pas encore pris par la boucle (lecture pour les tests).
+    var wakePending: Bool {
+        wakeRequested
+    }
+
     /// Attente de la boucle de la scène entre deux passes : rend la main à un réveil (`wake`), après `maxSeconds`, ou à
     /// l'annulation de la tâche (scène quittée).
     func waitForWake(maxSeconds: TimeInterval) async {

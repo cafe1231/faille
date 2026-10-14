@@ -10,6 +10,8 @@ enum Icon: String, CaseIterable, Sendable {
     case trophy, settings, search, back, arrow, pin, check, refresh, off, pause
     /// « Regarder » / « Revoir » (spec fonctionnalités §1) : écran avec un triangle de lecture.
     case play
+    /// Saison (spec saison §2.1) : onglet Accueil, calendrier, classements, duels, joueur.
+    case home, calendar, standings, versus, player
 
     var assetName: String {
         "icon-" + rawValue

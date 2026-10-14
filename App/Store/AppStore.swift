@@ -47,6 +47,9 @@ final class AppStore {
     let gameDetails: GameDetailsStore
     let timelines: TimelineStore
     let summonerSpells: SummonerSpellsStore
+    /// Statistiques de saison (spec saison §1) : games lues, tournois, classements, et leur collecte au premier plan
+    /// (`seasonLoop`). Inerte dans les aperçus.
+    let season: SeasonStore
     /// Notifications de début de match (spec fonctionnalités §2) : `UNUserNotificationCenter` dans l'appli, inerte dans
     /// les aperçus et les tests hébergés.
     let reminderCenter: any ReminderCenter
@@ -69,6 +72,8 @@ final class AppStore {
     /// Tâches lancées par une action de l'utilisateur (suivre, masquer, révéler, épingler…) : elles vivent avec la scène
     /// et sont annulées quand la boucle du premier plan s'arrête (`endScene`), au lieu de continuer en arrière-plan.
     @ObservationIgnored private var sceneTasks: [UUID: Task<Void, Never>] = [:]
+    /// Un vrai passage en arrière-plan a eu lieu : la prochaine boucle de collecte repart d'un budget neuf (I-2).
+    @ObservationIgnored var seasonSessionPending = false
     /// `follows.json` / `settings.json` existent mais n'ont pas pu être lus au lancement (erreur d'E/S, par exemple
     /// fichier verrouillé) : les valeurs par défaut ne doivent jamais être écrites par-dessus. Avant la première
     /// modification de l'utilisateur, on retente la lecture. `followsUnreadable` est aussi lu par `syncLiveActivities`, et
@@ -100,6 +105,7 @@ final class AppStore {
         gameDetails = GameDetailsStore(transport: transport, cache: cache)
         timelines = TimelineStore(transport: transport, cache: cache)
         summonerSpells = SummonerSpellsStore(transport: transport, cache: cache)
+        season = SeasonStore(transport: transport, cache: cache)
         if let reminderCenter {
             self.reminderCenter = reminderCenter
         } else if RunEnvironment.isTesting {
@@ -108,6 +114,8 @@ final class AppStore {
             self.reminderCenter = SystemReminderCenter()
         }
         loadFromDisk(files)
+        markOnboardedIfExistingUser()
+        // Le disque de la saison est lu par `seasonLoop`, au premier plan (M8) : pas à l'init.
     }
 
     /// Store figé pour les #Preview et les tests d'aperçu : aucune requête, aucun fichier.
@@ -124,6 +132,7 @@ final class AppStore {
         gameDetails = GameDetailsStore(preview: FeatureSamples.details)
         timelines = TimelineStore(preview: FeatureSamples.timelines)
         summonerSpells = SummonerSpellsStore(preview: FeatureSamples.spells)
+        season = SeasonStore(preview: AppStore.seasonPreview(data.season))
         reminderCenter = InertReminderCenter()
         follows = data.follows
         settings = data.settings
@@ -293,6 +302,7 @@ final class AppStore {
             colorsDirty = true
         }
         saveFollows()
+        season.wake()
         // Une équipe d'une autre ligue change les ligues du calendrier : la politique le voit tout de suite.
         runWithScene {
             await self.refreshDue(opening: false)
@@ -327,6 +337,8 @@ final class AppStore {
         syncSettingsBeforeChange()
         settings.revealedMatchIds.insert(matchId)
         saveSettings()
+        // Un match révélé devient éligible à la collecte (spec saison §1.6).
+        season.wake()
         runWithScene { await self.refreshActivitiesAfterSpoilerChange() }
     }
 
@@ -354,6 +366,65 @@ final class AppStore {
         saveSettings()
     }
 
+    /// Suivre une ligue, ou ne plus la suivre (spec saison §3.5) : son calendrier, sa collecte (priorité 3) et, si
+    /// demandé, les notifications de début de ses matchs suivent.
+    func toggleFollowLeague(_ league: League) {
+        syncFollowsBeforeChange()
+        if follows.containsLeague(id: league.id) {
+            follows.unfollowLeague(id: league.id)
+        } else {
+            follows.follow(league: league)
+        }
+        saveFollows()
+        season.wake()
+        runWithScene { await self.refreshDue(opening: false) }
+    }
+
+    /// « Suivre ses N équipes » (spec saison §3.5) : toutes les équipes de la ligue (`TeamDirectory`), d'un coup.
+    func followAllTeams(in league: League) {
+        syncFollowsBeforeChange()
+        for team in teams(in: league) where !follows.contains(id: team.id) {
+            follows.follow(team)
+        }
+        colorsDirty = true
+        saveFollows()
+        season.wake()
+        runWithScene {
+            await self.refreshDue(opening: false)
+            guard !Task.isCancelled else { return }
+            await self.syncLiveActivities(canStart: true)
+        }
+    }
+
+    /// Notifications de début des matchs d'une ligue suivie (spec saison §3.5, désactivées par défaut).
+    func setLeagueNotifications(_ on: Bool, leagueId: String) {
+        syncFollowsBeforeChange()
+        follows.setNotifyStarts(on, leagueId: leagueId)
+        saveFollows()
+    }
+
+    /// « Classement masqué · toucher pour révéler » (spec saison §3.5) : mémorisé par tournoi ; ne révèle aucun match.
+    func revealStandings(tournamentId: String) {
+        syncSettingsBeforeChange()
+        settings.revealedStandingIds.insert(tournamentId)
+        saveSettings()
+    }
+
+    /// Fin du premier lancement (« C'est parti » ou « Passer », spec saison §3.7).
+    func completeOnboarding() {
+        syncSettingsBeforeChange()
+        settings.onboardingDone = true
+        saveSettings()
+    }
+
+    /// Un utilisateur qui suit déjà des équipes au lancement (version précédente) est marqué « fait » sans voir
+    /// l'onboarding (spec saison §3.7). Jamais tant que les réglages sont illisibles (ils ne doivent pas être écrasés).
+    private func markOnboardedIfExistingUser() {
+        guard !settings.onboardingDone, !follows.teams.isEmpty, !settingsUnreadable else { return }
+        settings.onboardingDone = true
+        files?.save(settings, to: .settings)
+    }
+
     // MARK: Rafraîchissements
 
     /// Boucle du premier plan, lancée par `.task(id: scenePhase)` : s'arrête, requêtes comprises, quand la tâche est
@@ -364,6 +435,8 @@ final class AppStore {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.refreshLoop() }
             group.addTask { await self.colorLoop() }
+            // Collecte des stats de saison (spec saison §1.6) : au premier plan seulement, arrêtée avec la scène.
+            group.addTask { await self.seasonLoop() }
         }
         endScene()
     }
