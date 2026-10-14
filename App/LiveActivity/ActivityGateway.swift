@@ -74,7 +74,8 @@ enum ActivityGateway {
 
     private static func phase(_ state: ActivityState) -> RunningActivity.Phase {
         switch state {
-        case .active, .stale: return .running
+        // `.pending` (iOS 26, démarrage différé) : Faille n'en programme pas ; traité comme les cas inconnus, « en cours ».
+        case .active, .stale, .pending: return .running
         case .ended: return .ended
         case .dismissed: return .gone
         @unknown default: return .running
