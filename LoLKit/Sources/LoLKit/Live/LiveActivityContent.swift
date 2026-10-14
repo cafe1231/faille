@@ -26,8 +26,11 @@ public struct LiveActivityContent: Sendable, Equatable {
 
 extension LiveMatchState {
     /// Score de série et stats remis dans l'ordre des équipes de `attributes` (fixé au démarrage de la Live Activity) :
-    /// chaque équipe est reconnue par son id, sinon son nom (sans la casse), sinon — en dernier recours, et seulement
-    /// entre les deux équipes d'un même match — son code. Inchangé si une équipe n'est pas reconnue.
+    /// chaque équipe est reconnue par son id, sinon son nom (sans la casse), sinon, en dernier recours, son code.
+    /// Le repli par code n'est sûr qu'à l'intérieur d'un même match de deux équipes (spec §4.2 : plusieurs équipes
+    /// actives partagent le même code, jamais le code seul entre équipes quelconques) : les deux équipes d'un match
+    /// se distinguent par leur code, mais `teams` doit être celles du match des `attributes`, pas d'un autre match.
+    /// Inchangé si une équipe n'est pas reconnue.
     public func aligned(from teams: [MatchTeam], to attributes: LiveMatchAttributes) -> LiveMatchState {
         guard teams.count == attributes.teams.count else { return self }
         var order: [Int] = []
