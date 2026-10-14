@@ -1,0 +1,228 @@
+{
+ "type": "item",
+ "version": "16.17.1",
+ "data": {
+  "1001": {
+   "name": "Bottes",
+   "plaintext": "Augmente légèrement la vitesse de déplacement.",
+   "image": {
+    "full": "1001.png",
+    "sprite": "item0.png",
+    "group": "item",
+    "x": 0,
+    "y": 0,
+    "w": 48,
+    "h": 48
+   },
+   "gold": {
+    "base": 300,
+    "purchasable": true,
+    "total": 300,
+    "sell": 210
+   },
+   "tags": [
+    "Boots"
+   ]
+  },
+  "1036": {
+   "name": "Épée longue",
+   "plaintext": "Augmente légèrement les dégâts d'attaque.",
+   "image": {
+    "full": "1036.png",
+    "sprite": "item0.png",
+    "group": "item",
+    "x": 96,
+    "y": 48,
+    "w": 48,
+    "h": 48
+   },
+   "gold": {
+    "base": 350,
+    "purchasable": true,
+    "total": 350,
+    "sell": 245
+   },
+   "tags": [
+    "Damage",
+    "Lane"
+   ]
+  },
+  "1054": {
+   "name": "Bouclier de Doran",
+   "plaintext": "Bon objet défensif de départ.",
+   "image": {
+    "full": "1054.png",
+    "sprite": "item0.png",
+    "group": "item",
+    "x": 48,
+    "y": 96,
+    "w": 48,
+    "h": 48
+   },
+   "gold": {
+    "base": 450,
+    "purchasable": true,
+    "total": 450,
+    "sell": 180
+   },
+   "tags": [
+    "Health",
+    "HealthRegen",
+    "Lane"
+   ]
+  },
+  "2031": {
+   "name": "Potion rechargeable",
+   "plaintext": "Rend des PV sur la durée. Se recharge à la boutique.",
+   "image": {
+    "full": "2031.png",
+    "sprite": "item0.png",
+    "group": "item",
+    "x": 240,
+    "y": 432,
+    "w": 48,
+    "h": 48
+   },
+   "gold": {
+    "base": 150,
+    "purchasable": true,
+    "total": 150,
+    "sell": 60
+   },
+   "tags": [
+    "HealthRegen",
+    "Consumable",
+    "Active",
+    "Lane",
+    "Jungle"
+   ]
+  },
+  "2055": {
+   "name": "Balise de contrôle",
+   "plaintext": "Utilisée pour désactiver les balises et les pièges invisibles dans une zone.",
+   "image": {
+    "full": "2055.png",
+    "sprite": "item1.png",
+    "group": "item",
+    "x": 48,
+    "y": 0,
+    "w": 48,
+    "h": 48
+   },
+   "gold": {
+    "base": 75,
+    "purchasable": true,
+    "total": 75,
+    "sell": 30
+   },
+   "tags": [
+    "Consumable",
+    "Lane",
+    "Stealth",
+    "Vision"
+   ]
+  },
+  "3071": {
+   "name": "Couperet noir",
+   "plaintext": "Infliger des dégâts physiques aux champions ennemis réduit leur armure.",
+   "image": {
+    "full": "3071.png",
+    "sprite": "item3.png",
+    "group": "item",
+    "x": 96,
+    "y": 240,
+    "w": 48,
+    "h": 48
+   },
+   "gold": {
+    "base": 225,
+    "purchasable": true,
+    "total": 3000,
+    "sell": 2100
+   },
+   "tags": [
+    "Health",
+    "Damage",
+    "CooldownReduction",
+    "OnHit",
+    "NonbootsMovement",
+    "ArmorPenetration",
+    "AbilityHaste"
+   ]
+  },
+  "3340": {
+   "name": "Balise camouflée",
+   "plaintext": "Pose périodiquement une Balise camouflée.",
+   "image": {
+    "full": "3340.png",
+    "sprite": "item4.png",
+    "group": "item",
+    "x": 240,
+    "y": 240,
+    "w": 48,
+    "h": 48
+   },
+   "gold": {
+    "base": 0,
+    "purchasable": true,
+    "total": 0,
+    "sell": 0
+   },
+   "tags": [
+    "Active",
+    "Jungle",
+    "Lane",
+    "Trinket",
+    "Vision"
+   ]
+  },
+  "3364": {
+   "name": "Brouilleur oraculaire",
+   "plaintext": "Désactive temporairement les pièges et balises invisibles proches.",
+   "image": {
+    "full": "3364.png",
+    "sprite": "item4.png",
+    "group": "item",
+    "x": 432,
+    "y": 240,
+    "w": 48,
+    "h": 48
+   },
+   "gold": {
+    "base": 0,
+    "purchasable": true,
+    "total": 0,
+    "sell": 0
+   },
+   "tags": [
+    "Active",
+    "Trinket",
+    "Vision"
+   ]
+  },
+  "6692": {
+   "name": "Éclipse",
+   "plaintext": "",
+   "image": {
+    "full": "6692.png",
+    "sprite": "item6.png",
+    "group": "item",
+    "x": 48,
+    "y": 144,
+    "w": 48,
+    "h": 48
+   },
+   "gold": {
+    "base": 625,
+    "purchasable": true,
+    "total": 2900,
+    "sell": 2030
+   },
+   "tags": [
+    "Damage",
+    "CooldownReduction",
+    "AbilityHaste"
+   ]
+  }
+ }
+}
