@@ -21,6 +21,9 @@ public struct TeamMetadata: Codable, Sendable, Equatable {
 
 public struct ParticipantMetadata: Codable, Sendable, Equatable {
     public let participantId: Int
+    /// Id du joueur, le même que `TeamPlayer.id` de `getTeams` (identité d'un joueur, spec saison §1.5) ; absent des
+    /// vieilles captures.
+    public let esportsPlayerId: String?
     public let summonerName: String?
     public let championId: String?
     public let role: String?
