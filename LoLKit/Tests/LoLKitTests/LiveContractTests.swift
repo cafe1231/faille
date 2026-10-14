@@ -100,6 +100,21 @@ import Testing
         #expect(stopped.gameClockStoppedAt == now)
     }
 
+    @Test func aRealPausedFrameStopsTheClock() throws {
+        // Fenêtre réelle du flux dont la dernière frame est `paused` (KC vs MKOI, LEC, 19/09/2026).
+        let paused = try snapshot("window_paused")
+        let details = makeDetails(wins: [0, 0], games: [(1, paused.gameId, .inProgress)],
+                                  teams: [("111692118851466302", "KC"), ("103461966965149786", "MKOI")])
+        let state = LiveMatchBuilder.state(details: details, snapshot: paused,
+                                           firstFrameTime: date("2026-09-19T15:15:01.457Z"),
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now)
+        #expect(state.phase == .inGame)
+        #expect(state.gameNumber == 1)
+        #expect(state.gameClockStoppedAt == now)
+        #expect(state.gameClockStart != nil)
+        #expect(state.stats?.first?.gold == 2500)
+    }
+
     @Test func clockRunsEvenWhenStatsAreDisabled() throws {
         // Spec §6.3 : sans stats, la Live Activity affiche quand même score + chrono + message.
         let details = makeDetails(wins: [0, 0], games: [(1, game, .inProgress)])

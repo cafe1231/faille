@@ -55,6 +55,22 @@ import Testing
         #expect(empty.firstFrameTime == nil)
     }
 
+    /// Vraie fenêtre du flux avec une pause (LEC, play-offs, KC vs MKOI, game 1, 19/09/2026) : des frames `in_game`
+    /// puis une frame `paused` en dernier.
+    @Test func pausedFrameFromTheFeed() throws {
+        let paused = try window("window_paused")
+        let snap = try #require(paused.latestSnapshot())
+        #expect(snap.gameId == "115548681803406328")
+        #expect(snap.phase == .paused)
+        #expect(snap.timestamp == date("2026-09-19T15:15:02.993Z"))
+        #expect(paused.firstFrameTime == date("2026-09-19T15:15:01.457Z"))
+        #expect(snap.blueTeamId == "111692118851466302")
+        #expect(snap.redTeamId == "103461966965149786")
+        #expect(snap.blue.gold == 2500)
+        #expect(snap.bluePlayers.count == 5)
+        #expect(snap.redPlayers.count == 5)
+    }
+
     @Test func pausedStateIsRecognised() {
         #expect(GamePhase(apiValue: "paused") == .paused)
         #expect(GamePhase(apiValue: "in_game") == .inGame)
