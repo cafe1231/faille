@@ -135,7 +135,16 @@ struct TeamsView: View {
             .scrollClipDisabled()
             .contentMargins(.horizontal, 16, for: .scrollContent)
             .padding(.horizontal, -16)
-            teamList(store.teams(in: selected))
+            let leagueTeams = store.teams(in: selected)
+            // Suivre la ligue, ou toutes ses équipes (spec saison §3.5).
+            LeagueFollowRow(league: selected, followed: store.follows.containsLeague(id: selected.id),
+                            notifies: store.follows.leagues.first { $0.id == selected.id }?.notifyStarts ?? false,
+                            teamCount: leagueTeams.count,
+                            allTeamsFollowed: leagueTeams.allSatisfy { store.follows.contains(id: $0.id) },
+                            onToggleFollow: { toggleLeague(selected) },
+                            onFollowAll: { followAll(selected) },
+                            onToggleNotifications: { store.setLeagueNotifications($0, leagueId: selected.id) })
+            teamList(leagueTeams)
         } else if store.isFailing {
             NoteCard(icon: .refresh, text: "Ligues indisponibles pour l'instant.")
         } else {
@@ -169,6 +178,18 @@ struct TeamsView: View {
             }
         }
         .glassCard(radius: Radius.inner, padding: 12)
+    }
+
+    /// Étoile d'une ligue (spec saison §3.5) : suivre (succès) ou ne plus suivre (impact léger).
+    private func toggleLeague(_ league: League) {
+        haptics.play(store.follows.containsLeague(id: league.id) ? .unfollow : .follow)
+        store.toggleFollowLeague(league)
+    }
+
+    /// « Suivre ses N équipes » (spec saison §3.5).
+    private func followAll(_ league: League) {
+        haptics.play(.follow)
+        store.followAllTeams(in: league)
     }
 
     /// Étoile du catalogue (spec finitions §3) : suivre (succès) ou ne plus suivre (impact léger).

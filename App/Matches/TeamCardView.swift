@@ -40,7 +40,10 @@ struct TeamCardView: View {
         // Un match que `getLive` donne pour terminé est « Terminé », jamais « En direct » (spec §8).
         let liveState = card.live.map { store.liveState(for: $0).displayed(for: $0) }
         VStack(alignment: .leading, spacing: 10) {
-            SectionLabel(text: header, dot: tint)
+            // Toucher l'équipe → sa page (spec saison §2.1).
+            TeamLink(teamId: card.team.id) {
+                SectionLabel(text: header, dot: tint)
+            }
             if let live = card.live, let liveState {
                 liveBlock(live, state: liveState)
             }

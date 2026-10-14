@@ -10,17 +10,22 @@ struct FollowedTeamRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            TeamBadge(code: team.code, logoFile: logoFile, tint: Palette.team(team.colorHex), size: 34)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(team.name)
-                    .font(Typo.bodyMedium)
-                    .foregroundStyle(Palette.text)
-                    .lineLimit(1)
-                Text(subtitle)
-                    .font(Typo.secondary)
-                    .foregroundStyle(Palette.secondary)
+            // Toucher la ligne → page de l'équipe (spec saison §2.1) ; l'œil et l'étoile restent des boutons.
+            TeamLink(teamId: team.id) {
+                HStack(spacing: 10) {
+                    TeamBadge(code: team.code, logoFile: logoFile, tint: Palette.team(team.colorHex), size: 34)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(team.name)
+                            .font(Typo.bodyMedium)
+                            .foregroundStyle(Palette.text)
+                            .lineLimit(1)
+                        Text(subtitle)
+                            .font(Typo.secondary)
+                            .foregroundStyle(Palette.secondary)
+                    }
+                    Spacer(minLength: 8)
+                }
             }
-            Spacer(minLength: 8)
             // Deux cibles tactiles d'au moins 44 × 44 pt, côte à côte (le glyphe reste de 20 pt).
             HStack(spacing: 0) {
                 Button(action: onToggleSpoiler) {
@@ -58,19 +63,24 @@ struct CatalogTeamRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            TeamBadge(code: team.code, logoFile: logoFile, size: 34)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(team.name)
-                    .font(Typo.bodyMedium)
-                    .foregroundStyle(Palette.text)
-                    .lineLimit(1)
-                if let league = team.homeLeague?.name {
-                    Text(league)
-                        .font(Typo.secondary)
-                        .foregroundStyle(Palette.secondary)
+            // Toucher la ligne → page de l'équipe (spec saison §2.1) ; l'étoile reste un bouton.
+            TeamLink(teamId: team.id) {
+                HStack(spacing: 10) {
+                    TeamBadge(code: team.code, logoFile: logoFile, size: 34)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(team.name)
+                            .font(Typo.bodyMedium)
+                            .foregroundStyle(Palette.text)
+                            .lineLimit(1)
+                        if let league = team.homeLeague?.name {
+                            Text(league)
+                                .font(Typo.secondary)
+                                .foregroundStyle(Palette.secondary)
+                        }
+                    }
+                    Spacer(minLength: 8)
                 }
             }
-            Spacer(minLength: 8)
             Button(action: onToggle) {
                 IconView(icon: followed ? .starFill : .star, size: 20)
                     .foregroundStyle(followed ? Palette.accent : Palette.secondary)
