@@ -1,11 +1,11 @@
 # Faille — checklist de test sur l'iPhone (étapes 2, 3, 4 et finitions)
 
-À faire avec la dernière IPA (`C:\Users\Dan\Downloads\faille\Faille-etape4.ipa`), idéalement pendant un vrai match des Worlds d'une équipe suivie (premier match : **jeudi 15/10 à 20 h, C9 vs KC**). Pour chaque ligne : OK / KO + une remarque. Les KO deviennent des corrections.
+À faire avec la dernière IPA (`C:\Users\Dan\Downloads\faille\Faille.ipa`), idéalement pendant un vrai match des Worlds d'une équipe suivie (premier match : **jeudi 15/10 à 20 h, C9 vs KC**). Pour chaque ligne : OK / KO + une remarque. Les KO deviennent des corrections.
 
 ## 0. Installer (AltServer, comme pour la sonde)
 
 1. iPhone branché en USB et déverrouillé, iTunes et AltServer lancés sur le PC.
-2. **Maj + clic** sur l'icône AltServer (barre des tâches, près de l'horloge) → **Sideload .ipa…** → choisir l'iPhone → `Faille-etape4.ipa` → ton Apple ID (tu le tapes toi-même).
+2. **Maj + clic** sur l'icône AltServer (barre des tâches, près de l'horloge) → **Sideload .ipa…** → choisir l'iPhone → `Faille.ipa` → ton Apple ID (tu le tapes toi-même).
 3. Même identifiant que la sonde : l'ancienne Faille est remplacée. Le widget « Sonde Faille » posé à l'écran d'accueil devient vide : retire-le.
 4. Avant le match, dans les Réglages iOS :
    - Général › Actualisation en arrière-plan : **activée** pour Faille ;
@@ -81,16 +81,16 @@ Quand la Live Activity n'a pas été mise à jour depuis 3 min (téléphone verr
 
 ## D. Finitions (animations, retours tactiles, icône)
 
-À faire avec `C:\Users\Dan\Downloads\faille\Faille-finitions.ipa` (installer comme au §0). Un match en direct d'une équipe suivie aide pour D.4, D.5, D.12 et D.14 ; le reste se vérifie à tout moment. Pour chaque ligne : OK / KO + une remarque (« trop lent », « trop fort », « on ne le voit pas »…) : c'est ici que se juge le style « sobre et fluide ».
+À faire avec la même IPA que pour les sections précédentes (`C:\Users\Dan\Downloads\faille\Faille.ipa`, installée comme au §0). Un match en direct d'une équipe suivie aide pour D.4, D.5, D.12 et D.14 ; le reste se vérifie à tout moment. Pour chaque ligne : OK / KO + une remarque (« trop lent », « trop fort », « on ne le voit pas »…) : c'est ici que se juge le style « sobre et fluide ».
 
-1. **Icône** : sur l'écran d'accueil, l'icône Faille (fond abysse, faille verticale lumineuse cyan, halo doux, aucun texte) remplace l'icône vide ; la même dans Réglages › Faille, Spotlight et le sélecteur d'applis. Appui long sur l'accueil › Personnaliser › **Sombre** : la faille sur fond sombre ; **Teinté** : une version d'une seule teinte, lisible.
+1. **Icône** : sur l'écran d'accueil, l'icône Faille (fond abysse, faille verticale lumineuse cyan, halo doux, aucun texte) remplace l'icône vide ; la même dans Réglages › Faille, Spotlight et le sélecteur d'applis. Appui long sur l'accueil › Personnaliser › **Sombre** : la faille sur fond sombre ; **Teinté** : une version d'une seule teinte, lisible ; **Transparent** (iOS 26) : l'icône devient translucide, la faille doit rester reconnaissable, y compris en petit (≈ 40 pt : Spotlight, Réglages).
 2. **Toucher** : le bloc « En direct » d'une carte, les lignes Prochain et Dernier, une pilule de ligue ou de game, l'étoile, l'œil, « Choisir mes équipes », « Épingler », « À propos » s'enfoncent légèrement et pâlissent pendant l'appui, puis reviennent sans rebond. Les zones de toucher n'ont pas rétréci (œil et étoile toujours faciles à viser).
 3. **Retours haptiques**, un seul par action : suivre une équipe (succès) ; ne plus suivre (léger) ; œil (petit clic) ; Épingler (succès) ; Retirer (léger) ; toucher pour révéler (moyen) ; tirer pour rafraîchir (succès ; en mode avion : avertissement) ; Valider une couleur ou « Couleur automatique » (petit clic) ; changer de pilule de game (petit clic). **Aucun** retour pendant un match quand les stats se mettent à jour toutes les 10 s.
 4. **Chiffres qui défilent** (match en direct) : sur la carte et dans le Détail, kills, gold, tours, inhibs, barons, drakes et le score de série changent en faisant défiler leurs chiffres ; le sous-titre « N en direct · N à venir » aussi. Sur une carte masquée : aucun chiffre, donc rien ne défile.
 5. **« En direct »** : un halo doux respire lentement (≈ 1,6 s) derrière l'icône « en direct » de la pastille de la carte, de la pastille du Détail et de la pilule de la game en cours ; il ne clignote pas.
 6. **Zoom** : toucher le bloc « En direct » d'une carte → le Détail s'ouvre en zoomant depuis ce bloc ; revenir (bouton retour, glisser depuis le bord gauche ou vers le bas) → il se referme vers le même bloc. Pareil depuis « Prochain » et « Dernier ». Si les deux équipes d'un match sont suivies (deux cartes), le zoom part de la carte touchée.
 7. **Listes** : dans Équipes, suivre / ne plus suivre fait apparaître (fondu, léger grossissement) ou disparaître (fondu) la ligne dans « Mes équipes », sans saut. À l'ouverture de l'appli, les cartes de Matchs arrivent en cascade rapide, une fois ; en revenant du Détail, pas de nouvelle cascade.
-8. **Révéler** : sur une carte masquée, « toucher pour révéler » → le score et les stats sortent d'un flou en fondu (≈ 0,5 s), avec un retour moyen ; pareil dans le Détail. Remettre l'œil dans Équipes → la carte redevient masquée en simple fondu. Aucun chiffre n'apparaît, même un instant, sur un match encore masqué.
+8. **Révéler** : sur une carte masquée, « toucher pour révéler » → le score sort d'un flou en fondu (≈ 0,5 s), avec un retour moyen ; la ligne de stats, qui arrive un instant plus tard (elles ne sont jamais demandées tant que le match est masqué), remplace en fondu un squelette de même hauteur : les cartes du dessous ne sautent pas ; pareil dans le Détail (stats et joueurs, le bouton « Épingler » ne saute pas). Remettre l'œil dans Équipes → la carte redevient masquée en simple fondu. Aucun chiffre n'apparaît, même un instant, sur un match encore masqué.
 9. **Détail** : la capsule blanche glisse d'une pilule de game à l'autre ; la barre de gold change de largeur en douceur ; changer d'équipe dans « Joueurs » fait un fondu des lignes.
 10. **Chargement** : ouvrir un match pas encore chargé (ou, au premier lancement, l'onglet Équipes) → des formes grises arrondies au gabarit du contenu, parcourues d'un reflet lent, au lieu d'une roue ; le contenu les remplace dès qu'il arrive.
 11. **Bandeau d'erreur** : mode avion puis tirer pour rafraîchir → le bandeau descend du haut en fondu ; sortir du mode avion → il remonte et disparaît.

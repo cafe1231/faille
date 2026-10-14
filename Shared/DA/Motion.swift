@@ -56,7 +56,10 @@ enum Motion {
     }
 
     /// Règle « Réduire les animations » (spec, Principes) : un mouvement pur (appui, largeur de la barre de gold)
-    /// devient immédiat ; un changement de contenu (chiffres, listes, révélation, bandeau, pilules) devient un fondu.
+    /// devient immédiat ; un changement de contenu (chiffres, listes, révélation, bandeau, pilules) devient un fondu de
+    /// `Duration.fade` (0,2 s). Ce fondu est une courbe `easeInOut` posée sur la transaction : elle anime donc encore
+    /// les positions quand des cartes ou des lignes changent d'ordre ou d'arrivée (elles glissent 0,2 s, sans zoom ni
+    /// ressort). Comportement accepté, à juger sur l'appareil (checklist D.13).
     static func reduced(_ kind: Kind, reduceMotion: Bool) -> Reduced {
         guard reduceMotion else { return .full }
         switch kind {

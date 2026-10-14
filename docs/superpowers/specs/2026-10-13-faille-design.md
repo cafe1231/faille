@@ -274,7 +274,7 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
 
 **Workflows** :
 - `lolkit.yml` : Linux, `swift test`, à chaque push.
-- `ios.yml` : macOS, à chaque push sur `main` et à la demande.
+- `ios.yml` : macOS, à chaque push sur `main` et sur les branches de travail `fin/**` et `fonc/**` (lots menés en parallèle), et à la demande.
 
 ## 12. Phase 2 (conçue, non construite)
 
