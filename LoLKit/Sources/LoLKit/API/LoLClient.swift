@@ -48,14 +48,29 @@ public struct LoLClient: Sendable {
 
     /// Frames de stats d'une game. Sans `startingTime`, le flux renvoie le début de la game.
     public func window(gameId: String, startingTime: Date?) async throws -> LiveWindow {
-        var components = URLComponents(string: "\(Self.feedBase)/window/\(gameId)")!
+        try await feed("window", gameId: gameId, startingTime: startingTime, as: LiveWindow.self)
+    }
+
+    /// Dernières frames d'une game en cours. Le flux refuse (400 « ahead of broadcast ») une fenêtre dont la fin a moins
+    /// de 80 s (mesuré le 14/10/2026 à 0,5 s près sur 78 requêtes) : on recule par paliers (`steppingBack`).
+    public func liveWindow(gameId: String, now: Date) async throws -> LiveWindow {
+        try await steppingBack(gameId: gameId, now: now) { startingTime in
+            try await window(gameId: gameId, startingTime: startingTime)
+        }
+    }
+
+    /// Lecture d'une route du flux livestats (`window`, `details`), sans clé : 200 vide ou 204 = pas encore de données,
+    /// 404 = stats désactivées par Riot pour cette game.
+    func feed<T: Decodable & Sendable>(_ route: String, gameId: String, startingTime: Date?,
+                                       as type: T.Type) async throws -> T {
+        var components = URLComponents(string: "\(Self.feedBase)/\(route)/\(gameId)")!
         if let startingTime {
             components.queryItems = [URLQueryItem(name: "startingTime", value: LoLDate.format(startingTime))]
         }
         let response = try await transport.get(components.url!, headers: [:])
         switch response.status {
         case 200 where !response.body.isEmpty:
-            return try JSONDecoder.lolesports().decode(LiveWindow.self, from: response.body)
+            return try JSONDecoder.lolesports().decode(T.self, from: response.body)
         case 200, 204:
             throw LoLAPIError.noData
         case 404:
@@ -65,17 +80,17 @@ public struct LoLClient: Sendable {
         }
     }
 
-    /// Dernières frames d'une game en cours. Le flux refuse (400 « ahead of broadcast ») une fenêtre dont la fin a moins
-    /// de 80 s (mesuré le 14/10/2026 à 0,5 s près sur 78 requêtes) : on recule par paliers (`LiveStatsTime.delays`) et on
-    /// retient, pour cette game, le premier délai accepté.
-    public func liveWindow(gameId: String, now: Date) async throws -> LiveWindow {
+    /// Recul commun à `liveWindow` et `details(gameId:now:)` : essaie `read` avec les délais de `LiveStatsTime.delays`, à
+    /// partir du dernier délai accepté pour cette game, passe au suivant sur un 400, et retient le premier accepté. Les
+    /// deux routes partagent cette mémoire (même flux, même seuil de 80 s).
+    func steppingBack<T: Sendable>(gameId: String, now: Date,
+                                   _ read: (Date) async throws -> T) async throws -> T {
         let first = await LiveStatsTime.memory.delayIndex(for: gameId)
         for index in first..<LiveStatsTime.delays.count {
             do {
-                let window = try await window(gameId: gameId,
-                                              startingTime: LiveStatsTime.startingTime(now: now, delay: LiveStatsTime.delays[index]))
+                let value = try await read(LiveStatsTime.startingTime(now: now, delay: LiveStatsTime.delays[index]))
                 await LiveStatsTime.memory.remember(index, for: gameId)
-                return window
+                return value
             } catch LoLAPIError.http(status: 400) {
                 continue
             }
@@ -93,7 +108,8 @@ public struct LoLClient: Sendable {
 }
 
 /// Heure à demander au flux livestats : un délai dans le passé, arrondi aux 10 s inférieures. Le flux refuse une fenêtre
-/// trop récente (en avance sur la diffusion) : `LoLClient.liveWindow` essaie ces délais dans l'ordre.
+/// trop récente (en avance sur la diffusion) : `LoLClient.liveWindow` et `LoLClient.details(gameId:now:)` essaient ces
+/// délais dans l'ordre.
 public enum LiveStatsTime {
     /// 90 s : fin de fenêtre entre 80 et 90 s, la donnée la plus fraîche que le flux accepte ; 100 s couvre une horloge
     /// en retard d'une seconde ; les paliers suivants, un seuil plus long sur un autre match.
@@ -104,7 +120,8 @@ public enum LiveStatsTime {
         return Date(timeIntervalSince1970: (seconds / 10).rounded(.down) * 10)
     }
 
-    /// Délai accepté par game, gardé pour la durée du processus (le seuil ne change pas pendant un match).
+    /// Délai accepté par game, gardé pour la durée du processus (le seuil ne change pas pendant un match) ; partagé par
+    /// `window` et `details`.
     static let memory = DelayMemory()
 
     actor DelayMemory {
