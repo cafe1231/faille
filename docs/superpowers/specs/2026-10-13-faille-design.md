@@ -184,20 +184,20 @@ Deux onglets dans une barre de navigation en pilule flottante : **Matchs** et **
 | `betweenGames` | Score de série + « La game N commence dans quelques minutes » |
 | `finished` | « Victoire XX », score final. La Live Activity se retire 1 h après la fin. |
 | Stats indisponibles | Score + chrono + message |
-| Pas fraîche (`staleDate` dépassée) | « màj il y a X min » à la place du chrono, stats pâlies |
+| Pas fraîche (`staleDate` dépassée) | « màj il y a X minutes » (texte système qui avance seul, sans secondes) à la place du chrono, stats pâlies |
 | Anti-spoiler | Voir §8 |
 
 ### 6.4 Démarrage et fin (v1, sans push)
 
-- **Automatique** : à chaque passage de l'appli au premier plan, une Live Activity est créée pour chaque match en direct impliquant une équipe suivie qui n'en a pas déjà une. Au maximum **3 en même temps**, par ordre de suivi des équipes.
+- **Automatique** : à chaque tour du premier plan (10 s), une Live Activity est créée pour chaque match en direct impliquant une équipe suivie qui n'en a pas déjà une (un match qui commence pendant que l'appli est ouverte a donc aussi la sienne). Au maximum **3 en même temps** (terminées encore affichées comprises, pas d'éviction), par ordre de suivi des équipes. Une Live Activity ne peut être créée qu'au premier plan : ouvrir Faille pendant le match suffit.
 - **Manuelle** : uniquement via le bouton du Détail.
 - L'utilisateur peut toujours en retirer une d'un glissement. Une Live Activity retirée à la main n'est pas recréée automatiquement pour ce match.
 - **Mises à jour** :
   - Au premier plan : à chaque rafraîchissement des données (10 s).
   - Au passage en arrière-plan : une dernière mise à jour.
-  - En arrière-plan : à chaque `BGAppRefreshTask`, demandée toutes les 15 min tant qu'un match suivi est en direct.
-  - Chaque mise à jour fixe `staleDate = maintenant + 3 min`.
-- **Fin** : quand le match passe à `completed`, état `finished`, puis fin de la Live Activity 1 h après.
+  - En arrière-plan : à chaque `BGAppRefreshTask`, demandée toutes les 15 min tant qu'un match suivi est en direct ou qu'une Live Activity est affichée (iOS décide seul s'il l'accorde ; jamais si l'appli a été fermée de force).
+  - Chaque mise à jour fixe `staleDate = updatedAt + 3 min`, où `updatedAt` est la dernière relecture réussie des données (pas l'heure de la mise à jour) : une donnée vieille est montrée « pas fraîche » tout de suite.
+- **Fin** : quand le match passe à `completed` (direct, calendrier, ou détails du match pour une compétition hors des ligues suivies), état `finished`, puis fin de la Live Activity 1 h après le moment où l'appli l'apprend.
 
 ## 7. Widgets
 
