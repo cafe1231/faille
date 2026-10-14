@@ -1,6 +1,9 @@
+import Foundation
+
 extension LiveWindow {
     /// Un `GameSnapshot` par frame, dans l'ordre du flux (le dernier est `latestSnapshot()`). Sert à rejouer une relecture
-    /// mise en cache (une frame par pas de 60 s) dans `GameTimeline` et `GoldSeries`.
+    /// mise en cache (une frame par pas de 60 s) dans `GameTimeline` et `GoldSeries`. Anti-spoiler : l'appli n'appelle
+    /// pas cette fonction (et ne demande aucune frame) pour un match masqué.
     public func snapshots() -> [GameSnapshot] {
         let blueMeta = gameMetadata.blueTeamMetadata
         let redMeta = gameMetadata.redTeamMetadata

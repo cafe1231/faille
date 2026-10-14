@@ -20,7 +20,9 @@ public struct TimelineEvent: Sendable, Equatable {
     /// Nombre gagné entre les deux frames (« +2 kills ») ; 1 pour un drake (un événement par drake).
     public let count: Int
     /// Pour les kills : pseudos des joueurs dont les kills ont augmenté, dans l'ordre du flux, seulement si la somme de
-    /// leurs hausses vaut exactement `count` ; sinon vide (« +2 kills » sans nom : pas d'attribution inventée).
+    /// leurs hausses vaut exactement `count` ; sinon vide (« +2 kills » sans nom : pas d'attribution inventée). C'est une
+    /// liste de joueurs, pas un nom par kill : un joueur à plusieurs kills n'y figure qu'une fois (« +4 kills » peut porter
+    /// 3 noms) ; l'appli affiche les noms en liste.
     public let players: [String]
 
     public init(gameTime: TimeInterval, teamId: String, kind: Kind, count: Int, players: [String] = []) {
@@ -34,16 +36,18 @@ public struct TimelineEvent: Sendable, Equatable {
 
 /// Fil des événements d'une game : différences entre frames successives (spec fonctionnalités §4). La première frame sert
 /// de référence (rien n'est inventé avant elle). Pas de hérauts ni de larves : le flux `window` ne les donne pas.
+/// Anti-spoiler : le fil raconte la game (kills, objectifs) ; l'appli n'appelle pas cette fonction (et ne demande aucune
+/// frame) pour un match masqué.
 public enum GameTimeline {
     /// Événements dans l'ordre chronologique (l'appli les affiche du plus récent au plus ancien). Pour chaque pas : équipe
     /// bleue puis rouge ; kills, drakes, barons, tours, inhibiteurs. Une baisse (frame incohérente) n'est jamais un
     /// événement.
     /// - Parameters:
     ///   - snapshots: frames d'une même game (direct : une par lecture de 10 s ; relecture : une par pas de 60 s), triées
-    ///     ici par horodatage.
+    ///     ici par horodatage (deux frames au même instant gardent leur ordre de remise).
     ///   - firstFrameTime: première frame de la game (fenêtre lue sans `startingTime`) : le 0:00 du temps de jeu.
     public static func events(from snapshots: [GameSnapshot], firstFrameTime: Date) -> [TimelineEvent] {
-        let ordered = snapshots.sorted { $0.timestamp < $1.timestamp }
+        let ordered = chronological(snapshots)
         guard ordered.count > 1 else { return [] }
         var events: [TimelineEvent] = []
         for (previous, current) in zip(ordered, ordered.dropFirst()) {
@@ -54,6 +58,14 @@ public enum GameTimeline {
                               playersBefore: previous.redPlayers, playersAfter: current.redPlayers, at: gameTime)
         }
         return events
+    }
+
+    /// Frames par horodatage croissant ; à horodatage égal, l'ordre de remise départage (tri stable explicite : `sorted(by:)`
+    /// ne promet pas la stabilité). Partagé avec `GoldSeries`, qui suit les mêmes frames.
+    static func chronological(_ snapshots: [GameSnapshot]) -> [GameSnapshot] {
+        snapshots.enumerated()
+            .sorted { ($0.element.timestamp, $0.offset) < ($1.element.timestamp, $1.offset) }
+            .map(\.element)
     }
 
     static func changes(team: String, before: TeamStats, after: TeamStats, playersBefore: [PlayerLine],

@@ -32,6 +32,20 @@ import LoLKit
         return "\(Format.clock(event.gameTime)) \(code) \(what)"
     }
 
+    // Frames synthétiques (les cas que la vraie relecture ne couvre pas).
+    private static let syntheticStart = "2026-10-04T20:18:26Z"
+
+    private func player(_ name: String, kills: Int) -> PlayerLine {
+        PlayerLine(role: "mid", champion: "Ahri", name: name, level: 6, kills: kills, deaths: 0, assists: 0,
+                   creepScore: 50, gold: 3000)
+    }
+
+    private func snap(_ at: String, blue: TeamStats = TeamStats(), red: TeamStats = TeamStats(), redTeamId: String = "red",
+                      bluePlayers: [PlayerLine] = []) -> GameSnapshot {
+        GameSnapshot(gameId: "g", phase: .inGame, timestamp: date(at), blueTeamId: "blue", redTeamId: redTeamId,
+                     blue: blue, red: red, bluePlayers: bluePlayers, redPlayers: [])
+    }
+
     @Test func replaySnapshots() throws {
         let replay = try window("window_replay")
         let snapshots = replay.snapshots()
@@ -96,21 +110,83 @@ import LoLKit
     }
 
     @Test func unattributableKillsHaveNoNames() {
-        let start = date("2026-10-04T20:18:26Z")
-        func player(_ name: String, kills: Int) -> PlayerLine {
-            PlayerLine(role: "mid", champion: "Ahri", name: name, level: 6, kills: kills, deaths: 0, assists: 0,
-                       creepScore: 50, gold: 3000)
-        }
-        func snap(_ at: String, kills: Int, towers: Int, players: [PlayerLine]) -> GameSnapshot {
-            GameSnapshot(gameId: "g", phase: .inGame, timestamp: date(at), blueTeamId: "blue", redTeamId: "red",
-                         blue: TeamStats(kills: kills, towers: towers), red: TeamStats(), bluePlayers: players,
-                         redPlayers: [])
-        }
-        let before = snap("2026-10-04T20:28:26Z", kills: 3, towers: 3, players: [player("A", kills: 1), player("B", kills: 2)])
+        let start = date(Self.syntheticStart)
+        let before = snap("2026-10-04T20:28:26Z", blue: TeamStats(kills: 3, towers: 3),
+                          bluePlayers: [player("A", kills: 1), player("B", kills: 2)])
         // L'équipe gagne 2 kills mais un seul joueur en gagne 1 : « +2 kills » sans nom ; une tour en moins : rien.
-        let after = snap("2026-10-04T20:28:36Z", kills: 5, towers: 2, players: [player("A", kills: 2), player("B", kills: 2)])
+        let after = snap("2026-10-04T20:28:36Z", blue: TeamStats(kills: 5, towers: 2),
+                         bluePlayers: [player("A", kills: 2), player("B", kills: 2)])
         let events = GameTimeline.events(from: [before, after], firstFrameTime: start)
         #expect(events == [TimelineEvent(gameTime: 610, teamId: "blue", kind: .kills, count: 2, players: [])])
+    }
+
+    @Test func killsWithAnUnreliablePlayerListHaveNoNames() {
+        let start = date(Self.syntheticStart)
+        let before = snap("2026-10-04T20:28:26Z", blue: TeamStats(kills: 3),
+                          bluePlayers: [player("A", kills: 1), player("B", kills: 2)])
+        func events(after players: [PlayerLine]) -> [TimelineEvent] {
+            let after = snap("2026-10-04T20:28:36Z", blue: TeamStats(kills: 4), bluePlayers: players)
+            return GameTimeline.events(from: [before, after], firstFrameTime: start)
+        }
+        let anonymous = [TimelineEvent(gameTime: 610, teamId: "blue", kind: .kills, count: 1)]
+        // Témoin : mêmes joueurs, A gagne le kill de l'équipe.
+        #expect(events(after: [player("A", kills: 2), player("B", kills: 2)])
+                == [TimelineEvent(gameTime: 610, teamId: "blue", kind: .kills, count: 1, players: ["A"])])
+        // Effectif différent d'une frame à l'autre (joueur manquant ou en trop) : pas de suivi par position, pas de nom.
+        #expect(events(after: [player("A", kills: 2)]) == anonymous)
+        #expect(events(after: [player("A", kills: 2), player("B", kills: 2), player("C", kills: 0)]) == anonymous)
+        // Pseudo qui change entre les deux frames (même position) : pas de nom.
+        #expect(events(after: [player("A2", kills: 2), player("B", kills: 2)]) == anonymous)
+        // Pseudo vide des deux côtés (métadonnées absentes) : pas de nom.
+        let unnamedBefore = snap("2026-10-04T20:28:26Z", blue: TeamStats(kills: 3),
+                                 bluePlayers: [player("", kills: 1), player("B", kills: 2)])
+        let unnamedAfter = snap("2026-10-04T20:28:36Z", blue: TeamStats(kills: 4),
+                                bluePlayers: [player("", kills: 2), player("B", kills: 2)])
+        #expect(GameTimeline.events(from: [unnamedBefore, unnamedAfter], firstFrameTime: start) == anonymous)
+    }
+
+    @Test func severalDragonsInOneStepAreSeparateEventsInOrder() {
+        let start = date(Self.syntheticStart)
+        let before = snap("2026-10-04T20:28:26Z", red: TeamStats(dragons: ["ocean"]))
+        let after = snap("2026-10-04T20:29:26Z", red: TeamStats(dragons: ["ocean", "cloud", "infernal"]))
+        #expect(GameTimeline.events(from: [before, after], firstFrameTime: start) == [
+            TimelineEvent(gameTime: 660, teamId: "red", kind: .dragon("cloud"), count: 1),
+            TimelineEvent(gameTime: 660, teamId: "red", kind: .dragon("infernal"), count: 1),
+        ])
+    }
+
+    @Test func aDropIsNeverAnEvent() {
+        let start = date(Self.syntheticStart)
+        let high = TeamStats(kills: 5, towers: 4, inhibitors: 1, barons: 1, dragons: ["ocean", "cloud"])
+        let low = TeamStats(kills: 4, towers: 3, inhibitors: 0, barons: 0, dragons: ["ocean"])
+        // Frame incohérente (kills, tours, inhibiteurs, barons, drakes en baisse) des deux côtés : rien.
+        let drop = GameTimeline.events(from: [snap("2026-10-04T20:28:26Z", blue: high, red: high),
+                                              snap("2026-10-04T20:29:26Z", blue: low, red: low)], firstFrameTime: start)
+        #expect(drop.isEmpty)
+        // Une baisse n'empêche pas de relever les vraies hausses du même pas.
+        var mixed = low
+        mixed.barons = 2
+        #expect(GameTimeline.events(from: [snap("2026-10-04T20:28:26Z", blue: high),
+                                           snap("2026-10-04T20:29:26Z", blue: mixed)], firstFrameTime: start)
+                == [TimelineEvent(gameTime: 660, teamId: "blue", kind: .baron, count: 1)])
+    }
+
+    @Test func framesAtTheSameInstantKeepTheirGivenOrder() {
+        let start = date(Self.syntheticStart)
+        let first = snap("2026-10-04T20:28:26Z", blue: TeamStats(kills: 0, gold: 1000))
+        let one = snap("2026-10-04T20:29:26Z", blue: TeamStats(kills: 1, gold: 1100))
+        let two = snap("2026-10-04T20:29:26Z", blue: TeamStats(kills: 2, gold: 1200))
+        // Même horodatage : l'ordre de remise départage (résultat déterministe, pas celui d'un tri sans garantie).
+        #expect(GameTimeline.events(from: [first, one, two], firstFrameTime: start) == [
+            TimelineEvent(gameTime: 660, teamId: "blue", kind: .kills, count: 1),
+            TimelineEvent(gameTime: 660, teamId: "blue", kind: .kills, count: 1),
+        ])
+        #expect(GameTimeline.events(from: [first, two, one], firstFrameTime: start)
+                == [TimelineEvent(gameTime: 660, teamId: "blue", kind: .kills, count: 2)])
+        #expect(GoldSeries.points(from: [first, one, two], firstFrameTime: start, orientedTo: nil).map(\.difference)
+                == [1000, 1100, 1200])
+        #expect(GoldSeries.points(from: [first, two, one], firstFrameTime: start, orientedTo: nil).map(\.difference)
+                == [1000, 1200, 1100])
     }
 
     @Test func goldCurveOfTheWholeGame() throws {
@@ -132,5 +208,19 @@ import LoLKit
         #expect(lyon.map(\.difference) == expected.map { -$0.1 })
         #expect(GoldSeries.points(from: snapshots, firstFrameTime: try gameStart(), orientedTo: nil) == points)
         #expect(GoldSeries.points(from: snapshots.reversed(), firstFrameTime: try gameStart(), orientedTo: "autre") == points)
+    }
+
+    @Test func goldOrientationIsDecidedFrameByFrame() {
+        let start = date(Self.syntheticStart)
+        // Le côté rouge change d'une frame à l'autre : chaque point s'oriente d'après les équipes de sa propre frame.
+        let first = snap("2026-10-04T20:28:26Z", blue: TeamStats(gold: 3000), red: TeamStats(gold: 2000), redTeamId: "r1")
+        let second = snap("2026-10-04T20:29:26Z", blue: TeamStats(gold: 5000), red: TeamStats(gold: 4500), redTeamId: "r2")
+        func differences(_ teamId: String?) -> [Int] {
+            GoldSeries.points(from: [first, second], firstFrameTime: start, orientedTo: teamId).map(\.difference)
+        }
+        #expect(differences("r2") == [1000, -500])
+        #expect(differences("r1") == [-1000, 500])
+        #expect(differences("blue") == [1000, 500])
+        #expect(differences(nil) == [1000, 500])
     }
 }
