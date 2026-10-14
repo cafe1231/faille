@@ -89,6 +89,7 @@ extension AppStore {
     /// Le réveil suivant est demandé dès le début : si le temps accordé expire pendant les requêtes, la chaîne de réveils
     /// ne s'arrête pas là ; la demande de la fin, plus fraîche (le direct vient d'être relu), remplace la première.
     func refreshInBackground() async {
+        recordBackgroundWake()
         scheduleBackgroundRefresh()
         await refreshDue(opening: false)
         await syncLiveActivities(canStart: false)
@@ -103,8 +104,17 @@ extension AppStore {
     }
 
     /// Dans 15 min si un match suivi est en direct ou si une Live Activity est à l'écran ; sinon, plus aucune demande.
+    /// Ce qu'iOS en a dit est noté pour le diagnostic de À propos.
     func scheduleBackgroundRefresh(now: Date = Date()) {
-        BackgroundRefresh.schedule(at: LiveActivityPlanner.nextBackgroundRefresh(
+        let outcome = BackgroundRefresh.schedule(at: LiveActivityPlanner.nextBackgroundRefresh(
             now: now, live: live, follows: follows, hasActivities: !liveActivities.shownMatchIds.isEmpty))
+        recordWakeRequest(outcome, at: now)
+    }
+
+    /// Les quatre lignes du bloc « Diagnostic Live Activity » de À propos : autorisation d'iOS, dernier échec de
+    /// démarrage, dernier réveil reçu, dernière demande de réveil.
+    func liveActivityDiagnosticLines(now: Date = Date()) -> [LiveActivityDiagnosticText.Line] {
+        LiveActivityDiagnosticText.lines(enabled: liveActivities.isEnabled, failure: liveActivities.lastStartFailure,
+                                         background: backgroundDiagnostic, now: now)
     }
 }

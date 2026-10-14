@@ -24,6 +24,9 @@ final class LiveActivityController {
     private(set) var isEnabled: Bool
     /// Épinglés, retirés à la main, démarrés par l'appli ; enregistrés dans `live-activities.json`.
     private(set) var choices: LiveActivityChoices
+    /// Dernier démarrage qui a échoué ou n'a pas pu avoir lieu (« Diagnostic Live Activity » de À propos) ; effacé quand
+    /// une Live Activity démarre. En mémoire seulement : les démarrages n'ont lieu qu'au premier plan.
+    private(set) var lastStartFailure: StartFailure?
 
     private let files: FileStore?
     /// Faux dans les tests hébergés et les aperçus : rien n'est demandé à ActivityKit (les choix restent enregistrés).
@@ -32,6 +35,9 @@ final class LiveActivityController {
     @ObservationIgnored private var hasSynced = false
     /// Échecs de démarrage déjà journalisés (match et cause) : un tour de 10 s ne répète pas la même ligne.
     @ObservationIgnored private var loggedStartFailures: Set<String> = []
+    /// Passes de `sync` demandées depuis le lancement, même quand ActivityKit n'est pas appelé (lu par les tests : le
+    /// store n'en demande aucune tant que `follows.json` est illisible).
+    @ObservationIgnored private(set) var syncPasses = 0
 
     private static let log = Logger(subsystem: "Faille", category: "live-activity")
 
@@ -69,11 +75,10 @@ final class LiveActivityController {
     /// - Parameter content: contenu actuel d'un match (`AppStore.activityContent`), nil s'il n'y a rien de neuf.
     func sync(live: [MatchEvent]?, follows: FollowList, mode: LiveActivityMode, canStart: Bool, now: Date,
               content: (String) -> LiveActivityContent?) async {
+        syncPasses += 1
         guard usesActivityKit else { return }
-        let enabled = ActivityGateway.isEnabled
-        if enabled != isEnabled {
-            isEnabled = enabled
-        }
+        refreshAuthorization()
+        let enabled = isEnabled
         let before = choices
 
         let running = ActivityGateway.running()
@@ -116,7 +121,7 @@ final class LiveActivityController {
                 // Pas de démarrage sans contenu ni ids d'équipe (attributs) : journalisé, c'est un match épinglé ou
                 // suivi qui n'aura pas sa Live Activity.
                 guard let start = content(matchId), let attributes = start.attributes else {
-                    logStartFailure(matchId, "contenu ou ids d'équipe manquants")
+                    recordStartFailure(matchId, "contenu ou ids d'équipe manquants", now: now)
                     continue
                 }
                 // Pas de démarrage non plus pour un match déjà fini.
@@ -124,8 +129,9 @@ final class LiveActivityController {
                 do {
                     try ActivityGateway.start(attributes: attributes, state: start.state)
                     choices.markStarted(matchId, now: now)
+                    lastStartFailure = nil
                 } catch {
-                    logStartFailure(matchId, String(describing: error))
+                    recordStartFailure(matchId, String(describing: error), now: now)
                 }
             }
         }
@@ -145,6 +151,16 @@ final class LiveActivityController {
     /// liste aucune.
     nonisolated static func isListVerified(hasSynced: Bool, iosListsAny: Bool, appStartedAny: Bool) -> Bool {
         hasSynced || iosListsAny || !appStartedAny
+    }
+
+    /// Autorisation d'iOS relue : l'utilisateur a pu couper les Live Activities dans les Réglages d'iOS (lu à chaque
+    /// passe, et à l'ouverture du diagnostic de À propos).
+    func refreshAuthorization() {
+        guard usesActivityKit else { return }
+        let enabled = ActivityGateway.isEnabled
+        if enabled != isEnabled {
+            isEnabled = enabled
+        }
     }
 
     /// « Épingler sur l'écran verrouillé » (spec §5.3) : enregistré tout de suite ; la Live Activity démarre au `sync`
@@ -183,16 +199,18 @@ final class LiveActivityController {
     }
 
     /// À appeler après le `sync` qui suit un « Épingler » : si le match épinglé n'est pas à l'écran à cause du direct,
-    /// l'écrit au journal (niveau error, comme les autres échecs de démarrage ; pas d'écran pour le dire).
-    func reportPinWithoutActivity(matchId: String, live: [MatchEvent]?) {
-        guard usesActivityKit, !shownMatchIds.contains(matchId),
+    /// le note (diagnostic de À propos) et l'écrit au journal (niveau error, comme les autres échecs de démarrage).
+    func reportPinWithoutActivity(matchId: String, live: [MatchEvent]?, now: Date = Date()) {
+        guard !shownMatchIds.contains(matchId),
               let reason = Self.pinFailureReason(matchId: matchId, live: live) else { return }
-        logStartFailure(matchId, reason)
+        recordStartFailure(matchId, reason, now: now)
     }
 
-    /// Un démarrage qui échoue (pas d'ids d'équipe, `Activity.request` qui lève : limite d'iOS, autorisation retirée…)
-    /// est journalisé une fois par match et par cause : sans écran pour le dire, le journal est la seule trace.
-    private func logStartFailure(_ matchId: String, _ reason: String) {
+    /// Un démarrage qui échoue (pas d'ids d'équipe, `Activity.request` qui lève : limite d'iOS, autorisation retirée,
+    /// « Épingler » sans direct…) est noté pour le diagnostic de À propos, et journalisé une fois par match et par
+    /// cause (un tour de 10 s ne répète pas la même ligne) : le journal d'iOS n'est pas lisible depuis Windows.
+    func recordStartFailure(_ matchId: String, _ reason: String, now: Date = Date()) {
+        lastStartFailure = StartFailure(matchId: matchId, reason: reason, date: now)
         guard loggedStartFailures.insert("\(matchId)|\(reason)").inserted else { return }
         Self.log.error("Live Activity de \(matchId, privacy: .public) non démarrée : \(reason, privacy: .public)")
     }

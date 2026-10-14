@@ -37,6 +37,9 @@ final class AppStore {
     private(set) var lastSuccess: [DataKind: Date] = [:]
     /// Live Activities (spec §6) : tous les appels à ActivityKit passent par lui.
     let liveActivities: LiveActivityController
+    /// Réveils d'arrière-plan reçus et demandés (bloc « Diagnostic Live Activity » de À propos) ; enregistré, car iOS
+    /// relance l'appli pour un réveil et la mémoire du processus ne survit pas jusqu'à la prochaine ouverture.
+    private(set) var backgroundDiagnostic = BackgroundDiagnostic()
 
     // MARK: Interne
 
@@ -56,8 +59,9 @@ final class AppStore {
     @ObservationIgnored private var sceneTasks: [UUID: Task<Void, Never>] = [:]
     /// `follows.json` / `settings.json` existent mais n'ont pas pu être lus au lancement (erreur d'E/S, par exemple
     /// fichier verrouillé) : les valeurs par défaut ne doivent jamais être écrites par-dessus. Avant la première
-    /// modification de l'utilisateur, on retente la lecture.
-    @ObservationIgnored private var followsUnreadable = false
+    /// modification de l'utilisateur, on retente la lecture. `followsUnreadable` est aussi lu par `syncLiveActivities`
+    /// (autre fichier, d'où `private(set)`).
+    @ObservationIgnored private(set) var followsUnreadable = false
     @ObservationIgnored private var settingsUnreadable = false
     /// Demandes de rechargement des widgets (lu par les tests ; WidgetKit n'est appelé que si `reloadsWidgets`).
     @ObservationIgnored private(set) var widgetReloadRequests = 0
@@ -130,6 +134,7 @@ final class AppStore {
             scheduleLeagueIds = cached.value.leagueIds
             lastSuccess[.schedule] = cached.fetchedAt
         }
+        backgroundDiagnostic = files.load(BackgroundDiagnostic.self, from: .backgroundDiagnostic) ?? BackgroundDiagnostic()
         let cachedLive = files.load(Cached<[MatchEvent]>.self, from: .live)
         live = RefreshPolicy.usableLive(cachedLive, now: Date())
         if live != nil {
@@ -592,6 +597,24 @@ final class AppStore {
 
     private func recomputeDirectory() {
         leaguePills = TeamDirectory.leagues(leagues, catalog: catalog, schedule: schedule)
+    }
+
+    // MARK: Diagnostic de l'arrière-plan
+
+    /// Un réveil d'arrière-plan vient d'être reçu d'iOS (`BGAppRefreshTask`).
+    func recordBackgroundWake(at date: Date = Date()) {
+        backgroundDiagnostic.lastWake = date
+        saveBackgroundDiagnostic()
+    }
+
+    /// Résultat de la dernière demande de réveil faite à iOS.
+    func recordWakeRequest(_ outcome: WakeRequest.Outcome, at date: Date = Date()) {
+        backgroundDiagnostic.lastRequest = WakeRequest(at: date, outcome: outcome)
+        saveBackgroundDiagnostic()
+    }
+
+    private func saveBackgroundDiagnostic() {
+        files?.save(backgroundDiagnostic, to: .backgroundDiagnostic)
     }
 
     // MARK: Enregistrement

@@ -19,6 +19,8 @@ struct FileStore: Sendable {
         case live = "cache-live.json"
         /// Choix sur les Live Activities (épinglées, retirées à la main, démarrées) : écrit par l'appli seule.
         case liveActivities = "live-activities.json"
+        /// Réveils d'arrière-plan reçus et demandés (bloc « Diagnostic Live Activity » de À propos) : écrit par l'appli seule.
+        case backgroundDiagnostic = "diagnostic-arriere-plan.json"
     }
 
     let directory: URL

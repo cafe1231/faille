@@ -69,8 +69,10 @@ struct SettingsView: View {
     }
 }
 
-/// À propos : source des données, version, stockage.
+/// À propos : source des données, version, stockage, diagnostic des Live Activities.
 struct AboutView: View {
+    @Environment(AppStore.self) private var store
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
@@ -78,6 +80,7 @@ struct AboutView: View {
                 block("Données", "Matchs, équipes et stats viennent de l'API de lolesports.com (non officielle) et du flux livestats de Riot, avec environ une minute de retard sur le direct. Usage strictement personnel.")
                 block("Stockage", AppGroup.identifier.map { "Groupe d'apps : \($0)" }
                       ?? "Aucun groupe d'apps : les données restent dans l'appli seule.")
+                diagnostic
                 Text("Police Sora, sous licence SIL Open Font License.")
                     .font(Typo.secondary)
                     .foregroundStyle(Palette.secondary)
@@ -87,6 +90,24 @@ struct AboutView: View {
         .abyssBackground()
         .navigationTitle("À propos")
         .navigationBarTitleDisplayMode(.inline)
+        // L'utilisateur a pu changer l'autorisation dans les Réglages d'iOS depuis la dernière passe.
+        .onAppear { store.liveActivities.refreshAuthorization() }
+    }
+
+    /// « Diagnostic Live Activity » : pourquoi une Live Activity n'est pas apparue ou ne bouge pas en arrière-plan (le
+    /// journal d'iOS n'est pas lisible depuis Windows). Heures locales, « — » quand c'est inconnu.
+    private var diagnostic: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Diagnostic Live Activity")
+                .font(Typo.headline)
+                .foregroundStyle(Palette.text)
+            ForEach(store.liveActivityDiagnosticLines()) { line in
+                Text("\(line.title) : \(line.value)")
+                    .font(Typo.secondary)
+                    .foregroundStyle(Palette.secondary)
+            }
+        }
+        .glassCard(radius: Radius.inner, padding: 14)
     }
 
     private func block(_ title: String, _ text: String) -> some View {
