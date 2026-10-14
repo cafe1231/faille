@@ -41,6 +41,14 @@ jobs:
           # Réglages du petit widget (AppIntent) : métadonnées extraites à la compilation.
           ls "$APPEX/Metadata.appintents" || echo "::warning::Metadata.appintents absent de l'extension : le choix d'équipe du petit widget risque de manquer"
 
+      - name: Vérifier l'Info.plist de l'appli (Live Activities, arrière-plan)
+        # Sans ces clés, iOS refuse les Live Activities ou ne réveille jamais l'appli en arrière-plan (spec §6.4).
+        run: |
+          PLIST=build/Build/Products/Release-iphoneos/Faille.app/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :NSSupportsLiveActivities" "$PLIST" | grep -qx true
+          /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$PLIST" | grep -q fetch
+          /usr/libexec/PlistBuddy -c "Print :BGTaskSchedulerPermittedIdentifiers" "$PLIST" | grep -q faille.live-refresh
+
       - name: Signer en ad hoc avec les entitlements
         # AltServer re-signe ensuite avec l'Apple ID de Dan ; il lit les entitlements embarqués ici.
         run: |

@@ -70,3 +70,29 @@ extension AppStore {
         runWithScene { await self.liveActivities.remove(matchId: matchId) }
     }
 }
+
+// MARK: - Arrière-plan (étape 4, Task 7)
+
+extension AppStore {
+    /// Réveil par iOS (`BGAppRefreshTask`, spec §6.4) : le direct et les stats des matchs suivis (ni logos ni couleurs :
+    /// le temps accordé est compté, environ 30 s), puis les Live Activities — sans en démarrer, iOS ne le permet pas
+    /// en arrière-plan —, puis la demande du réveil suivant. Sans effet dans les aperçus et les tests.
+    func refreshInBackground() async {
+        await refreshDue(opening: false)
+        await syncLiveActivities(canStart: false)
+        scheduleBackgroundRefresh()
+    }
+
+    /// Passage en arrière-plan (spec §6.4) : une dernière mise à jour des Live Activities avec ce que l'appli sait, puis
+    /// la demande du premier réveil.
+    func enterBackground() async {
+        await syncLiveActivities(canStart: false)
+        scheduleBackgroundRefresh()
+    }
+
+    /// Dans 15 min si un match suivi est en direct ou si une Live Activity est à l'écran ; sinon, plus aucune demande.
+    func scheduleBackgroundRefresh(now: Date = Date()) {
+        BackgroundRefresh.schedule(at: LiveActivityPlanner.nextBackgroundRefresh(
+            now: now, live: live, follows: follows, hasActivities: !liveActivities.shownMatchIds.isEmpty))
+    }
+}

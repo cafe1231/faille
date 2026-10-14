@@ -45,6 +45,11 @@ targets:
         UIAppFonts:
           - Sora-Variable.ttf
         NSSupportsLiveActivities: true
+        # Réveils en arrière-plan pour les Live Activities (spec §6.4) : BGAppRefreshTask, sans entitlement ni push.
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - faille.live-refresh
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UISupportedInterfaceOrientations~ipad:
