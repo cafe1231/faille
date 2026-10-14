@@ -1,5 +1,7 @@
 # Faille — ce qui a été fait cette nuit (14/10/2026)
 
+> **Mise à jour du 14/10, 11 h 45 — à lire d'abord.** Pendant un vrai match en direct (Demacia Cup), j'ai découvert que **les stats en direct étaient refusées par le serveur** (il refuse une demande trop proche de la diffusion, et l'appli demandait 60 s en arrière). Corrigé et testé (`e3953e6`, CI verte : [iOS 38544400706](https://github.com/cafe1231/faille/actions/runs/38544400706), [LoLKit 38544400618](https://github.com/cafe1231/faille/actions/runs/38544400618)) : l'appli recule maintenant par paliers (90 s, 120 s…) jusqu'à ce que le serveur accepte. **Installe la nouvelle IPA** `Faille-etape4.ipa` (même chemin, remplacée à 11 h 47), pas celle de la nuit. Une vraie fenêtre capturée en direct sert maintenant de test.
+
 ## 1. État des étapes
 
 | Étape | État | Preuve |
@@ -9,7 +11,7 @@
 | 4 — La Live Activity (écran verrouillé + Dynamic Island, auto/manuel, bouton « Épingler », arrière-plan) | **Faite et testée en CI** ; relecture finale + corrections (démarrage au lancement, diagnostic, anti-doublon) ; reste le test pendant un vrai match | CI [iOS 38498941347](https://github.com/cafe1231/faille/actions/runs/38498941347), LoLKit [38498941332](https://github.com/cafe1231/faille/actions/runs/38498941332) |
 | Worlds : flux en direct | **En partie** : `lolkit live` lancé (« Aucun match en direct » cette nuit) ; une **vraie frame en pause** capturée sur KC vs MKOI (LEC, 19/09) → fixture `window_paused.json` + 2 tests ; la capture du **vrai direct** est programmée pour jeudi 15/10 à 20 h 20 (voir 6.4) | [LoLKit 38501202196](https://github.com/cafe1231/faille/actions/runs/38501202196) |
 
-Tests automatiques : 253 tests LoLKit (Linux + macOS), 118 tests sur simulateur iOS, captures PNG de chaque écran.
+Tests automatiques : 258 tests LoLKit (Linux + macOS), 118 tests sur simulateur iOS, captures PNG de chaque écran.
 
 ## 2. Installer
 
