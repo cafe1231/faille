@@ -92,20 +92,76 @@ public struct GameRef: Codable, Sendable, Equatable {
     public let id: String
     public let state: State
     public let teams: [Side]?
+    /// Rediffusions de la game (`getEventDetails` d'un match terminé) ; vide ou absent sinon.
+    public let vods: [Vod]?
 
-    public init(number: Int, id: String, state: State, teams: [Side]?) {
+    public init(number: Int, id: String, state: State, teams: [Side]?, vods: [Vod]? = nil) {
         self.number = number
         self.id = id
         self.state = state
         self.teams = teams
+        self.vods = vods
     }
 }
 
+/// Rediffusion d'une game (`games[].vods[]` de `getEventDetails`) : une vidéo par langue.
+public struct Vod: Codable, Sendable, Equatable {
+    /// `youtube` (le seul vu le 14/10/2026).
+    public let provider: String?
+    /// Identifiant de la vidéo chez le fournisseur (YouTube : `v=`).
+    public let parameter: String?
+    /// Langue, ex. `en-US`.
+    public let locale: String?
+    /// Début de la game dans la vidéo, en millisecondes (souvent 0 ou absent : la vidéo commence avec la game).
+    public let startMillis: Int?
+
+    public init(provider: String?, parameter: String?, locale: String?, startMillis: Int?) {
+        self.provider = provider
+        self.parameter = parameter
+        self.locale = locale
+        self.startMillis = startMillis
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case provider, parameter, locale, startMillis
+    }
+
+    /// Décodage tolérant : un champ illisible devient nil, la game et le match restent lisibles.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        provider = try? container.decodeIfPresent(String.self, forKey: .provider)
+        parameter = try? container.decodeIfPresent(String.self, forKey: .parameter)
+        locale = try? container.decodeIfPresent(String.self, forKey: .locale)
+        startMillis = try? container.decodeIfPresent(Int.self, forKey: .startMillis)
+    }
+}
+
+/// Un stream d'un match (`getLive`, `getEventDetails`) : fournisseur (`twitch`, `youtube`, `afreecatv`…), identifiant
+/// chez ce fournisseur (`parameter`), langue (`locale`, ex. `fr-FR`) et état des stats live.
 public struct StreamInfo: Codable, Sendable, Equatable {
     public let statsStatus: String?
+    public let provider: String?
+    public let parameter: String?
+    public let locale: String?
 
-    public init(statsStatus: String?) {
+    public init(statsStatus: String?, provider: String? = nil, parameter: String? = nil, locale: String? = nil) {
         self.statsStatus = statsStatus
+        self.provider = provider
+        self.parameter = parameter
+        self.locale = locale
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case statsStatus, provider, parameter, locale
+    }
+
+    /// Décodage tolérant : un champ illisible devient nil, le match reste lisible.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        statsStatus = try? container.decodeIfPresent(String.self, forKey: .statsStatus)
+        provider = try? container.decodeIfPresent(String.self, forKey: .provider)
+        parameter = try? container.decodeIfPresent(String.self, forKey: .parameter)
+        locale = try? container.decodeIfPresent(String.self, forKey: .locale)
     }
 }
 
