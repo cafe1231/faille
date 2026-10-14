@@ -3,7 +3,7 @@ import LoLKit
 
 /// Ce qui oblige à reprogrammer les notifications : le réglage et le plan de LoLKit. Il change quand le calendrier, les
 /// équipes suivies, les révélations ou les réglages changent (spec fonctionnalités §2), et quand une notification passe
-/// son heure. Sert d'`id` à la tâche de la scène qui reprogramme (`FailleApp`).
+/// son heure. Sert d'`id` à la tâche qui reprogramme (`RootView`).
 struct ReminderSignature: Equatable, Sendable {
     let enabled: Bool
     let reminders: [MatchReminder]
@@ -25,11 +25,13 @@ extension AppStore {
         ReminderSignature(enabled: settings.matchRemindersEnabled, reminders: plannedReminders())
     }
 
-    /// Reprogramme les notifications de Faille (celles des autres applis ne sont jamais touchées). Rien tant que
-    /// `follows.json` est illisible : la liste des équipes suivies serait vide par défaut, et on supprimerait des
+    /// Reprogramme les notifications de Faille (celles des autres applis ne sont jamais touchées). Appelée par l'écran
+    /// (`RootView`, dès que le plan change) et par chaque rafraîchissement d'arrière-plan (`refreshInBackground`,
+    /// `enterBackground`) : un réveil d'iOS n'a aucune scène. Rien tant que `follows.json` ou `settings.json` est
+    /// illisible : la liste des équipes suivies serait vide, et le réglage coupé, par défaut ; on supprimerait des
     /// notifications voulues (même règle que pour les Live Activities).
     func syncReminders(center: any ReminderCenter, now: Date = Date()) async {
-        guard !followsUnreadable else { return }
+        guard !followsUnreadable, !settingsUnreadable else { return }
         await ReminderSync.apply(plannedReminders(now: now), enabled: settings.matchRemindersEnabled, center: center)
     }
 }

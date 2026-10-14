@@ -71,10 +71,10 @@ final class AppStore {
     @ObservationIgnored private var sceneTasks: [UUID: Task<Void, Never>] = [:]
     /// `follows.json` / `settings.json` existent mais n'ont pas pu être lus au lancement (erreur d'E/S, par exemple
     /// fichier verrouillé) : les valeurs par défaut ne doivent jamais être écrites par-dessus. Avant la première
-    /// modification de l'utilisateur, on retente la lecture. `followsUnreadable` est aussi lu par `syncLiveActivities`
-    /// (autre fichier, d'où `private(set)`).
+    /// modification de l'utilisateur, on retente la lecture. `followsUnreadable` est aussi lu par `syncLiveActivities`, et
+    /// les deux par `syncReminders` (autres fichiers, d'où `private(set)`).
     @ObservationIgnored private(set) var followsUnreadable = false
-    @ObservationIgnored private var settingsUnreadable = false
+    @ObservationIgnored private(set) var settingsUnreadable = false
     /// Demandes de rechargement des widgets (lu par les tests ; WidgetKit n'est appelé que si `reloadsWidgets`).
     @ObservationIgnored private(set) var widgetReloadRequests = 0
 

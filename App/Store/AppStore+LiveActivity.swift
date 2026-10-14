@@ -93,18 +93,22 @@ extension AppStore {
     /// en arrière-plan —, puis la demande du réveil suivant. Sans effet dans les aperçus et les tests.
     /// Le réveil suivant est demandé dès le début : si le temps accordé expire pendant les requêtes, la chaîne de réveils
     /// ne s'arrête pas là ; la demande de la fin, plus fraîche (le direct vient d'être relu), remplace la première.
+    /// Les notifications de début de match sont reprogrammées avec le calendrier qui vient d'être relu (spec fonctionnalités
+    /// §2) : sans scène, aucun écran ne le ferait (le prochain match d'une équipe, quand le précédent est terminé).
     func refreshInBackground() async {
         recordBackgroundWake()
         scheduleBackgroundRefresh()
         await refreshDue(opening: false)
         await syncLiveActivities(canStart: false)
+        await syncReminders(center: reminderCenter)
         scheduleBackgroundRefresh()
     }
 
-    /// Passage en arrière-plan (spec §6.4) : une dernière mise à jour des Live Activities avec ce que l'appli sait, puis
-    /// la demande du premier réveil.
+    /// Passage en arrière-plan (spec §6.4) : une dernière mise à jour des Live Activities et des notifications avec ce que
+    /// l'appli sait, puis la demande du premier réveil.
     func enterBackground() async {
         await syncLiveActivities(canStart: false)
+        await syncReminders(center: reminderCenter)
         scheduleBackgroundRefresh()
     }
 

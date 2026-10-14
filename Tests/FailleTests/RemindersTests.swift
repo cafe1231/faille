@@ -244,6 +244,101 @@ struct RemindersStoreTests {
     }
 }
 
+/// Les notifications ne dépendent pas d'un écran (spec fonctionnalités §2 : programmées « à chaque rafraîchissement du
+/// calendrier ») : un réveil d'iOS en arrière-plan n'a aucune scène, donc aucune `RootView` pour reprogrammer.
+@MainActor
+@Suite(.serialized)
+struct RemindersBackgroundTests {
+    private static func match(_ id: String, start: Date, state: EventState) -> MatchEvent {
+        let over = state == .completed
+        let teams = [
+            MatchTeam(id: nil, name: "Karmine Corp", code: "KC", image: nil,
+                      result: over ? MatchTeam.Result(outcome: "win", gameWins: 3) : nil),
+            MatchTeam(id: nil, name: "G2 Esports", code: "G2", image: nil,
+                      result: over ? MatchTeam.Result(outcome: "loss", gameWins: 1) : nil),
+        ]
+        return MatchEvent(startTime: start, state: state, type: "match", blockName: "Play-in", league: SampleData.worlds,
+                          match: MatchInfo(id: id, teams: teams, strategy: Strategy(type: "bestOf", count: 5), games: nil),
+                          streams: nil)
+    }
+
+    /// `getSchedule` tel que le serveur le donne : un match, avec son état et son résultat.
+    private static func eventJSON(_ id: String, start: Date, state: String, kcWins: Int, g2Wins: Int) -> String {
+        let outcomes = state == "completed" ? (kc: #""win""#, g2: #""loss""#) : (kc: "null", g2: "null")
+        return #"{"startTime":"\#(LoLDate.format(start))","state":"\#(state)","type":"match","blockName":"Play-in","league":{"name":"Mondial","slug":"worlds"},"match":{"id":"\#(id)","teams":[{"name":"Karmine Corp","code":"KC","result":{"outcome":\#(outcomes.kc),"gameWins":\#(kcWins)}},{"name":"G2 Esports","code":"G2","result":{"outcome":\#(outcomes.g2),"gameWins":\#(g2Wins)}}],"strategy":{"type":"bestOf","count":5}}}"#
+    }
+
+    /// Disque : KC suivie (sans anti-spoiler), notifications activées, calendrier d'il y a une heure avec deux matchs de KC
+    /// à venir — `m0` dans 1 h, `m1` dans 5 h (le plan ne garde que `m0`, le prochain). Réseau : `getSchedule` dit que `m0`
+    /// est terminé depuis longtemps (le plan passe à `m1`).
+    private static func environment(now: Date, settings: AppSettings = AppSettings(matchRemindersEnabled: true))
+        -> (FileStore, ScriptedTransport) {
+        let files = TemporaryFiles.store()
+        files.save(FollowList(teams: [FollowedTeam(id: "kc", code: "KC", name: "Karmine Corp")]), to: .follows)
+        files.save(settings, to: .settings)
+        files.save(Cached(value: SampleData.leagues, fetchedAt: now), to: .leagues)
+        let cached = [match("m0", start: now.addingTimeInterval(3600), state: .unstarted),
+                      match("m1", start: now.addingTimeInterval(5 * 3600), state: .unstarted)]
+        files.save(Cached(value: SchedulePage(leagueIds: [], events: cached), fetchedAt: now.addingTimeInterval(-3600)),
+                   to: .schedule)
+        let served = [
+            eventJSON("m0", start: now.addingTimeInterval(-3 * 3600), state: "completed", kcWins: 3, g2Wins: 1),
+            eventJSON("m1", start: now.addingTimeInterval(5 * 3600), state: "unstarted", kcWins: 0, g2Wins: 0),
+        ]
+        let body = #"{"data":{"schedule":{"events":[\#(served.joined(separator: ","))]}}}"#
+        let transport = ScriptedTransport(extra: { url in
+            url.path.hasSuffix("/getSchedule") ? HTTPResponse(status: 200, body: Data(body.utf8)) : nil
+        })
+        return (files, transport)
+    }
+
+    /// Un réveil d'arrière-plan relit le calendrier : `m0` est terminé, le prochain match de KC est `m1`. Sans écran pour
+    /// le faire, sa notification ne serait programmée qu'à la prochaine ouverture de Faille.
+    @Test func backgroundRefreshSchedulesTheNextMatchOnceThePreviousIsOver() async {
+        let (files, transport) = Self.environment(now: Date())
+        let center = FakeReminderCenter()
+        let store = AppStore(transport: transport, files: files, reminderCenter: center)
+        await store.syncReminders(center: center) // ce que l'écran avait programmé avant de passer en arrière-plan
+        #expect(Set(await center.pending.keys) == ["match-start-m0"])
+
+        await store.refreshInBackground()
+        #expect(store.schedule.first { $0.id == "m0" }?.state == .completed)
+        #expect(Set(await center.pending.keys) == ["match-start-m1"])
+    }
+
+    /// Passer en arrière-plan reprogramme aussi, avec ce que l'appli sait (coût nul : rien ne change si le plan est le même).
+    @Test func enteringTheBackgroundSchedulesThePlan() async {
+        let (files, transport) = Self.environment(now: Date())
+        let center = FakeReminderCenter()
+        let store = AppStore(transport: transport, files: files, reminderCenter: center)
+        await store.enterBackground()
+        #expect(Set(await center.pending.keys) == ["match-start-m0"])
+        await store.enterBackground()
+        #expect(Set(await center.pending.keys) == ["match-start-m0"])
+    }
+
+    /// `settings.json` illisible : les réglages par défaut (notifications coupées) ne sont pas la volonté de l'utilisateur,
+    /// aucune notification déjà programmée n'est retirée.
+    @Test func unreadableSettingsRemoveNoReminder() async throws {
+        let now = Date()
+        let (files, transport) = Self.environment(now: now)
+        let path = files.url(.settings).path(percentEncoded: false)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: path) }
+
+        let center = FakeReminderCenter()
+        try await center.add(MatchReminder(id: MatchReminders.identifier(matchId: "m0"), matchId: "m0",
+                                           fireDate: now.addingTimeInterval(2700), title: "KC vs G2 dans 15 min",
+                                           subtitle: "Mondial · Play-in · Bo5"))
+        let store = AppStore(transport: transport, files: files, reminderCenter: center)
+        #expect(store.settingsUnreadable)
+        #expect(!store.settings.matchRemindersEnabled)
+        await store.syncReminders(center: center)
+        await store.enterBackground()
+        #expect(Set(await center.pending.keys) == ["match-start-m0"])
+    }
+}
+
 /// La section des Réglages (spec fonctionnalités §2) sans la vue : ce que l'interrupteur et l'avertissement deviennent
 /// quand on bascule et quand l'autorisation d'iOS change sans l'appli.
 @MainActor

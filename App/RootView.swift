@@ -7,6 +7,7 @@ enum AppTab: Hashable {
 
 struct RootView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.scenePhase) private var scenePhase
     @State private var tab: AppTab
     /// Pile de l'onglet Matchs : toucher une notification de début de match y pousse le Détail du match (spec
     /// fonctionnalités §2).
@@ -16,6 +17,14 @@ struct RootView: View {
     @ReduceMotion var reduceMotion
     /// Zoom carte → Détail (spec finitions §6) : les lignes des cartes en sont les sources, l'écran Détail la destination.
     @Namespace private var zoom
+
+    /// Ce qui relance la reprogrammation des notifications : un autre plan (`reminderSignature`), et chaque passage de la
+    /// scène au premier plan ou hors de celui-ci. Au retour, l'autorisation d'iOS a pu être rendue dans les Réglages
+    /// d'iOS sans que le plan ait changé : sans cela, rien ne serait reprogrammé avant le prochain changement du plan.
+    private struct ReminderKey: Equatable, Sendable {
+        let signature: ReminderSignature
+        let active: Bool
+    }
 
     init(tab: AppTab = .matches, router: NotificationRouter? = nil) {
         _tab = State(initialValue: tab)
@@ -46,8 +55,9 @@ struct RootView: View {
             openPendingMatch()
         }
         // Notifications de début de match (spec fonctionnalités §2) : reprogrammées dès que le calendrier, les équipes
-        // suivies, les révélations ou les réglages changent le plan (`reminderSignature`).
-        .task(id: store.reminderSignature) {
+        // suivies, les révélations ou les réglages changent le plan (`reminderSignature`), et au retour au premier plan.
+        // En arrière-plan, `refreshInBackground` et `enterBackground` s'en chargent (un réveil d'iOS n'a pas de scène).
+        .task(id: ReminderKey(signature: store.reminderSignature, active: scenePhase == .active)) {
             await store.syncReminders(center: store.reminderCenter)
         }
     }
