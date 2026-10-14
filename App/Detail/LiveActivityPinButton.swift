@@ -36,9 +36,10 @@ struct LiveActivityPinButton: View {
                 .foregroundStyle(controller.isEnabled ? Palette.text : Palette.secondary)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())
+                // Dans le libellé : le bouton entier (verre compris) s'enfonce au toucher, comme « À propos ».
+                .glassCard(radius: Radius.inner, padding: 4)
             }
             .buttonStyle(.pressable)
-            .glassCard(radius: Radius.inner, padding: 4)
             if let note = note(enabled: controller.isEnabled) {
                 Text(note)
                     .font(Typo.secondary)
