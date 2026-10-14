@@ -32,9 +32,14 @@ extension MatchDetailModel {
     }
 
     /// Détails par joueur de la game affichée, tant que l'écran l'affiche : toutes les 60 s tant qu'ils ne sont pas
-    /// définitifs, une fois ensuite.
+    /// définitifs, une fois ensuite. Une game jouée dont aucune frame n'est encore en mémoire (première ouverture) n'est pas
+    /// lue maintenant : la frame `finished` arrive en quelques centaines de millisecondes, la clé de la tâche repart alors
+    /// (`detailsAreFinal`) et la lecture est faite une seule fois, définitive, au lieu d'une lecture provisoire de 200 Ko
+    /// suivie de la définitive. Le passage du direct à la fin garde sa boucle de 60 s : la game a alors des frames en
+    /// mémoire.
     func followDetails(store: AppStore) async {
         guard let game = featureGame(store: store) else { return }
+        if game.state == .completed, store.snapshots[game.id] == nil { return }
         await store.gameDetails.follow(gameId: game.id, finished: detailsAreFinal(game, store: store))
     }
 

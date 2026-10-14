@@ -99,6 +99,23 @@ struct FeaturesIntegrationTests {
         #expect(store.gameDetails.details.isEmpty)
     }
 
+    /// Première ouverture d'une game jouée : aucune frame en mémoire, donc aucune lecture des détails (~200 Ko) ; la frame
+    /// `finished` lue, une seule lecture, définitive. Pas de lecture provisoire suivie de la définitive.
+    @Test func aPlayedGameIsReadOnceItsFinishedFrameIsThere() async throws {
+        let (store, transport) = await Self.makeStore(game2: "completed", spoilerFree: false)
+        let model = MatchDetailModel(matchId: Self.matchId)
+        func detailsRequests() async -> Int {
+            await transport.requests.filter { $0.path.contains("/details/") }.count
+        }
+        await model.followDetails(store: store)
+        #expect(await detailsRequests() == 0)
+
+        await store.loadWindow(gameId: "g2", inProgress: false)
+        #expect(store.snapshots["g2"]?.phase == .finished)
+        await model.followDetails(store: store)
+        #expect(await detailsRequests() == 1)
+    }
+
     /// Les détails par joueur d'une game jouée ne sont définitifs qu'une fois sa frame `finished` lue : avant, la boucle de
     /// 60 s continue (`FeatureKey.detailsFinal`).
     @Test func detailsAreFinalOnceTheFinishedFrameIsRead() async throws {
