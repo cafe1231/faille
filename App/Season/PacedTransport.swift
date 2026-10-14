@@ -41,6 +41,13 @@ actor PacedTransport: HTTPTransport {
     private(set) var sent = 0
     /// Heure (de l'horloge) du départ de chaque requête de la session : tests de cadence.
     private(set) var sentAt: [Date] = []
+    /// Requêtes à la demande (classement, page de calendrier) envoyées APRÈS l'épuisement du budget de la collecte : petite
+    /// réserve à part (`onDemandBudget`), comptée et cadencée comme les autres.
+    private(set) var reserveSent = 0
+    /// Réserve par session pour les écrans, une fois le budget de la collecte épuisé.
+    static let onDemandBudget = 20
+    /// Numéro de session : une réponse arrivée après `beginSession()` ne touche ni le rythme ni l'arrêt de la nouvelle.
+    private var generation = 0
 
     init(base: any HTTPTransport, clock: any CrawlClock) {
         self.base = base
@@ -54,6 +61,8 @@ actor PacedTransport: HTTPTransport {
         stopped = nil
         sent = 0
         sentAt = []
+        reserveSent = 0
+        generation += 1
     }
 
     /// La collecte de cette session est finie (budget, échecs) : plus aucune requête jusqu'à la suivante.
@@ -62,42 +71,64 @@ actor PacedTransport: HTTPTransport {
     }
 
     func get(_ url: URL, headers: [String: String]) async throws -> HTTPResponse {
+        try await send(url, headers: headers, onDemand: false)
+    }
+
+    /// Requête d'un écran (classement, page de calendrier) : même porte et même cadence ; l'arrêt `.budget` de la
+    /// collecte ne la bloque pas, dans la limite de la réserve `onDemandBudget`. Un arrêt `.failures` la bloque.
+    func getOnDemand(_ url: URL, headers: [String: String]) async throws -> HTTPResponse {
+        try await send(url, headers: headers, onDemand: true)
+    }
+
+    private func send(_ url: URL, headers: [String: String], onDemand: Bool) async throws -> HTTPResponse {
         await acquire()
         defer { release() }
-        if let stopped { throw CrawlStopped(reason: stopped) }
-        guard sent < CrawlPacer.sessionRequestBudget else {
-            stopped = .budget
-            throw CrawlStopped(reason: .budget)
+        var useReserve = false
+        if let stopped {
+            guard onDemand, stopped == .budget else { throw CrawlStopped(reason: stopped) }
+            useReserve = true
+        } else if sent >= CrawlPacer.sessionRequestBudget {
+            guard onDemand else {
+                stopped = .budget
+                throw CrawlStopped(reason: .budget)
+            }
+            useReserve = true
         }
+        if useReserve, reserveSent >= Self.onDemandBudget { throw CrawlStopped(reason: .budget) }
         if let nextAllowed {
             let wait = nextAllowed.timeIntervalSince(await clock.now())
             if wait > 0 { try await clock.sleep(seconds: wait) }
         }
         try Task.checkCancellation()
-        sent += 1
+        let session = generation
+        if useReserve { reserveSent += 1 } else { sent += 1 }
         sentAt.append(await clock.now())
         do {
             let response = try await base.get(url, headers: headers)
             // Même règle que `CrawlPacer.outcome(of:)` : 429 et 5xx reculent ; toute autre réponse (200, 204, 400, 404…)
             // est une réponse.
             let retryable = response.status == 429 || response.status >= 500
-            await apply(pacer.next(after: retryable ? .retryable : .answered))
+            if session == generation { await apply(pacer.next(after: retryable ? .retryable : .answered), session: session) }
             return response
         } catch {
             if Self.isCancellation(error) {
                 // Scène quittée : ni échec ni recul ; la prochaine requête (prochaine session) attendra le pas normal.
-                nextAllowed = await clock.now().addingTimeInterval(CrawlPacer.baseInterval)
+                let resume = await clock.now().addingTimeInterval(CrawlPacer.baseInterval)
+                if session == generation { nextAllowed = resume }
                 throw error
             }
-            await apply(pacer.next(after: .retryable))
+            if session == generation { await apply(pacer.next(after: .retryable), session: session) }
             throw error
         }
     }
 
-    private func apply(_ decision: CrawlPacer.Decision) async {
+    /// Applique une décision du rythme, sauf si la session a changé pendant la requête (`beginSession`).
+    private func apply(_ decision: CrawlPacer.Decision, session: Int) async {
+        let now = await clock.now()
+        guard session == generation else { return }
         switch decision {
         case let .wait(seconds):
-            nextAllowed = await clock.now().addingTimeInterval(seconds)
+            nextAllowed = now.addingTimeInterval(seconds)
         case let .stop(reason):
             stopped = reason
         }
@@ -122,5 +153,15 @@ actor PacedTransport: HTTPTransport {
 
     static func isCancellation(_ error: any Error) -> Bool {
         error is CancellationError || (error as? URLError)?.code == .cancelled
+    }
+}
+
+/// Transport des écrans (classement ouvert, page de calendrier) : même `PacedTransport`, mais par la réserve à la demande
+/// (`getOnDemand`) qui survit à l'arrêt `.budget` de la collecte.
+struct OnDemandTransport: HTTPTransport {
+    let paced: PacedTransport
+
+    func get(_ url: URL, headers: [String: String]) async throws -> HTTPResponse {
+        try await paced.getOnDemand(url, headers: headers)
     }
 }

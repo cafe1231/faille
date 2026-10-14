@@ -62,6 +62,9 @@ final class SeasonStore {
     private(set) var version = 0
     /// Équipe dont la page est ouverte (collecte priorité 0 si elle n'est pas suivie).
     private(set) var openedTeamId: String?
+    /// Pourquoi la collecte de la session s'est arrêtée (budget, échecs d'affilée) ; nil tant qu'elle peut continuer. Les
+    /// écrans le disent (« Réseau indisponible, réessaie plus tard » après `.failures`).
+    private(set) var stopReason: CrawlPacer.StopReason?
 
     // MARK: Interne
 
@@ -73,6 +76,8 @@ final class SeasonStore {
     @ObservationIgnored private var loading: Task<Void, Never>?
     @ObservationIgnored private var wakeRequested = false
     @ObservationIgnored private var schedulePages: [String: SchedulePageResult] = [:]
+    /// Games du disque d'un schéma plus récent : ignorées, jamais réécrites (une version suivante les relira).
+    @ObservationIgnored private var newerGameIds: Set<String> = []
     let disk: SeasonDisk?
     let paced: PacedTransport?
     let clock: any CrawlClock
@@ -141,6 +146,7 @@ final class SeasonStore {
             fetchedAt[Self.standingsKey(tournamentId)] = cached.fetchedAt
         }
         failures.merge(snapshot.failures) { current, _ in current }
+        newerGameIds.formUnion(snapshot.newerGameIds)
         rejoin()
         isLoaded = true
         version += 1
@@ -235,6 +241,12 @@ final class SeasonStore {
     /// Nouvelle session au premier plan (`AppStore.poll`) : budget et recul de la collecte remis à zéro.
     func beginSession() async {
         await paced?.beginSession()
+        stopReason = nil
+    }
+
+    /// Relève la raison d'arrêt du transport (après une passe ou une requête à la demande).
+    private func refreshStopReason() async {
+        stopReason = await paced?.stopReason
     }
 
     // MARK: Collecte
@@ -246,11 +258,16 @@ final class SeasonStore {
     @discardableResult
     func crawl(context: @MainActor () -> SeasonContext) async -> CrawlEnd {
         guard let paced else { return .inert }
-        await loadFromDisk()
+        // Une seule passe à la fois : une boucle relancée pendant qu'une ancienne s'annule ne lit pas deux fois la même
+        // game, et le `defer` de l'ancienne ne remet pas `running` à faux sous la nouvelle (M9).
+        guard !progress.running else { return .cancelled }
         progress.running = true
         defer { progress.running = false }
+        await loadFromDisk()
         let crawler = SeasonCrawler(store: self, client: LoLClient(transport: paced), clock: clock)
-        return await crawler.run(context: context)
+        let end = await crawler.run(context: context)
+        await refreshStopReason()
+        return end
     }
 
     /// Une page `older` / `newer` du calendrier (spec saison §3.2), gardée en mémoire pour la session ; nil si elle n'a
@@ -259,16 +276,22 @@ final class SeasonStore {
         let key = leagueIds.joined(separator: ",") + "#" + (token ?? "")
         if let known = schedulePages[key] { return known }
         guard let paced else { return nil }
-        guard let page = try? await LoLClient(transport: paced).schedulePage(leagueIds: leagueIds, pageToken: token)
-        else { return nil }
+        let page = try? await LoLClient(transport: OnDemandTransport(paced: paced))
+            .schedulePage(leagueIds: leagueIds, pageToken: token)
+        await refreshStopReason()
+        guard let page else { return nil }
         schedulePages[key] = page
         return page
     }
 
-    /// Classement d'un tournoi ouvert à l'écran et pas encore lu par la collecte : une requête, au rythme de la collecte.
+    /// Classement d'un tournoi ouvert à l'écran et pas encore lu par la collecte : une requête, au rythme de la collecte,
+    /// par la réserve à la demande (une vingtaine par session, même après l'arrêt `.budget` de la collecte).
     func loadStandings(tournamentId: String) async {
         guard standings[tournamentId] == nil, let paced else { return }
-        guard let value = try? await LoLClient(transport: paced).standings(tournamentId: tournamentId) else { return }
+        let loaded = try? await LoLClient(transport: OnDemandTransport(paced: paced))
+            .standings(tournamentId: tournamentId)
+        await refreshStopReason()
+        guard let value = loaded else { return }
         record(standings: value, tournamentId: tournamentId, at: await clock.now())
     }
 
@@ -332,9 +355,11 @@ final class SeasonStore {
     func record(_ game: GameSummary, followedTeamIds: Set<String>) {
         games[game.gameId] = game
         failures[game.gameId] = nil
-        disk?.save(game)
+        persist(game)
         assignWinners(matchId: game.matchId)
+        // Jamais la game qu'on vient d'écrire : sinon elle serait relue en boucle jusqu'au budget (M11).
         let excess = CrawlPlanner.evictions(Array(games.values), followedTeamIds: followedTeamIds)
+            .filter { $0 != game.gameId }
         if !excess.isEmpty {
             for id in excess { games[id] = nil }
             disk?.deleteGames(excess)
@@ -364,8 +389,14 @@ final class SeasonStore {
         for gameId in match.playedGameIds {
             guard let game = updated[gameId], game.result != games[gameId]?.result else { continue }
             games[gameId] = game
-            disk?.save(game)
+            persist(game)
         }
+    }
+
+    /// Écrit une game sur disque, sauf si le fichier est d'un schéma plus récent (on ne l'écrase pas).
+    private func persist(_ game: GameSummary) {
+        guard !newerGameIds.contains(game.gameId) else { return }
+        disk?.save(game)
     }
 }
 

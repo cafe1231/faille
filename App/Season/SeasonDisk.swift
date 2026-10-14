@@ -21,6 +21,12 @@ struct SeasonDisk: Sendable {
         var completed: [String: Cached<[CompletedMatch]>] = [:]
         var standings: [String: Cached<Standings>] = [:]
         var failures: [String: CrawlFailure] = [:]
+        /// Games d'un schéma plus récent que le nôtre : ignorées, et jamais réécrites par un recrawl.
+        var newerGameIds: Set<String> = []
+    }
+
+    private struct SchemaProbe: Decodable {
+        let v: Int
     }
 
     /// Lecture complète. Une game d'un schéma plus récent que celui que l'appli connaît est ignorée (pas supprimée : une
@@ -29,7 +35,12 @@ struct SeasonDisk: Sendable {
         var snapshot = Snapshot()
         let decoder = JSONDecoder()
         for (id, data) in files(in: "season/games") {
-            guard let game = GameSummary.decodeStored(data) else { continue }
+            guard let game = GameSummary.decodeStored(data) else {
+                if let probe = try? decoder.decode(SchemaProbe.self, from: data), probe.v > GameSummary.schemaVersion {
+                    snapshot.newerGameIds.insert(id)
+                }
+                continue
+            }
             snapshot.games[id] = game
         }
         for (id, data) in files(in: "season/tournaments") {

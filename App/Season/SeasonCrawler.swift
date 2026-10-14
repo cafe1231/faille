@@ -49,28 +49,38 @@ struct SeasonCrawler {
                                             maxAge: CrawlPlanner.tournamentsMaxAge) else { continue }
             if let refs = try await fetch(key, now: now, { try await client.tournaments(leagueId: leagueId) }) {
                 store.record(tournaments: refs, leagueId: leagueId, at: now)
+                wrote = true
             }
         }
         let today = SeasonPlanning.day(now)
+        var wrote = false
         for tournament in SeasonPlanning.startedTournaments(store.tournaments, leagueIds: leagueIds, now: now) {
             // En cours : relu après 30 min ; terminé et déjà lu : jamais relu (`CrawlPlanner.maxAge` nil).
             let maxAge = CrawlPlanner.maxAge(of: tournament, today: today)
             let completedKey = SeasonStore.completedKey(tournament.id)
-            if CrawlPlanner.needsRefresh(fetchedAt: store.lastFetch(completedKey), now: now, maxAge: maxAge),
+            // Terminé mais lu pendant qu'il était actif : une relecture (résultats et classement finaux).
+            let lateReread = maxAge == nil
+                && SeasonPlanning.readWhileActive(lastFetch: store.lastFetch(completedKey), endDate: tournament.endDate)
+            if lateReread || CrawlPlanner.needsRefresh(fetchedAt: store.lastFetch(completedKey), now: now, maxAge: maxAge),
                let events = try await fetch(completedKey, now: now, {
                    try await client.completedEvents(tournamentId: tournament.id)
                }) {
                 store.record(completed: events, tournamentId: tournament.id, at: now)
+                wrote = true
             }
             let standingsKey = SeasonStore.standingsKey(tournament.id)
-            if CrawlPlanner.needsRefresh(fetchedAt: store.lastFetch(standingsKey), now: now, maxAge: maxAge),
+            let lateStandings = maxAge == nil
+                && SeasonPlanning.readWhileActive(lastFetch: store.lastFetch(standingsKey), endDate: tournament.endDate)
+            if lateStandings || CrawlPlanner.needsRefresh(fetchedAt: store.lastFetch(standingsKey), now: now, maxAge: maxAge),
                let value = try await fetch(standingsKey, now: now, {
                    try await client.standings(tournamentId: tournament.id)
                }) {
                 store.record(standings: value, tournamentId: tournament.id, at: now)
+                wrote = true
             }
         }
-        store.rejoin(catalog: context.catalog, leagues: context.leagues)
+        // Jointure seulement après une écriture : `run` repasse ici avant chaque game (M17).
+        if wrote { store.rejoin(catalog: context.catalog, leagues: context.leagues) }
     }
 
     /// Une liste de l'énumération. Refus définitif de l'API (4xx hors 429) ou réponse illisible : la liste est notée lue
