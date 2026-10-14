@@ -1,0 +1,134 @@
+{
+ "data": {
+  "schedule": {
+   "events": [
+    {
+     "startTime": "2026-09-06T15:00:00Z",
+     "blockName": "Play-offs",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406303",
+      "type": "normal",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "image": "http://static.lolesports.com/teams/1704714951336_KC.png",
+        "result": {
+         "gameWins": 1
+        }
+       },
+       {
+        "name": "G2 Esports",
+        "code": "G2",
+        "image": "http://static.lolesports.com/teams/G2-FullonDark.png",
+        "result": {
+         "gameWins": 3
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 5
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406304",
+       "vods": [
+        {
+         "parameter": "ZRsJYluoq4w"
+        }
+       ]
+      },
+      {
+       "id": "115548681803406305",
+       "vods": [
+        {
+         "parameter": "ZRsJYluoq4w"
+        }
+       ]
+      },
+      {
+       "id": "115548681803406306",
+       "vods": [
+        {
+         "parameter": "ZRsJYluoq4w"
+        }
+       ]
+      },
+      {
+       "id": "115548681803406307",
+       "vods": [
+        {
+         "parameter": "ZRsJYluoq4w"
+        }
+       ]
+      },
+      {
+       "id": "115548681803406308",
+       "vods": []
+      }
+     ]
+    },
+    {
+     "startTime": "2026-07-24T17:30:00Z",
+     "blockName": "Semaine 1",
+     "league": {
+      "name": "LEC"
+     },
+     "match": {
+      "id": "115548681803406199",
+      "type": "normal",
+      "teams": [
+       {
+        "name": "Karmine Corp",
+        "code": "KC",
+        "image": "http://static.lolesports.com/teams/1704714951336_KC.png",
+        "result": {
+         "gameWins": 2
+        }
+       },
+       {
+        "name": "Team Vitality",
+        "code": "VIT",
+        "image": "http://static.lolesports.com/teams/1675865863968_Vitality_FullColor.png",
+        "result": {
+         "gameWins": 0
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 3
+      }
+     },
+     "games": [
+      {
+       "id": "115548681803406200",
+       "vods": [
+        {
+         "parameter": "r6VYzUuCed4"
+        }
+       ]
+      },
+      {
+       "id": "115548681803406201",
+       "vods": [
+        {
+         "parameter": "r6VYzUuCed4"
+        }
+       ]
+      },
+      {
+       "id": "115548681803406202",
+       "vods": []
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

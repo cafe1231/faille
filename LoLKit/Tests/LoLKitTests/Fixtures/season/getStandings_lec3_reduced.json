@@ -1,0 +1,217 @@
+{
+ "data": {
+  "standings": [
+   {
+    "stages": [
+     {
+      "id": "115548681802750747",
+      "name": "Saison régulière",
+      "type": null,
+      "slug": "regular_season",
+      "sections": [
+       {
+        "name": "Saison régulière",
+        "matches": [
+         {
+          "id": "115548681803340575",
+          "state": "completed",
+          "previousMatchIds": [],
+          "flags": [
+           "hasVod"
+          ],
+          "teams": [
+           {
+            "id": "109637393694097670",
+            "slug": "team-heretics-lec",
+            "name": "Team Heretics",
+            "code": "TH",
+            "image": "http://static.lolesports.com/teams/1672933861879_Heretics-Full-Color.png",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "114868016111590239",
+            "slug": "natus-vincere",
+            "name": "Natus Vincere",
+            "code": "NAVI",
+            "image": "http://static.lolesports.com/teams/1752746833620_NAVI_FullColor.png",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           }
+          ]
+         },
+         {
+          "id": "115548681803406115",
+          "state": "completed",
+          "previousMatchIds": [],
+          "flags": [
+           "hasVod"
+          ],
+          "teams": [
+           {
+            "id": "109637393694097670",
+            "slug": "team-heretics-lec",
+            "name": "Team Heretics",
+            "code": "TH",
+            "image": "http://static.lolesports.com/teams/1672933861879_Heretics-Full-Color.png",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "99322214695067838",
+            "slug": "team-vitality",
+            "name": "Team Vitality",
+            "code": "VIT",
+            "image": "http://static.lolesports.com/teams/1675865863968_Vitality_FullColor.png",
+            "result": {
+             "outcome": "win",
+             "gameWins": 2
+            }
+           }
+          ]
+         }
+        ],
+        "rankings": [
+         {
+          "ordinal": 1,
+          "teams": [
+           {
+            "id": "111692118851466302",
+            "slug": "karmine-corp",
+            "name": "Karmine Corp",
+            "code": "KC",
+            "image": "http://static.lolesports.com/teams/1704714951336_KC.png",
+            "record": {
+             "wins": 9,
+             "losses": 0
+            }
+           }
+          ]
+         },
+         {
+          "ordinal": 2,
+          "teams": [
+           {
+            "id": "99322214695067838",
+            "slug": "team-vitality",
+            "name": "Team Vitality",
+            "code": "VIT",
+            "image": "http://static.lolesports.com/teams/1675865863968_Vitality_FullColor.png",
+            "record": {
+             "wins": 7,
+             "losses": 2
+            }
+           }
+          ]
+         },
+         {
+          "ordinal": 3,
+          "teams": [
+           {
+            "id": "98767991926151025",
+            "slug": "g2-esports",
+            "name": "G2 Esports",
+            "code": "G2",
+            "image": "http://static.lolesports.com/teams/G2-FullonDark.png",
+            "record": {
+             "wins": 6,
+             "losses": 3
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "115548681802750748",
+      "name": "Play-offs",
+      "type": null,
+      "slug": "playoffs",
+      "sections": [
+       {
+        "name": "Play-offs",
+        "matches": [
+         {
+          "id": "115548681803406327",
+          "state": "completed",
+          "previousMatchIds": [],
+          "flags": [
+           "hasVod",
+           "isSpoiler"
+          ],
+          "teams": [
+           {
+            "id": "111692118851466302",
+            "slug": "karmine-corp",
+            "name": "Karmine Corp",
+            "code": "KC",
+            "image": "http://static.lolesports.com/teams/1704714951336_KC.png",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           },
+           {
+            "id": "103461966965149786",
+            "slug": "mad-lions",
+            "name": "Movistar KOI",
+            "code": "MKOI",
+            "image": "http://static.lolesports.com/teams/1734012609283_MKOI_FullColor_Blue.png",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           }
+          ]
+         },
+         {
+          "id": "115548681803406333",
+          "state": "completed",
+          "previousMatchIds": [],
+          "flags": [
+           "hasVod",
+           "isSpoiler"
+          ],
+          "teams": [
+           {
+            "id": "98767991926151025",
+            "slug": "g2-esports",
+            "name": "G2 Esports",
+            "code": "G2",
+            "image": "http://static.lolesports.com/teams/G2-FullonDark.png",
+            "result": {
+             "outcome": "win",
+             "gameWins": 3
+            }
+           },
+           {
+            "id": "103461966965149786",
+            "slug": "mad-lions",
+            "name": "Movistar KOI",
+            "code": "MKOI",
+            "image": "http://static.lolesports.com/teams/1734012609283_MKOI_FullColor_Blue.png",
+            "result": {
+             "outcome": "loss",
+             "gameWins": 0
+            }
+           }
+          ]
+         }
+        ],
+        "rankings": []
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

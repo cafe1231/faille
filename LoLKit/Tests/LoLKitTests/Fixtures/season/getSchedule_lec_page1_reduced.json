@@ -1,0 +1,108 @@
+{
+ "data": {
+  "schedule": {
+   "pages": {
+    "older": "b2xkZXI6OjExNTU0ODQyNDMwODQxNDI0NA==",
+    "newer": "bmV3ZXI6OjExNTU0ODY2ODA1OTUyMzc1Mg=="
+   },
+   "events": [
+    {
+     "startTime": "2026-01-25T17:15:00Z",
+     "state": "completed",
+     "type": "match",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC",
+      "slug": "lec"
+     },
+     "match": {
+      "id": "115548424308414244",
+      "flags": [
+       "hasVod"
+      ],
+      "teams": [
+       {
+        "name": "Los Ratones",
+        "code": "LR",
+        "image": "http://static.lolesports.com/teams/1736206905390_LR1.png",
+        "result": {
+         "outcome": "win",
+         "gameWins": 1
+        },
+        "record": {
+         "wins": 5,
+         "losses": 6
+        }
+       },
+       {
+        "name": "Team Heretics",
+        "code": "TH",
+        "image": "http://static.lolesports.com/teams/1672933861879_Heretics-Full-Color.png",
+        "result": {
+         "outcome": "loss",
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 6,
+         "losses": 5
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 1
+      }
+     }
+    },
+    {
+     "startTime": "2026-01-25T18:00:00Z",
+     "state": "completed",
+     "type": "match",
+     "blockName": "Semaine 2",
+     "league": {
+      "name": "LEC",
+      "slug": "lec"
+     },
+     "match": {
+      "id": "115548424308414224",
+      "flags": [
+       "hasVod"
+      ],
+      "teams": [
+       {
+        "name": "Movistar KOI",
+        "code": "MKOI",
+        "image": "http://static.lolesports.com/teams/1734012609283_MKOI_FullColor_Blue.png",
+        "result": {
+         "outcome": "win",
+         "gameWins": 1
+        },
+        "record": {
+         "wins": 6,
+         "losses": 5
+        }
+       },
+       {
+        "name": "Karmine Corp Blue",
+        "code": "KCB",
+        "image": "http://static.lolesports.com/teams/1765897112519_WHITE.png",
+        "result": {
+         "outcome": "loss",
+         "gameWins": 0
+        },
+        "record": {
+         "wins": 2,
+         "losses": 9
+        }
+       }
+      ],
+      "strategy": {
+       "type": "bestOf",
+       "count": 1
+      }
+     }
+    }
+   ]
+  }
+ }
+}

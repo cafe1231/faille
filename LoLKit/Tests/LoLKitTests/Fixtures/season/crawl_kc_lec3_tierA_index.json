@@ -1,0 +1,1514 @@
+[
+ {
+  "match": "115548681803406199",
+  "n": 1,
+  "game": "115548681803406200",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16814,
+  "b2": 18555,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "VIT",
+    0
+   ]
+  ],
+  "start": "2026-07-24T18:04:56.731Z",
+  "end": "2026-07-24T18:44:21.163Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "99322214695067838",
+  "blueTeam": {
+   "totalGold": 81366,
+   "inhibitors": 3,
+   "towers": 11,
+   "barons": 2,
+   "totalKills": 22,
+   "dragons": [
+    "ocean",
+    "ocean",
+    "ocean",
+    "ocean"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 64699,
+   "inhibitors": 0,
+   "towers": 0,
+   "barons": 0,
+   "totalKills": 9,
+   "dragons": [
+    "infernal",
+    "cloud"
+   ],
+   "deadAtEnd": 2
+  }
+ },
+ {
+  "match": "115548681803406199",
+  "n": 2,
+  "game": "115548681803406201",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16799,
+  "b2": 18546,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "VIT",
+    0
+   ]
+  ],
+  "start": "2026-07-24T19:05:03.150Z",
+  "end": "2026-07-24T19:43:36.625Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "99322214695067838",
+  "blueTeam": {
+   "totalGold": 77942,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 0,
+   "totalKills": 19,
+   "dragons": [
+    "infernal",
+    "cloud",
+    "cloud"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 72935,
+   "inhibitors": 0,
+   "towers": 6,
+   "barons": 2,
+   "totalKills": 16,
+   "dragons": [
+    "hextech",
+    "cloud",
+    "cloud"
+   ],
+   "deadAtEnd": 4
+  }
+ },
+ {
+  "match": "115548681803406271",
+  "n": 1,
+  "game": "115548681803406272",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16814,
+  "b2": 18556,
+  "series": [
+   [
+    "MKOI",
+    0
+   ],
+   [
+    "KC",
+    2
+   ]
+  ],
+  "start": "2026-07-25T16:38:55.072Z",
+  "end": "2026-07-25T17:13:58.938Z",
+  "state": "finished",
+  "blueId": "103461966965149786",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 58665,
+   "inhibitors": 0,
+   "towers": 3,
+   "barons": 0,
+   "totalKills": 18,
+   "dragons": [],
+   "deadAtEnd": 3
+  },
+  "redTeam": {
+   "totalGold": 65895,
+   "inhibitors": 2,
+   "towers": 10,
+   "barons": 1,
+   "totalKills": 24,
+   "dragons": [
+    "hextech",
+    "ocean",
+    "mountain",
+    "mountain",
+    "elder"
+   ],
+   "deadAtEnd": 2
+  }
+ },
+ {
+  "match": "115548681803406271",
+  "n": 2,
+  "game": "115548681803406273",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16805,
+  "b2": 18312,
+  "series": [
+   [
+    "MKOI",
+    0
+   ],
+   [
+    "KC",
+    2
+   ]
+  ],
+  "start": "2026-07-25T17:35:47.780Z",
+  "end": "2026-07-25T18:03:07.414Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "103461966965149786",
+  "blueTeam": {
+   "totalGold": 60599,
+   "inhibitors": 1,
+   "towers": 9,
+   "barons": 1,
+   "totalKills": 17,
+   "dragons": [
+    "mountain",
+    "chemtech"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 47941,
+   "inhibitors": 0,
+   "towers": 3,
+   "barons": 0,
+   "totalKills": 6,
+   "dragons": [
+    "ocean"
+   ],
+   "deadAtEnd": 2
+  }
+ },
+ {
+  "match": "115548681803406287",
+  "n": 1,
+  "game": "115548681803406288",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16797,
+  "b2": 18428,
+  "series": [
+   [
+    "G2",
+    1
+   ],
+   [
+    "KC",
+    2
+   ]
+  ],
+  "start": "2026-07-26T17:38:45.051Z",
+  "end": "2026-07-26T18:15:18.866Z",
+  "state": "finished",
+  "blueId": "98767991926151025",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 53957,
+   "inhibitors": 0,
+   "towers": 2,
+   "barons": 0,
+   "totalKills": 6,
+   "dragons": [
+    "cloud"
+   ],
+   "deadAtEnd": 4
+  },
+  "redTeam": {
+   "totalGold": 64489,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 1,
+   "totalKills": 19,
+   "dragons": [
+    "chemtech",
+    "infernal",
+    "infernal"
+   ],
+   "deadAtEnd": 0
+  }
+ },
+ {
+  "match": "115548681803406287",
+  "n": 2,
+  "game": "115548681803406289",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16801,
+  "b2": 18522,
+  "series": [
+   [
+    "G2",
+    1
+   ],
+   [
+    "KC",
+    2
+   ]
+  ],
+  "start": "2026-07-26T18:38:11.148Z",
+  "end": "2026-07-26T19:13:17.541Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "98767991926151025",
+  "blueTeam": {
+   "totalGold": 66226,
+   "inhibitors": 0,
+   "towers": 2,
+   "barons": 0,
+   "totalKills": 9,
+   "dragons": [
+    "ocean"
+   ],
+   "deadAtEnd": 3
+  },
+  "redTeam": {
+   "totalGold": 73641,
+   "inhibitors": 3,
+   "towers": 11,
+   "barons": 2,
+   "totalKills": 19,
+   "dragons": [
+    "cloud",
+    "mountain",
+    "mountain",
+    "mountain"
+   ],
+   "deadAtEnd": 1
+  }
+ },
+ {
+  "match": "115548681803406287",
+  "n": 3,
+  "game": "115548681803406290",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16806,
+  "b2": 18857,
+  "series": [
+   [
+    "G2",
+    1
+   ],
+   [
+    "KC",
+    2
+   ]
+  ],
+  "start": "2026-07-26T19:35:13.613Z",
+  "end": "2026-07-26T20:19:09.910Z",
+  "state": "finished",
+  "blueId": "98767991926151025",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 84916,
+   "inhibitors": 1,
+   "towers": 9,
+   "barons": 2,
+   "totalKills": 21,
+   "dragons": [
+    "cloud",
+    "chemtech"
+   ],
+   "deadAtEnd": 3
+  },
+  "redTeam": {
+   "totalGold": 95723,
+   "inhibitors": 2,
+   "towers": 10,
+   "barons": 2,
+   "totalKills": 27,
+   "dragons": [
+    "infernal",
+    "chemtech",
+    "chemtech",
+    "chemtech",
+    "elder"
+   ],
+   "deadAtEnd": 0
+  }
+ },
+ {
+  "match": "115548681803406171",
+  "n": 1,
+  "game": "115548681803406172",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16801,
+  "b2": 18661,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "NAVI",
+    0
+   ]
+  ],
+  "start": "2026-08-01T18:36:38.372Z",
+  "end": "2026-08-01T19:20:47.849Z",
+  "state": "in_game",
+  "blueId": "111692118851466302",
+  "redId": "114868016111590239",
+  "blueTeam": {
+   "totalGold": 84787,
+   "inhibitors": 1,
+   "towers": 10,
+   "barons": 1,
+   "totalKills": 19,
+   "dragons": [
+    "mountain",
+    "mountain",
+    "mountain"
+   ],
+   "deadAtEnd": 1
+  },
+  "redTeam": {
+   "totalGold": 75414,
+   "inhibitors": 1,
+   "towers": 7,
+   "barons": 1,
+   "totalKills": 14,
+   "dragons": [
+    "ocean",
+    "hextech",
+    "mountain"
+   ],
+   "deadAtEnd": 4
+  }
+ },
+ {
+  "match": "115548681803406171",
+  "n": 2,
+  "game": "115548681803406173",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16805,
+  "b2": 18499,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "NAVI",
+    0
+   ]
+  ],
+  "start": "2026-08-01T19:41:28.552Z",
+  "end": "2026-08-01T20:14:43.359Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "114868016111590239",
+  "blueTeam": {
+   "totalGold": 66299,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 1,
+   "totalKills": 19,
+   "dragons": [
+    "ocean",
+    "ocean"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 62571,
+   "inhibitors": 0,
+   "towers": 5,
+   "barons": 0,
+   "totalKills": 14,
+   "dragons": [
+    "cloud",
+    "mountain",
+    "ocean"
+   ],
+   "deadAtEnd": 3
+  }
+ },
+ {
+  "match": "115548681803406139",
+  "n": 1,
+  "game": "115548681803406140",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16802,
+  "b2": 18538,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "TH",
+    0
+   ]
+  ],
+  "start": "2026-08-03T17:12:11.235Z",
+  "end": "2026-08-03T17:52:11.430Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "109637393694097670",
+  "blueTeam": {
+   "totalGold": 82330,
+   "inhibitors": 3,
+   "towers": 11,
+   "barons": 2,
+   "totalKills": 18,
+   "dragons": [
+    "hextech",
+    "mountain",
+    "cloud"
+   ],
+   "deadAtEnd": 1
+  },
+  "redTeam": {
+   "totalGold": 72397,
+   "inhibitors": 0,
+   "towers": 3,
+   "barons": 0,
+   "totalKills": 6,
+   "dragons": [
+    "cloud",
+    "cloud",
+    "cloud"
+   ],
+   "deadAtEnd": 4
+  }
+ },
+ {
+  "match": "115548681803406139",
+  "n": 2,
+  "game": "115548681803406141",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16789,
+  "b2": 18553,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "TH",
+    0
+   ]
+  ],
+  "start": "2026-08-03T18:12:20.572Z",
+  "end": "2026-08-03T19:01:03.057Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "109637393694097670",
+  "blueTeam": {
+   "totalGold": 71175,
+   "inhibitors": 2,
+   "towers": 10,
+   "barons": 1,
+   "totalKills": 16,
+   "dragons": [
+    "chemtech",
+    "mountain",
+    "mountain",
+    "mountain"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 56276,
+   "inhibitors": 0,
+   "towers": 0,
+   "barons": 0,
+   "totalKills": 5,
+   "dragons": [
+    "cloud"
+   ],
+   "deadAtEnd": 3
+  }
+ },
+ {
+  "match": "115548681803406279",
+  "n": 1,
+  "game": "115548681803406280",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16801,
+  "b2": 18401,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "FNC",
+    0
+   ]
+  ],
+  "start": "2026-08-09T16:56:04.613Z",
+  "end": "2026-08-09T17:29:21.333Z",
+  "state": "in_game",
+  "blueId": "111692118851466302",
+  "redId": "98767991866488695",
+  "blueTeam": {
+   "totalGold": 67343,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 1,
+   "totalKills": 15,
+   "dragons": [
+    "cloud",
+    "infernal",
+    "infernal"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 54497,
+   "inhibitors": 0,
+   "towers": 2,
+   "barons": 0,
+   "totalKills": 8,
+   "dragons": [
+    "mountain"
+   ],
+   "deadAtEnd": 5
+  }
+ },
+ {
+  "match": "115548681803406279",
+  "n": 2,
+  "game": "115548681803406281",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16787,
+  "b2": 18428,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "FNC",
+    0
+   ]
+  ],
+  "start": "2026-08-09T17:50:01.391Z",
+  "end": "2026-08-09T18:21:54.581Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "98767991866488695",
+  "blueTeam": {
+   "totalGold": 69809,
+   "inhibitors": 3,
+   "towers": 11,
+   "barons": 1,
+   "totalKills": 20,
+   "dragons": [
+    "infernal",
+    "mountain",
+    "cloud"
+   ],
+   "deadAtEnd": 1
+  },
+  "redTeam": {
+   "totalGold": 59051,
+   "inhibitors": 0,
+   "towers": 3,
+   "barons": 0,
+   "totalKills": 8,
+   "dragons": [
+    "cloud",
+    "cloud"
+   ],
+   "deadAtEnd": 5
+  }
+ },
+ {
+  "match": "115548681803406243",
+  "n": 1,
+  "game": "115548681803406244",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16796,
+  "b2": 18509,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "GX",
+    0
+   ]
+  ],
+  "start": "2026-08-17T16:46:48.311Z",
+  "end": "2026-08-17T17:20:54.176Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "101383793572656373",
+  "blueTeam": {
+   "totalGold": 65254,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 1,
+   "totalKills": 16,
+   "dragons": [
+    "hextech",
+    "hextech",
+    "hextech"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 50318,
+   "inhibitors": 0,
+   "towers": 0,
+   "barons": 0,
+   "totalKills": 5,
+   "dragons": [
+    "cloud",
+    "infernal"
+   ],
+   "deadAtEnd": 3
+  }
+ },
+ {
+  "match": "115548681803406243",
+  "n": 2,
+  "game": "115548681803406245",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16798,
+  "b2": 18359,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "GX",
+    0
+   ]
+  ],
+  "start": "2026-08-17T17:40:11.540Z",
+  "end": "2026-08-17T18:08:24.486Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "101383793572656373",
+  "blueTeam": {
+   "totalGold": 60405,
+   "inhibitors": 1,
+   "towers": 9,
+   "barons": 1,
+   "totalKills": 12,
+   "dragons": [
+    "ocean",
+    "hextech",
+    "infernal"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 45439,
+   "inhibitors": 0,
+   "towers": 2,
+   "barons": 0,
+   "totalKills": 3,
+   "dragons": [],
+   "deadAtEnd": 1
+  }
+ },
+ {
+  "match": "115548681803406223",
+  "n": 1,
+  "game": "115548681803406224",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16802,
+  "b2": 18603,
+  "series": [
+   [
+    "SHFT",
+    1
+   ],
+   [
+    "KC",
+    2
+   ]
+  ],
+  "start": "2026-08-23T17:21:09.101Z",
+  "end": "2026-08-23T17:58:28.999Z",
+  "state": "finished",
+  "blueId": "107563714667537640",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 74333,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 2,
+   "totalKills": 20,
+   "dragons": [
+    "ocean",
+    "ocean",
+    "ocean"
+   ],
+   "deadAtEnd": 1
+  },
+  "redTeam": {
+   "totalGold": 71408,
+   "inhibitors": 0,
+   "towers": 4,
+   "barons": 0,
+   "totalKills": 19,
+   "dragons": [
+    "chemtech",
+    "infernal",
+    "ocean"
+   ],
+   "deadAtEnd": 3
+  }
+ },
+ {
+  "match": "115548681803406223",
+  "n": 2,
+  "game": "115548681803406225",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16808,
+  "b2": 18469,
+  "series": [
+   [
+    "SHFT",
+    1
+   ],
+   [
+    "KC",
+    2
+   ]
+  ],
+  "start": "2026-08-23T18:20:49.092Z",
+  "end": "2026-08-23T18:56:01.780Z",
+  "state": "finished",
+  "blueId": "107563714667537640",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 65514,
+   "inhibitors": 1,
+   "towers": 5,
+   "barons": 0,
+   "totalKills": 14,
+   "dragons": [
+    "infernal",
+    "ocean",
+    "ocean"
+   ],
+   "deadAtEnd": 4
+  },
+  "redTeam": {
+   "totalGold": 78260,
+   "inhibitors": 1,
+   "towers": 9,
+   "barons": 2,
+   "totalKills": 24,
+   "dragons": [
+    "hextech",
+    "ocean"
+   ],
+   "deadAtEnd": 1
+  }
+ },
+ {
+  "match": "115548681803406223",
+  "n": 3,
+  "game": "115548681803406226",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16807,
+  "b2": 18588,
+  "series": [
+   [
+    "SHFT",
+    1
+   ],
+   [
+    "KC",
+    2
+   ]
+  ],
+  "start": "2026-08-23T19:17:05.107Z",
+  "end": "2026-08-23T19:50:06.734Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "107563714667537640",
+  "blueTeam": {
+   "totalGold": 68858,
+   "inhibitors": 3,
+   "towers": 10,
+   "barons": 2,
+   "totalKills": 17,
+   "dragons": [
+    "hextech",
+    "chemtech",
+    "chemtech"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 57288,
+   "inhibitors": 0,
+   "towers": 1,
+   "barons": 0,
+   "totalKills": 8,
+   "dragons": [
+    "cloud",
+    "chemtech"
+   ],
+   "deadAtEnd": 2
+  }
+ },
+ {
+  "match": "115548681803406259",
+  "n": 1,
+  "game": "115548681803406260",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16797,
+  "b2": 18448,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "SK",
+    0
+   ]
+  ],
+  "start": "2026-08-29T15:09:15.727Z",
+  "end": "2026-08-29T15:45:43.593Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "101383793567806688",
+  "blueTeam": {
+   "totalGold": 81746,
+   "inhibitors": 1,
+   "towers": 10,
+   "barons": 1,
+   "totalKills": 24,
+   "dragons": [
+    "hextech",
+    "cloud",
+    "cloud",
+    "cloud"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 64988,
+   "inhibitors": 0,
+   "towers": 0,
+   "barons": 0,
+   "totalKills": 10,
+   "dragons": [
+    "ocean"
+   ],
+   "deadAtEnd": 4
+  }
+ },
+ {
+  "match": "115548681803406259",
+  "n": 2,
+  "game": "115548681803406261",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16783,
+  "b2": 18714,
+  "series": [
+   [
+    "KC",
+    2
+   ],
+   [
+    "SK",
+    0
+   ]
+  ],
+  "start": "2026-08-29T16:05:14.134Z",
+  "end": "2026-08-29T16:47:28.781Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "101383793567806688",
+  "blueTeam": {
+   "totalGold": 86278,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 0,
+   "totalKills": 25,
+   "dragons": [
+    "ocean",
+    "infernal",
+    "elder"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 84796,
+   "inhibitors": 2,
+   "towers": 8,
+   "barons": 2,
+   "totalKills": 23,
+   "dragons": [
+    "cloud",
+    "infernal",
+    "infernal",
+    "infernal"
+   ],
+   "deadAtEnd": 3
+  }
+ },
+ {
+  "match": "115548681803406291",
+  "n": 1,
+  "game": "115548681803406292",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16804,
+  "b2": 18505,
+  "series": [
+   [
+    "KC",
+    3
+   ],
+   [
+    "GX",
+    1
+   ]
+  ],
+  "start": "2026-09-05T13:24:13.927Z",
+  "end": "2026-09-05T14:04:53.748Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "101383793572656373",
+  "blueTeam": {
+   "totalGold": 70293,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 0,
+   "totalKills": 12,
+   "dragons": [
+    "ocean",
+    "infernal"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 61695,
+   "inhibitors": 0,
+   "towers": 3,
+   "barons": 0,
+   "totalKills": 8,
+   "dragons": [
+    "mountain",
+    "infernal",
+    "infernal"
+   ],
+   "deadAtEnd": 4
+  }
+ },
+ {
+  "match": "115548681803406291",
+  "n": 2,
+  "game": "115548681803406293",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16801,
+  "b2": 18562,
+  "series": [
+   [
+    "KC",
+    3
+   ],
+   [
+    "GX",
+    1
+   ]
+  ],
+  "start": "2026-09-05T14:26:03.950Z",
+  "end": "2026-09-05T15:03:45.499Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "101383793572656373",
+  "blueTeam": {
+   "totalGold": 65367,
+   "inhibitors": 0,
+   "towers": 3,
+   "barons": 0,
+   "totalKills": 12,
+   "dragons": [
+    "ocean"
+   ],
+   "deadAtEnd": 4
+  },
+  "redTeam": {
+   "totalGold": 75907,
+   "inhibitors": 2,
+   "towers": 11,
+   "barons": 2,
+   "totalKills": 22,
+   "dragons": [
+    "infernal",
+    "chemtech",
+    "chemtech",
+    "chemtech"
+   ],
+   "deadAtEnd": 0
+  }
+ },
+ {
+  "match": "115548681803406291",
+  "n": 3,
+  "game": "115548681803406294",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16792,
+  "b2": 18403,
+  "series": [
+   [
+    "KC",
+    3
+   ],
+   [
+    "GX",
+    1
+   ]
+  ],
+  "start": "2026-09-05T15:25:29.331Z",
+  "end": "2026-09-05T15:51:55.892Z",
+  "state": "finished",
+  "blueId": "101383793572656373",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 42358,
+   "inhibitors": 0,
+   "towers": 1,
+   "barons": 0,
+   "totalKills": 1,
+   "dragons": [],
+   "deadAtEnd": 3
+  },
+  "redTeam": {
+   "totalGold": 57778,
+   "inhibitors": 2,
+   "towers": 10,
+   "barons": 1,
+   "totalKills": 14,
+   "dragons": [
+    "ocean",
+    "cloud",
+    "mountain",
+    "mountain"
+   ],
+   "deadAtEnd": 0
+  }
+ },
+ {
+  "match": "115548681803406291",
+  "n": 4,
+  "game": "115548681803406295",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16798,
+  "b2": 18300,
+  "series": [
+   [
+    "KC",
+    3
+   ],
+   [
+    "GX",
+    1
+   ]
+  ],
+  "start": "2026-09-05T16:15:14.946Z",
+  "end": "2026-09-05T16:41:49.843Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "101383793572656373",
+  "blueTeam": {
+   "totalGold": 60178,
+   "inhibitors": 1,
+   "towers": 7,
+   "barons": 1,
+   "totalKills": 20,
+   "dragons": [
+    "chemtech",
+    "cloud",
+    "infernal"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 45508,
+   "inhibitors": 0,
+   "towers": 1,
+   "barons": 0,
+   "totalKills": 6,
+   "dragons": [],
+   "deadAtEnd": 4
+  }
+ },
+ {
+  "match": "115548681803406303",
+  "n": 1,
+  "game": "115548681803406304",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16794,
+  "b2": 18435,
+  "series": [
+   [
+    "KC",
+    1
+   ],
+   [
+    "G2",
+    3
+   ]
+  ],
+  "start": "2026-09-06T15:17:23.939Z",
+  "end": "2026-09-06T15:51:14.975Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "98767991926151025",
+  "blueTeam": {
+   "totalGold": 63457,
+   "inhibitors": 0,
+   "towers": 4,
+   "barons": 0,
+   "totalKills": 11,
+   "dragons": [],
+   "deadAtEnd": 4
+  },
+  "redTeam": {
+   "totalGold": 70918,
+   "inhibitors": 2,
+   "towers": 10,
+   "barons": 2,
+   "totalKills": 23,
+   "dragons": [
+    "ocean",
+    "mountain",
+    "cloud",
+    "cloud",
+    "elder"
+   ],
+   "deadAtEnd": 1
+  }
+ },
+ {
+  "match": "115548681803406303",
+  "n": 2,
+  "game": "115548681803406305",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16800,
+  "b2": 18541,
+  "series": [
+   [
+    "KC",
+    1
+   ],
+   [
+    "G2",
+    3
+   ]
+  ],
+  "start": "2026-09-06T16:15:38.348Z",
+  "end": "2026-09-06T16:50:12.418Z",
+  "state": "finished",
+  "blueId": "98767991926151025",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 71613,
+   "inhibitors": 1,
+   "towers": 9,
+   "barons": 2,
+   "totalKills": 22,
+   "dragons": [
+    "hextech",
+    "hextech"
+   ],
+   "deadAtEnd": 1
+  },
+  "redTeam": {
+   "totalGold": 60337,
+   "inhibitors": 0,
+   "towers": 2,
+   "barons": 0,
+   "totalKills": 14,
+   "dragons": [
+    "cloud",
+    "ocean",
+    "hextech"
+   ],
+   "deadAtEnd": 3
+  }
+ },
+ {
+  "match": "115548681803406303",
+  "n": 3,
+  "game": "115548681803406306",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16800,
+  "b2": 18370,
+  "series": [
+   [
+    "KC",
+    1
+   ],
+   [
+    "G2",
+    3
+   ]
+  ],
+  "start": "2026-09-06T17:13:05.310Z",
+  "end": "2026-09-06T17:41:23.550Z",
+  "state": "finished",
+  "blueId": "98767991926151025",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 45280,
+   "inhibitors": 0,
+   "towers": 1,
+   "barons": 0,
+   "totalKills": 1,
+   "dragons": [
+    "ocean"
+   ],
+   "deadAtEnd": 3
+  },
+  "redTeam": {
+   "totalGold": 60761,
+   "inhibitors": 1,
+   "towers": 9,
+   "barons": 1,
+   "totalKills": 14,
+   "dragons": [
+    "hextech",
+    "infernal",
+    "ocean"
+   ],
+   "deadAtEnd": 0
+  }
+ },
+ {
+  "match": "115548681803406303",
+  "n": 4,
+  "game": "115548681803406307",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16810,
+  "b2": 18301,
+  "series": [
+   [
+    "KC",
+    1
+   ],
+   [
+    "G2",
+    3
+   ]
+  ],
+  "start": "2026-09-06T18:05:00.966Z",
+  "end": "2026-09-06T18:31:34.815Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "98767991926151025",
+  "blueTeam": {
+   "totalGold": 44587,
+   "inhibitors": 0,
+   "towers": 2,
+   "barons": 0,
+   "totalKills": 6,
+   "dragons": [],
+   "deadAtEnd": 3
+  },
+  "redTeam": {
+   "totalGold": 54845,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 1,
+   "totalKills": 13,
+   "dragons": [
+    "ocean",
+    "chemtech",
+    "cloud",
+    "cloud"
+   ],
+   "deadAtEnd": 1
+  }
+ },
+ {
+  "match": "115548681803406327",
+  "n": 1,
+  "game": "115548681803406328",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16803,
+  "b2": 18744,
+  "series": [
+   [
+    "KC",
+    0
+   ],
+   [
+    "MKOI",
+    3
+   ]
+  ],
+  "start": "2026-09-19T15:14:53.067Z",
+  "end": "2026-09-19T15:59:04.290Z",
+  "state": "finished",
+  "blueId": "111692118851466302",
+  "redId": "103461966965149786",
+  "blueTeam": {
+   "totalGold": 77874,
+   "inhibitors": 0,
+   "towers": 6,
+   "barons": 1,
+   "totalKills": 15,
+   "dragons": [
+    "chemtech",
+    "chemtech",
+    "chemtech"
+   ],
+   "deadAtEnd": 5
+  },
+  "redTeam": {
+   "totalGold": 84898,
+   "inhibitors": 1,
+   "towers": 8,
+   "barons": 1,
+   "totalKills": 20,
+   "dragons": [
+    "ocean",
+    "cloud",
+    "chemtech",
+    "chemtech"
+   ],
+   "deadAtEnd": 1
+  }
+ },
+ {
+  "match": "115548681803406327",
+  "n": 2,
+  "game": "115548681803406329",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16801,
+  "b2": 18552,
+  "series": [
+   [
+    "KC",
+    0
+   ],
+   [
+    "MKOI",
+    3
+   ]
+  ],
+  "start": "2026-09-19T16:20:52.077Z",
+  "end": "2026-09-19T16:51:53.984Z",
+  "state": "finished",
+  "blueId": "103461966965149786",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 64723,
+   "inhibitors": 1,
+   "towers": 9,
+   "barons": 1,
+   "totalKills": 20,
+   "dragons": [
+    "infernal",
+    "infernal",
+    "infernal"
+   ],
+   "deadAtEnd": 1
+  },
+  "redTeam": {
+   "totalGold": 57367,
+   "inhibitors": 0,
+   "towers": 3,
+   "barons": 0,
+   "totalKills": 7,
+   "dragons": [
+    "hextech",
+    "chemtech"
+   ],
+   "deadAtEnd": 2
+  }
+ },
+ {
+  "match": "115548681803406327",
+  "n": 3,
+  "game": "115548681803406330",
+  "s1": 200,
+  "s2": 200,
+  "b1": 16808,
+  "b2": 18403,
+  "series": [
+   [
+    "KC",
+    0
+   ],
+   [
+    "MKOI",
+    3
+   ]
+  ],
+  "start": "2026-09-19T17:16:55.076Z",
+  "end": "2026-09-19T17:43:04.867Z",
+  "state": "finished",
+  "blueId": "103461966965149786",
+  "redId": "111692118851466302",
+  "blueTeam": {
+   "totalGold": 56514,
+   "inhibitors": 2,
+   "towers": 9,
+   "barons": 1,
+   "totalKills": 19,
+   "dragons": [
+    "mountain",
+    "mountain"
+   ],
+   "deadAtEnd": 0
+  },
+  "redTeam": {
+   "totalGold": 41483,
+   "inhibitors": 0,
+   "towers": 0,
+   "barons": 0,
+   "totalKills": 3,
+   "dragons": [
+    "cloud",
+    "hextech"
+   ],
+   "deadAtEnd": 3
+  }
+ }
+]
