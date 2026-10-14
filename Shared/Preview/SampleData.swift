@@ -15,6 +15,8 @@ struct PreviewData {
     var statsUnavailable: Set<String> = []
     var isFailing = false
     var lastUpdate: Date?
+    /// Matchs dont la Live Activity est à l'écran (bouton du Détail).
+    var activityMatchIds: Set<String> = []
 
     /// Comme les maquettes : KC en direct avec stats, T1 en direct masqué (anti-spoiler), GEN à venir.
     static var standard: PreviewData {
@@ -27,7 +29,8 @@ struct PreviewData {
             details: Dictionary(uniqueKeysWithValues: SampleData.live.map { ($0.id, EventDetails(event: $0)) }),
             snapshots: [SampleData.kcSnapshot.gameId: SampleData.kcSnapshot],
             firstFrames: [SampleData.kcSnapshot.gameId: SampleData.kcGameStart],
-            lastUpdate: SampleData.date("2026-10-15T15:05:00Z")
+            lastUpdate: SampleData.date("2026-10-15T15:05:00Z"),
+            activityMatchIds: [SampleData.kcMatchId]
         )
     }
 

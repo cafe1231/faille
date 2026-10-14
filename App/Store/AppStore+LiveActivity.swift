@@ -34,3 +34,39 @@ extension AppStore {
         return nil
     }
 }
+
+// MARK: - Live Activities (étape 4, Task 6)
+
+extension AppStore {
+    /// Live Activities à jour (spec §6.4) : retraits à la main reconnus, mises à jour et fins, puis démarrages si
+    /// `canStart` (premier plan seulement). Sans effet dans les aperçus et les tests hébergés.
+    func syncLiveActivities(canStart: Bool) async {
+        await liveActivities.sync(live: live, follows: follows, mode: settings.liveActivityMode, canStart: canStart,
+                                  now: Date()) { matchId in
+            self.activityContent(matchId: matchId)
+        }
+    }
+
+    /// Après un masquage (œil) ou une révélation (spec §8) : la Live Activity suit tout de suite, avec ce que le store
+    /// sait déjà (le masquage ne doit pas attendre le réseau), puis une seconde fois avec les stats relues (celles d'un
+    /// match qui vient d'être révélé).
+    func refreshActivitiesAfterSpoilerChange() async {
+        await syncLiveActivities(canStart: false)
+        await refreshLiveStats()
+        await syncLiveActivities(canStart: true)
+    }
+
+    /// « Épingler sur l'écran verrouillé » (spec §5.3) : enregistré tout de suite, la Live Activity démarre aussitôt.
+    func pinActivity(matchId: String) -> PinOutcome {
+        let outcome = liveActivities.pin(matchId: matchId)
+        if outcome == .pinned {
+            runWithScene { await self.syncLiveActivities(canStart: true) }
+        }
+        return outcome
+    }
+
+    /// « Retirer de l'écran verrouillé » : tout de suite, et plus jamais recréée automatiquement pour ce match.
+    func removeActivity(matchId: String) {
+        runWithScene { await self.liveActivities.remove(matchId: matchId) }
+    }
+}

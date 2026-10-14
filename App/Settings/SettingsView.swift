@@ -1,7 +1,7 @@
 import LoLKit
 import SwiftUI
 
-/// Réglages (spec §5.4) : mode de la Live Activity (utilisé à l'étape 4) et À propos.
+/// Réglages (spec §5.4) : mode de la Live Activity et À propos.
 struct SettingsView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -20,7 +20,7 @@ struct SettingsView: View {
                         Text(explanation)
                             .font(Typo.secondary)
                             .foregroundStyle(Palette.secondary)
-                        Text("Les Live Activities arrivent dans une prochaine version de Faille ; ce choix est déjà enregistré.")
+                        Text("Sans serveur de push, la Live Activity se met à jour quand Faille est ouverte, et en arrière-plan quand iOS le permet (environ toutes les 15 min, si l'actualisation en arrière-plan est activée). Sinon elle affiche « màj il y a X min ».")
                             .font(Typo.secondary)
                             .foregroundStyle(Palette.secondary)
                     }

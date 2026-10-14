@@ -2,7 +2,7 @@ import LoLKit
 import SwiftUI
 
 /// Détail d'un match (spec §5.3) : en-tête teinté (ligue, bloc, Bo, chrono, équipes, score), pilules de games,
-/// stats d'équipe et joueurs de la game choisie. Le bouton « Épingler sur l'écran verrouillé » arrive à l'étape 4.
+/// stats d'équipe et joueurs de la game choisie, et bouton « Épingler sur l'écran verrouillé » (iPhone, spec §6.4).
 /// Anti-spoiler (spec §8) : tant que le match est masqué, rien ne s'affiche sauf l'en-tête sans score et « toucher pour
 /// révéler » (ni pilules de games, ni stats, ni joueurs).
 struct MatchDetailView: View {
@@ -64,6 +64,16 @@ struct MatchDetailView: View {
                 .tint(Palette.secondary)
                 .frame(maxWidth: .infinity)
         }
+        if showsPinButton(event: event) {
+            LiveActivityPinButton(matchId: model.matchId)
+        }
+    }
+
+    /// « Épingler sur l'écran verrouillé » (spec §5.3) : iPhone seulement (Apple n'affiche pas les Live Activities sur
+    /// iPad), pour un match en direct ou dont la Live Activity est encore à l'écran.
+    private func showsPinButton(event: MatchEvent?) -> Bool {
+        UIDevice.current.userInterfaceIdiom == .phone
+            && (event?.state == .inProgress || store.liveActivities.shownMatchIds.contains(model.matchId))
     }
 
     private func header(event: MatchEvent?, details: EventDetails?, teams: [MatchTeam], order: [Int],

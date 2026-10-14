@@ -17,6 +17,8 @@ struct FileStore: Sendable {
         case teams = "cache-teams.json"
         case schedule = "cache-schedule.json"
         case live = "cache-live.json"
+        /// Choix sur les Live Activities (épinglées, retirées à la main, démarrées) : écrit par l'appli seule.
+        case liveActivities = "live-activities.json"
     }
 
     let directory: URL

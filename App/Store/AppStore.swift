@@ -35,6 +35,8 @@ final class AppStore {
     /// Heure de DÉBUT de la dernière tentative réussie de chaque donnée (pas l'heure de la réponse : la cadence du
     /// direct, 60 s, se compte de début de requête à début de requête).
     private(set) var lastSuccess: [DataKind: Date] = [:]
+    /// Live Activities (spec §6) : tous les appels à ActivityKit passent par lui.
+    let liveActivities: LiveActivityController
 
     // MARK: Interne
 
@@ -62,12 +64,18 @@ final class AppStore {
 
     private static let log = Logger(subsystem: "Faille", category: "données")
 
-    init(transport: any HTTPTransport = URLSessionTransport(), files: FileStore) {
+    /// - Parameter liveActivities: contrôleur des Live Activities ; nil (l'appli) : celui du dossier `files`. Les tests
+    ///   en passent un (aperçu) pour simuler des Live Activities à l'écran.
+    init(transport: any HTTPTransport = URLSessionTransport(), files: FileStore,
+         liveActivities: LiveActivityController? = nil) {
         self.transport = transport
         client = LoLClient(transport: transport)
         self.files = files
         isPreview = false
         reloadsWidgets = !RunEnvironment.isTesting
+        // Tests hébergés : aucune Live Activity réelle (les choix restent enregistrés et testables).
+        self.liveActivities = liveActivities
+            ?? LiveActivityController(files: files, usesActivityKit: !RunEnvironment.isTesting)
         loadFromDisk(files)
     }
 
@@ -79,6 +87,7 @@ final class AppStore {
         files = nil
         isPreview = true
         reloadsWidgets = false
+        liveActivities = LiveActivityController(preview: data.activityMatchIds)
         follows = data.follows
         settings = data.settings
         leagues = data.leagues
@@ -247,7 +256,10 @@ final class AppStore {
         }
         saveFollows()
         // Une équipe d'une autre ligue change les ligues du calendrier : la politique le voit tout de suite.
-        runWithScene { await self.refreshDue(opening: false) }
+        runWithScene {
+            await self.refreshDue(opening: false)
+            await self.syncLiveActivities(canStart: true)
+        }
     }
 
     func unfollow(id: String) {
@@ -261,7 +273,7 @@ final class AppStore {
         syncFollowsBeforeChange()
         follows.setSpoilerFree(on, id: id)
         saveFollows()
-        runWithScene { await self.refreshLiveStats() }
+        runWithScene { await self.refreshActivitiesAfterSpoilerChange() }
     }
 
     /// Couleur choisie à la main ; nil = revenir à la couleur tirée du logo.
@@ -276,14 +288,16 @@ final class AppStore {
         syncSettingsBeforeChange()
         settings.revealedMatchIds.insert(matchId)
         saveSettings()
-        runWithScene { await self.refreshLiveStats() }
+        runWithScene { await self.refreshActivitiesAfterSpoilerChange() }
     }
 
-    /// Réglage « Live Activity » (spec §5.4), utilisé à l'étape 4.
+    /// Réglage « Live Activity » (spec §5.4) : en manuel, les Live Activities non épinglées s'en vont tout de suite ;
+    /// en automatique, celles des équipes suivies démarrent.
     func setLiveActivityMode(_ mode: LiveActivityMode) {
         syncSettingsBeforeChange()
         settings.liveActivityMode = mode
         saveSettings()
+        runWithScene { await self.syncLiveActivities(canStart: true) }
     }
 
     // MARK: Rafraîchissements
@@ -305,6 +319,11 @@ final class AppStore {
         while !Task.isCancelled {
             await refreshDue(opening: opening)
             opening = false
+            // Une scène qui quitte le premier plan pendant le cycle ne démarre ni ne met à jour plus rien.
+            guard !Task.isCancelled else { break }
+            // Spec §6.4 : au premier plan, les Live Activities suivent chaque tour ; ActivityKit n'est appelé que si leur
+            // contenu a changé (en pratique à chaque relecture du direct, 60 s).
+            await syncLiveActivities(canStart: true)
             try? await Task.sleep(for: .seconds(RefreshPolicy.tick))
         }
     }
@@ -471,17 +490,26 @@ final class AppStore {
         }
     }
 
-    /// Stats des matchs en direct des équipes suivies, pour leurs cartes (cadence du direct). Les matchs masqués ne
-    /// sont pas demandés. Une game en cours est interrogée même quand Riot n'en fournit pas les stats
-    /// (`statsDisabled`) : le chrono (spec §4.3, §5.1) n'en dépend pas, et les stats restent cachées par LoLKit.
-    /// Un 404 arrête ensuite les nouvelles tentatives pour cette game (`statsUnavailable`).
+    /// Stats des matchs en direct des équipes suivies (cartes) et de ceux qui ont une Live Activity (match épinglé
+    /// d'équipes non suivies), à la cadence du direct. Les matchs masqués ne sont pas demandés. Une game en cours est
+    /// interrogée même quand Riot n'en fournit pas les stats (`statsDisabled`) : le chrono (spec §4.3, §5.1) n'en
+    /// dépend pas, et les stats restent cachées par LoLKit. Un 404 arrête ensuite les nouvelles tentatives pour cette
+    /// game (`statsUnavailable`).
+    /// Un match dont la Live Activity est à l'écran, sorti du direct et pas terminé au calendrier (compétition hors des
+    /// ligues suivies, équipe plus suivie), est relu par ses détails : seuls eux disent que sa série est gagnée
+    /// (`activityContent`).
     func refreshLiveStats() async {
         guard !isPreview, let live else { return }
-        for event in live where follows.involves(event.match.teams) {
+        for event in live where follows.involves(event.match.teams) || liveActivities.shownMatchIds.contains(event.id) {
             if Task.isCancelled { return }
             guard !isMasked(event.match.teams, matchId: event.id),
                   let game = EventDetails(event: event).currentGame else { continue }
             await loadWindow(gameId: game.id, inProgress: true)
+        }
+        for matchId in liveActivities.shownMatchIds where !live.contains(where: { $0.id == matchId })
+            && schedule.first(where: { $0.id == matchId })?.state != .completed {
+            if Task.isCancelled { return }
+            await loadDetails(matchId: matchId)
         }
     }
 

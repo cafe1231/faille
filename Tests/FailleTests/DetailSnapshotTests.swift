@@ -13,6 +13,13 @@ extension ApercuTests {
         expectNotBlank(url)
     }
 
+    /// Le bas du Détail de KC (comme `00-da-bas`) : le bouton « Retirer de l'écran verrouillé » (KC a une Live Activity
+    /// dans l'aperçu).
+    @Test func detailWithStatsBottom() async throws {
+        let url = try await Snapshot.write(detail(SampleData.kcMatchId).defaultScrollAnchor(.bottom), named: "04-detail-bas")
+        expectNotBlank(url)
+    }
+
     @Test func detailWithoutStats() async throws {
         let url = try await Snapshot.write(detail(SampleData.noStatsMatchId), named: "05-detail-sans-stats")
         expectNotBlank(url)
