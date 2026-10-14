@@ -173,6 +173,30 @@ struct FeaturesIntegrationTests {
         #expect(requests.filter { $0.path.hasSuffix("/api/versions.json") }.count == 1)
     }
 
+    /// La recherche des sorts a sa propre clé : vide tant que le match est masqué ou pas terminé ; la dernière game dès
+    /// qu'il est terminé et non masqué ; la fin de la game y entre quand sa frame `finished` est lue (la recherche repart
+    /// alors avec la vraie fin du match, au lieu de l'estimation).
+    @Test func spellsKeyFollowsTheEndOfTheMatch() async {
+        typealias Key = MatchDetailModel.SpellsKey
+        let nothing = Key(lastGameId: nil, end: nil)
+        let model = MatchDetailModel(matchId: Self.matchId)
+        let (live, _) = await Self.makeStore(game2: "inProgress", spoilerFree: false)
+        #expect(model.spellsKey(store: live) == nothing)
+
+        let (masked, _) = await Self.makeStore(game2: "completed", spoilerFree: true)
+        #expect(model.spellsKey(store: masked) == nothing)
+        masked.reveal(matchId: Self.matchId)
+        #expect(model.spellsKey(store: masked) == Key(lastGameId: "g2", end: nil))
+
+        let (done, _) = await Self.makeStore(game2: "completed", spoilerFree: false)
+        #expect(model.spellsKey(store: done) == Key(lastGameId: "g2", end: nil))
+        await done.loadWindow(gameId: "g2", inProgress: false)
+        #expect(model.spellsKey(store: done) == Key(lastGameId: "g2", end: LoLDate.parse("2026-10-04T20:53:40.101Z")))
+
+        let (disabled, _) = await Self.makeStore(game2: "completed", spoilerFree: false, stats: "disabled")
+        #expect(model.spellsKey(store: disabled) == nothing)
+    }
+
     /// Sorts d'invocateur : jamais pendant que le match se joue (le wiki n'aurait que des games partielles).
     @Test func spellsWaitForTheEndOfTheMatch() async {
         let (store, transport) = await Self.makeStore(game2: "inProgress", spoilerFree: false)

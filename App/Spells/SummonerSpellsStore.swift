@@ -81,7 +81,15 @@ final class SummonerSpellsStore {
     ///   - gameIds: games jouées du match (`completed`).
     ///   - matchEnd: frame `finished` de sa dernière game, si l'appli l'a ; sinon fin estimée (`SpellSchedule`).
     func lookUp(matchId: String, gameIds: [String], matchEnd: Date?, now: Date = Date()) async {
-        guard !gameIds.isEmpty, !running.contains(matchId) else { return }
+        guard !gameIds.isEmpty else { return }
+        // Une recherche de ce match est déjà en vol : l'écran relance la sienne quand la fin du match devient connue, sans
+        // attendre que l'ancienne, annulée, soit sortie (sa requête ne rend la main qu'après coup). On attend sa fin, pour
+        // repartir de ce qu'elle a gardé — essais comptés, débuts des games — : ne pas perdre cet appel, ni doubler la
+        // requête au wiki. Annulé en attendant, on s'en va.
+        while running.contains(matchId) {
+            try? await Task.sleep(for: .milliseconds(50))
+            if Task.isCancelled { return }
+        }
         running.insert(matchId)
         defer { running.remove(matchId) }
         var record = cache?.load(SpellRecord.self, from: Self.path(matchId)) ?? SpellRecord()

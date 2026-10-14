@@ -9,6 +9,9 @@ struct PlayerSheetItem: Identifiable, Equatable {
     let context: BuildContext
     /// Game terminée : les sorts d'invocateur viennent de Leaguepedia (sinon seul le Châtiment du jungler est connu).
     let finished: Bool
+    /// Game de la fiche : ses sorts d'invocateur sont lus en direct dans le store (`PlayerSheet`), car Leaguepedia peut
+    /// répondre pendant que la fiche est ouverte. nil (aperçus de composants) : ceux du `context`.
+    var gameId: String? = nil
 
     var id: Int { player.participantId }
 }
@@ -20,6 +23,8 @@ struct PlayerSheetItem: Identifiable, Equatable {
 struct PlayerSheet: View {
     let item: PlayerSheetItem
     @Environment(\.dataDragon) private var store
+    /// Le store de l'appli, pour lire les sorts d'invocateur en direct ; nil (aperçus de composants) : ceux de la fiche.
+    @Environment(AppStore.self) private var appStore: AppStore?
     @Environment(\.dismiss) private var dismiss
     @State private var champion: ChampionSpells?
 
@@ -146,8 +151,18 @@ struct PlayerSheet: View {
         }
     }
 
+    /// Contexte de la fiche, avec les sorts d'invocateur du store tels qu'ils sont à cet instant : la fiche se met à jour si
+    /// Leaguepedia répond pendant qu'elle est ouverte (le reste du contexte est celui de son ouverture).
+    private var liveContext: BuildContext {
+        var context = item.context
+        if item.finished, let gameId = item.gameId, let known = appStore?.summonerSpells.spells[gameId] {
+            context.summonerSpells = known
+        }
+        return context
+    }
+
     @ViewBuilder private func summonerSpells(_ line: PlayerLine) -> some View {
-        let context = item.context
+        let context = liveContext
         let spells = context.spells(for: line)
         ForEach(spells, id: \.self) { spell in
             nameRow(url: context.summonerURL(spell), name: context.summoners?.spell(spell)?.name ?? spell, round: false)

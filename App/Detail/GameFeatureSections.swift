@@ -80,7 +80,7 @@ struct PlayersSection: View {
         BuildPlayersPanel(teams: teams, rows: rows, context: context, selection: $selection) { player, index in
             let team = teams.indices.contains(index) ? teams[index] : nil
             onSelect(PlayerSheetItem(player: player, teamCode: team?.code ?? "", tint: team.flatMap { store.tint(for: $0) },
-                                     context: context, finished: game.state == .completed))
+                                     context: context, finished: game.state == .completed, gameId: game.id))
         }
     }
 

@@ -40,9 +40,8 @@ struct MatchDetailView: View {
         let inProgress: Bool
     }
 
-    /// Ce qui relance les détails par joueur (et les sorts, en attendant leur propre clé) de la game affichée : une autre
-    /// game, la révélation, la fin de la game, et la lecture de sa frame `finished` (les détails ne sont définitifs
-    /// qu'alors : la boucle de 60 s continue jusque-là).
+    /// Ce qui relance les détails par joueur de la game affichée : une autre game, la révélation, la fin de la game, et la
+    /// lecture de sa frame `finished` (les détails ne sont définitifs qu'alors : la boucle de 60 s continue jusque-là).
     private struct FeatureKey: Equatable, Sendable {
         let gameId: String?
         let inProgress: Bool
@@ -74,10 +73,7 @@ struct MatchDetailView: View {
         }
         .task(id: timelineKey) { await model.loadTimeline(store: store) }
         .task(id: featureKey) { await model.followDetails(store: store) }
-        .task(id: featureKey) {
-            guard model.featureGame(store: store) != nil else { return }
-            await model.lookUpSpells(store: store)
-        }
+        .task(id: model.spellsKey(store: store)) { await model.lookUpSpells(store: store) }
         .task(id: versionKey) { await model.loadDataDragon(store: store) }
         // Chaque frame lue en direct (10 s) allonge le fil et la courbe ; nil pour un match masqué (`featureGame`).
         .onChange(of: featureSnapshot) { _, snapshot in
@@ -88,6 +84,7 @@ struct MatchDetailView: View {
         .environment(\.dataDragon, store.dataDragon)
         .sheet(item: $player) { item in
             PlayerSheet(item: item)
+                .environment(store)
                 .environment(\.dataDragon, store.dataDragon)
                 .presentationDetents([.medium, .large])
         }
