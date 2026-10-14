@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import UIKit
+@testable import Faille
 
 /// Rend un écran dans une vraie fenêtre de l'appli hôte et l'enregistre en PNG dans `build/apercus/`
 /// (publié par la CI dans l'artefact `Faille-apercus`). `ImageRenderer` ne rend ni les ScrollView, ni la barre
@@ -43,7 +44,9 @@ enum Snapshot {
         // `UIWindowScene.coordinateSpace` est obsolète depuis iOS 26 : `effectiveGeometry.coordinateSpace` le remplace.
         window.frame = scene.effectiveGeometry.coordinateSpace.bounds
         window.overrideUserInterfaceStyle = .dark
-        window.rootViewController = UIHostingController(rootView: AnyView(view))
+        // Rendu figé (finitions) : « Réduire les animations » forcé, l'écran est capturé dans son état final — ni
+        // cascade en cours, ni halo à mi-respiration, ni reflet de squelette.
+        window.rootViewController = UIHostingController(rootView: AnyView(view.environment(\.reduceMotionOverride, true)))
         window.makeKeyAndVisible()
         defer { window.isHidden = true }
         // Laisse SwiftUI faire sa mise en page, lancer ses `.task` et poser le verre.
