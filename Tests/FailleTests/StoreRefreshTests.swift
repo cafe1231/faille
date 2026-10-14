@@ -331,6 +331,30 @@ struct StoreRefreshTests {
         #expect(files.load(FollowList.self, from: .follows)?.teams.isEmpty == true)
     }
 
+    /// `follows.json` illisible : la liste des équipes suivies, donc des œils (spec §8), est inconnue. Aucune Live
+    /// Activity n'est mise à jour ni démarrée avec un contenu démasqué ; la liste relue, les passes reprennent.
+    @Test func liveActivitiesDoNotMoveWhileTheFollowsFileIsUnreadable() async throws {
+        let files = TemporaryFiles.store()
+        files.save(FollowList(teams: [FollowedTeam(id: "kc", code: "KC", name: "Karmine Corp", spoilerFree: true)]),
+                   to: .follows)
+        let path = files.url(.follows).path(percentEncoded: false)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: path) }
+
+        let store = AppStore(transport: StubTransport(failing: true), files: files)
+        #expect(store.followsUnreadable)
+        await store.syncLiveActivities(canStart: true)
+        await store.syncLiveActivities(canStart: false)
+        #expect(store.liveActivities.syncPasses == 0)
+
+        // Le fichier est lisible de nouveau : la prochaine modification de l'utilisateur le relit, le drapeau tombe.
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: path)
+        store.setColorOverride(nil, id: "kc")
+        #expect(!store.followsUnreadable)
+        await store.syncLiveActivities(canStart: true)
+        #expect(store.liveActivities.syncPasses == 1)
+    }
+
     @Test func userChangeWhileSettingsStillUnreadableDoesNotOverwriteTheFile() throws {
         let files = TemporaryFiles.store()
         files.save(AppSettings(revealedMatchIds: ["ancien"]), to: .settings)

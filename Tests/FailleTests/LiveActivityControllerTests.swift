@@ -4,7 +4,8 @@ import Testing
 @testable import Faille
 
 /// Bouton du Détail et choix enregistrés (spec §5.3, §6.4, §10). ActivityKit n'est pas appelé dans les tests hébergés :
-/// les décisions sont testées dans LoLKit, ici le câblage et la persistance.
+/// les décisions sont testées dans LoLKit, ici le passage par le contrôleur et la persistance. Le câblage de `sync`
+/// lui-même (réconciliation, démarrages, mises à jour) n'est pas couvert ici : il ne se vérifie que sur l'iPhone.
 @MainActor
 @Suite(.serialized)
 struct LiveActivityControllerTests {

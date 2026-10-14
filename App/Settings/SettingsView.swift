@@ -20,7 +20,7 @@ struct SettingsView: View {
                         Text(explanation)
                             .font(Typo.secondary)
                             .foregroundStyle(Palette.secondary)
-                        Text("Sans serveur de push, la Live Activity se met à jour quand Faille est ouverte, et en arrière-plan quand iOS le permet (environ toutes les 15 min, si l'actualisation en arrière-plan est activée). Sinon elle affiche « màj il y a X min ».")
+                        Text("Sans serveur de push, la Live Activity se met à jour quand Faille est ouverte, et en arrière-plan quand iOS le permet (environ toutes les 15 min, si l'actualisation en arrière-plan est activée). Sinon elle affiche « màj il y a X minutes ».")
                             .font(Typo.secondary)
                             .foregroundStyle(Palette.secondary)
                     }

@@ -40,7 +40,12 @@ extension AppStore {
 extension AppStore {
     /// Live Activities à jour (spec §6.4) : retraits à la main reconnus, mises à jour et fins, puis démarrages si
     /// `canStart` (premier plan seulement). Sans effet dans les aperçus et les tests hébergés.
+    /// Rien ne bouge tant que `follows.json` est illisible : la liste des équipes suivies est alors vide par défaut, donc
+    /// plus aucun œil (spec §8) — une Live Activity mise à jour ou démarrée maintenant ne serait pas masquée. Elle garde
+    /// son dernier contenu (et passe « pas fraîche » d'elle-même) jusqu'à ce que la liste soit relue, à la prochaine
+    /// modification de l'utilisateur (`syncFollowsBeforeChange`).
     func syncLiveActivities(canStart: Bool) async {
+        guard !followsUnreadable else { return }
         await liveActivities.sync(live: live, follows: follows, mode: settings.liveActivityMode, canStart: canStart,
                                   now: Date()) { matchId in
             self.activityContent(matchId: matchId)
