@@ -214,7 +214,7 @@ struct SummonerSpellsTests {
         let transport = HeldFirstWikiTransport(base: spellsTransport { scoreboardJSON(["G1", "G2"]) })
         let store = SummonerSpellsStore(transport: transport, cache: cache)
         let now = Self.end.addingTimeInterval(3_600)
-        let first = Task { await store.lookUp(matchId: "M1", gameIds: ["G1", "G2"], matchEnd: nil, now: now) }
+        let first = Task { await store.lookUp(matchId: "M1", gameIds: ["G1", "G2"], matchEnd: Self.end, now: now) }
         let deadline = ContinuousClock.now + .seconds(10)
         while await transport.requests.filter({ $0.host() == "lol.fandom.com" }).isEmpty {
             try #require(ContinuousClock.now < deadline, "la requête au wiki n'est pas partie")
