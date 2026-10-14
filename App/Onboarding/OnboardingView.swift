@@ -40,6 +40,19 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
+                if page > 0 {
+                    Button { go(page - 1) } label: {
+                        HStack(spacing: 6) {
+                            IconView(icon: .back, size: 16)
+                            Text("Retour").font(Typo.bodyMedium)
+                        }
+                        .foregroundStyle(Palette.secondary)
+                        .frame(minHeight: 44)
+                    }
+                    .buttonStyle(.pressable)
+                    .accessibilityLabel(Text("Retour"))
+                    .accessibilityHint(Text("Page précédente"))
+                }
                 Spacer()
                 Button(action: onDone) {
                     Text("Passer").font(Typo.bodyMedium).foregroundStyle(Palette.secondary)

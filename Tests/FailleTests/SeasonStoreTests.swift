@@ -120,6 +120,46 @@ private actor FakeLoLWorld: HTTPTransport {
     }
 }
 
+/// Transport qui garde la première requête en vol jusqu'à `release()` (puis répond 503), les suivantes répondent 200 :
+/// une réponse qui arrive après `beginSession()`.
+private actor GateTransport: HTTPTransport {
+    private var entered = false
+    private var open = false
+    private var waiter: CheckedContinuation<Void, Never>?
+
+    func get(_ url: URL, headers: [String: String]) async throws -> HTTPResponse {
+        if open { return HTTPResponse(status: 200, body: Data()) }
+        entered = true
+        await withCheckedContinuation { waiter = $0 }
+        return HTTPResponse(status: 503, body: Data())
+    }
+
+    var hasEntered: Bool {
+        entered
+    }
+
+    func release() {
+        open = true
+        waiter?.resume()
+        waiter = nil
+    }
+}
+
+/// Une game d'exemple sous un autre id, un autre début et une autre version de schéma (JSON modifié : les champs de
+/// `GameSummary` sont des `let`).
+private func sampleGame(id: String, startedAt: TimeInterval? = nil, version: Int? = nil) throws -> (GameSummary, Data) {
+    guard let base = SeasonSamples.games.first else { throw CocoaError(.fileReadCorruptFile) }
+    let data = try JSONEncoder().encode(base)
+    guard var object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        throw CocoaError(.fileReadCorruptFile)
+    }
+    object["gameId"] = id
+    if let startedAt { object["startedAt"] = startedAt }
+    if let version { object["v"] = version }
+    let edited = try JSONSerialization.data(withJSONObject: object)
+    return (try JSONDecoder().decode(GameSummary.self, from: edited), edited)
+}
+
 private let lecId = "98767991302996019"
 private let worldsId = "98767975604431411"
 private let today = LoLDate.parse("2026-10-15T15:00:00Z")!
@@ -211,9 +251,144 @@ struct SeasonStoreTests {
         let end = await store.crawl { context(follows: kcFollowed()) }
         #expect(end == .budget)
         #expect(await world.requests.count == CrawlPacer.sessionRequestBudget)
+        #expect(store.stopReason == .budget)
         // Nouvelle session : le budget repart.
         await store.beginSession()
         #expect(await store.paced?.sent == 0)
+        #expect(store.stopReason == nil)
+    }
+
+    @Test func screensKeepASmallReserveAfterTheCrawlBudgetIsSpent() async throws {
+        let many = (0..<160).map { index in
+            FakeMatch(id: "b\(index)", start: "2026-08-01T\(String(format: "%02d", index % 24)):00:00Z",
+                      teams: [("kc", "KC", 1), ("g2", "G2", 0)])
+        }
+        let world = FakeLoLWorld(lec: many)
+        let store = makeStore(world, clock: VirtualClock(today))
+        let end = await store.crawl { context(follows: kcFollowed()) }
+        #expect(end == .budget)
+        for index in 0..<25 { await store.loadStandings(tournamentId: "t-extra\(index)") }
+        // Un classement ouvert se lit malgré l'arrêt de la collecte, dans la limite de la réserve (20 par session).
+        #expect(await world.requests.count == CrawlPacer.sessionRequestBudget + PacedTransport.onDemandBudget)
+        #expect(store.standings["t-extra0"] != nil)
+        #expect(store.standings["t-extra24"] == nil)
+        #expect(store.stopReason == .budget)
+    }
+
+    @Test func aLateResponseFromAnOldSessionDoesNotSlowTheNewOne() async throws {
+        let clock = VirtualClock(today)
+        let gate = GateTransport()
+        let paced = PacedTransport(base: gate, clock: clock)
+        let url = try #require(URL(string: "https://example.com/a"))
+        let old = Task { try? await paced.get(url, headers: [:]) }
+        while !(await gate.hasEntered) { await Task.yield() }
+        await paced.beginSession()
+        await gate.release()
+        _ = await old.value
+        // Le 503 de l'ancienne session n'a posé ni recul ni échec sur la nouvelle.
+        _ = try await paced.get(url, headers: [:])
+        #expect(await clock.sleeps.isEmpty)
+        #expect(await paced.sent == 1)
+        #expect(await paced.stopReason == nil)
+    }
+
+    @Test func aSecondCrawlWhileOneRunsReturnsAtOnce() async throws {
+        let world = FakeLoLWorld(lec: lecMatches)
+        let store = makeStore(world, clock: VirtualClock(today))
+        let first = Task { @MainActor in await store.crawl { context(follows: kcFollowed()) } }
+        let second = Task { @MainActor in await store.crawl { context(follows: kcFollowed()) } }
+        let ends = [await first.value, await second.value]
+        #expect(ends.contains(.done))
+        #expect(ends.contains(.cancelled))
+        #expect(!store.progress.running)
+        // Chaque game lue une seule fois : m1-g1 = 2 requêtes de palier A + 3 de palier B.
+        #expect(gameIds(await world.requests).filter { $0 == "m1-g1" }.count == 5)
+    }
+
+    @Test func aTournamentReadWhileActiveIsReadOnceMoreAfterItEnds() async throws {
+        let root = TemporaryFiles.directory()
+        let early = try #require(LoLDate.parse("2026-09-10T12:00:00Z"))
+        let store = makeStore(FakeLoLWorld(lec: lecMatches), clock: VirtualClock(early), root: root)
+        await store.crawl { context(follows: kcFollowed()) }
+        let read = try #require(store.lastFetch(SeasonStore.completedKey("t-lec")))
+        #expect(SeasonPlanning.day(read) == "2026-09-10")
+        func lecListReads(_ requests: [URL]) -> [String] {
+            requests.filter { $0.query?.contains("tournamentId=t-lec") == true }
+                .map { $0.path.split(separator: "/").last.map(String.init) ?? "" }.sorted()
+        }
+        // Reprise le 15/10 : le split est fini, ses résultats et son classement finaux sont relus UNE fois…
+        let second = FakeLoLWorld(lec: lecMatches)
+        let resumed = makeStore(second, clock: VirtualClock(today), root: root)
+        await resumed.crawl { context(follows: kcFollowed()) }
+        #expect(lecListReads(await second.requests) == ["getCompletedEvents", "getStandings"])
+        // … et plus jamais.
+        let third = FakeLoLWorld(lec: lecMatches)
+        let again = makeStore(third, clock: VirtualClock(today.addingTimeInterval(3_600)), root: root)
+        await again.crawl { context(follows: kcFollowed()) }
+        #expect(lecListReads(await third.requests).isEmpty)
+    }
+
+    @Test func rereadHelperOnlyAsksForACopyReadWhileActive() throws {
+        let during = try #require(LoLDate.parse("2026-09-10T12:00:00Z"))
+        let grace = try #require(LoLDate.parse("2026-09-22T23:00:00Z"))
+        let after = try #require(LoLDate.parse("2026-09-23T00:30:00Z"))
+        #expect(SeasonPlanning.plusDays("2026-09-30", 2) == "2026-10-02")
+        #expect(SeasonPlanning.readWhileActive(lastFetch: nil, endDate: "2026-09-20"))
+        #expect(SeasonPlanning.readWhileActive(lastFetch: during, endDate: "2026-09-20"))
+        #expect(SeasonPlanning.readWhileActive(lastFetch: grace, endDate: "2026-09-20"))
+        #expect(!SeasonPlanning.readWhileActive(lastFetch: after, endDate: "2026-09-20"))
+        #expect(!SeasonPlanning.readWhileActive(lastFetch: during, endDate: ""))
+    }
+
+    @Test func theJoinCanBeGivenRightAfterTheDiskIsRead() async throws {
+        let root = TemporaryFiles.directory()
+        let first = makeStore(FakeLoLWorld(lec: lecMatches), clock: VirtualClock(today), root: root)
+        await first.crawl { context(follows: kcFollowed()) }
+        let resumed = makeStore(FakeLoLWorld(lec: lecMatches), clock: VirtualClock(today), root: root)
+        await resumed.loadFromDisk()
+        // Sans ligues, la jointure ne connaît pas le slug : il vient avec `rejoin(catalog:leagues:)`.
+        #expect(resumed.matches.count == 4)
+        #expect(resumed.matches.allSatisfy { $0.leagueSlug.isEmpty })
+        resumed.rejoin(catalog: [kcTeam], leagues: leagues)
+        #expect(resumed.matches.allSatisfy { $0.leagueSlug == "lec" })
+    }
+
+    @Test func theNewestGameIsNeverEvictedWhenTheDiskIsFull() throws {
+        let store = SeasonStore(preview: SeasonPreview())
+        for index in 0..<CrawlPlanner.diskLimit {
+            store.record(try sampleGame(id: "old-\(index)", startedAt: 1_000_000 + Double(index)).0, followedTeamIds: [])
+        }
+        // Une game plus ancienne que toutes les autres, écrite à l'instant : la plus ancienne n'est pas elle.
+        let late = try sampleGame(id: "late", startedAt: 10).0
+        store.record(late, followedTeamIds: [])
+        #expect(store.games["late"] != nil)
+    }
+
+    @Test func unreadableFilesAreIgnoredAndANewerSchemaGameIsNeverOverwritten() async throws {
+        let root = TemporaryFiles.directory()
+        let cache = DiskCache(root: root)
+        cache.write(Data("pas du json".utf8), to: "season/games/broken.json")
+        cache.write(Data("{".utf8), to: "season/completed/t-x.json")
+        cache.write(Data("[]".utf8), to: "season/standings/t-x.json")
+        cache.write(Data("".utf8), to: "season/tournaments/l.json")
+        cache.write(Data("pas du json".utf8), to: "season/crawl.json")
+        let newer = try sampleGame(id: "future", version: GameSummary.schemaVersion + 1)
+        cache.write(newer.1, to: SeasonDisk.gamePath("future"))
+        let known = try sampleGame(id: "known")
+        cache.write(known.1, to: SeasonDisk.gamePath("known"))
+
+        let store = makeStore(FakeLoLWorld(lec: []), clock: VirtualClock(today), root: root)
+        await store.loadFromDisk()
+        #expect(store.isLoaded)
+        #expect(Set(store.games.keys) == ["known"])
+        #expect(store.matches.isEmpty)
+
+        // La game du futur relue par la collecte reste en mémoire mais son fichier n'est pas réécrit.
+        let reread = try sampleGame(id: "future")
+        store.record(reread.0, followedTeamIds: [])
+        #expect(store.games["future"] != nil)
+        let stored = try #require(cache.data(SeasonDisk.gamePath("future")))
+        #expect(stored == newer.1)
     }
 
     @Test func aMaskedMatchIsNeverRequestedUntilItIsRevealed() async throws {
@@ -272,6 +447,11 @@ struct SeasonStoreTests {
         #expect(sleeps.suffix(4) == [4, 8, 16, 32])
         #expect(store.games.isEmpty)
         #expect(store.failures.isEmpty) // une panne n'est pas un échec de game
+        // Après l'arrêt pour échecs, les écrans n'envoient rien et le store dit pourquoi.
+        #expect(store.stopReason == .failures)
+        let before = await world.requests.count
+        await store.loadStandings(tournamentId: "t-extra")
+        #expect(await world.requests.count == before)
     }
 
     @Test func planningHelpers() {
@@ -315,6 +495,7 @@ struct SeasonStoreTests {
         // T1 est en anti-spoiler dans les aperçus : ses matchs d'exemple sont masqués.
         let masked = SeasonMasking.maskedMatchIds(preview.matches, follows: SampleData.follows, revealed: [])
         #expect(masked == ["m-t1-blg", "m-t1-hle", "m-gen-t1"])
-        #expect(SeasonSamples.games.map(\.durationSeconds) == SeasonSamples.games.map(\.durationSeconds)) // déterministe
+        // Valeur attendue (déterministe) : 1 740 + 137 × graine (601 mod 7 = 6 pour « g1-kc-g2 »).
+        #expect(SeasonSamples.games.first { $0.gameId == "g1-kc-g2" }?.durationSeconds == 2_562)
     }
 }

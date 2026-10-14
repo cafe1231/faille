@@ -26,6 +26,8 @@ struct OnboardingPickPage: View {
     let onToggleTeam: (Team) -> Void
     let onToggleLeague: (League) -> Void
     @State private var query = ""
+    /// Équipes montrées dans la grille ; au-delà, une mention invite à chercher.
+    static let gridLimit = 40
 
     var body: some View {
         let shown = query.trimmingCharacters(in: .whitespaces).isEmpty ? teams : search(query)
@@ -57,9 +59,13 @@ struct OnboardingPickPage: View {
                     .foregroundStyle(Palette.secondary)
             }
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
-                ForEach(shown.prefix(40)) { team in
+                ForEach(shown.prefix(Self.gridLimit)) { team in
                     teamCell(team, followed: followedTeamIds.contains(team.id))
                 }
+            }
+            if shown.count > Self.gridLimit {
+                Text("\(Self.gridLimit) équipes affichées sur \(shown.count) : affine avec la recherche.")
+                    .font(Typo.secondary).foregroundStyle(Palette.secondary)
             }
         }
         .foregroundStyle(Palette.text)

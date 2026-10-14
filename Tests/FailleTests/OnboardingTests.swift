@@ -32,3 +32,22 @@ struct OnboardingModelTests {
         #expect(teams.map(\.id) == ["fly", "kc"])
     }
 }
+
+@MainActor
+struct OnboardingExampleTests {
+    /// Le score de l exemple vivant avance (spec saison 3.7) : une game gagnee de plus a chaque etape, jamais l inverse.
+    @Test func theExampleSeriesAdvancesOneGameAtATime() {
+        let series = OnboardingExampleCard.series
+        #expect(series.count > 2)
+        for (earlier, later) in zip(series, series.dropFirst()) {
+            #expect((later.left + later.right) == (earlier.left + earlier.right) + 1)
+            #expect(later.left >= earlier.left && later.right >= earlier.right)
+        }
+        // La carte figee (Reduire les animations) montre une serie en cours, pas 0 - 0.
+        #expect(series[1].left + series[1].right == 1)
+    }
+
+    @Test func theTeamGridIsCappedAndSaysSo() {
+        #expect(OnboardingPickPage.gridLimit == 40)
+    }
+}

@@ -28,6 +28,28 @@ enum SeasonPlanning {
         return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
     }
 
+    /// Un tournoi aujourd'hui terminé dont la dernière lecture date de son temps actif (jusqu'à 2 jours après sa fin,
+    /// comme `CrawlPlanner.maxAge`) n'a pas ses résultats ni son classement finaux : une relecture, une seule (la
+    /// lecture suivante date d'après la fin). Jamais lu : à lire de toute façon. Pur.
+    static func readWhileActive(lastFetch: Date?, endDate: String) -> Bool {
+        guard let lastFetch else { return true }
+        guard let end = plusDays(endDate, 2) else { return false }
+        return day(lastFetch) <= end
+    }
+
+    /// « 2026-09-20 » + 2 → « 2026-09-22 » (nil si la date est illisible).
+    static func plusDays(_ day: String, _ days: Int) -> String? {
+        let parts = day.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return nil }
+        var components = DateComponents()
+        components.year = parts[0]
+        components.month = parts[1]
+        components.day = parts[2]
+        guard let start = utc.date(from: components),
+              let end = utc.date(byAdding: .day, value: days, to: start) else { return nil }
+        return Self.day(end)
+    }
+
     /// 2026 : la saison est l'année civile (spec saison §1.2).
     static func year(_ date: Date) -> Int {
         utc.component(.year, from: date)
