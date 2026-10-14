@@ -34,6 +34,44 @@ private func replayTransport(statsDisabled: Bool = false) -> ScriptedTransport {
     })
 }
 
+/// Faux flux `window` dont la première requête d'ouverture (sans `startingTime`) reste suspendue jusqu'à `release()` et ne
+/// tient aucun compte de l'annulation de la tâche qui l'attend : comme `URLSession`, dont le rappel d'une requête annulée
+/// n'arrive qu'après coup, par sa propre file. La réponse retenue décrit une première frame à `heldOpeningAt` ; toutes les
+/// autres requêtes sont celles de `replayTransport`.
+private actor HeldOpeningTransport: HTTPTransport {
+    private(set) var requests: [URL] = []
+    private let heldOpeningAt: Date
+    private var holdsOpening = true
+    private var released = false
+    private var held: CheckedContinuation<Void, Never>?
+
+    init(heldOpeningAt: Date = gameStart) {
+        self.heldOpeningAt = heldOpeningAt
+    }
+
+    func get(_ url: URL, headers: [String: String]) async throws -> HTTPResponse {
+        requests.append(url)
+        let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+        let start = query?.first { $0.name == "startingTime" }?.value.flatMap(LoLDate.parse)
+        if start == nil, holdsOpening {
+            holdsOpening = false
+            if !released {
+                await withCheckedContinuation { held = $0 }
+            }
+            return HTTPResponse(status: 200, body: Data(windowJSON(at: heldOpeningAt).utf8))
+        }
+        let time = start.map { $0.addingTimeInterval(9) } ?? gameStart
+        return HTTPResponse(status: 200, body: Data(windowJSON(at: time).utf8))
+    }
+
+    /// Rend la réponse retenue : la requête suspendue reprend, annulée ou non.
+    func release() {
+        released = true
+        held?.resume()
+        held = nil
+    }
+}
+
 /// Fil et courbe de gold (spec fonctionnalités §4, §5) : relecture à pas de 60 s gardée sur disque, reprise, arrêt à la
 /// frame `finished`, jamais en avance sur la diffusion, frames du direct ajoutées une seule fois.
 @MainActor
@@ -55,6 +93,18 @@ struct TimelineStoreTests {
             try #require(ContinuousClock.now < deadline, "relecture trop lente")
             try await Task.sleep(for: .milliseconds(20))
         }
+    }
+
+    /// Attend que le transport ait reçu `count` requêtes ; faux si `timeout` passe avant (sans échec du test).
+    @discardableResult
+    private static func waitForRequests(_ transport: HeldOpeningTransport, atLeast count: Int,
+                                        timeout: Duration = .seconds(10)) async -> Bool {
+        let deadline = ContinuousClock.now + timeout
+        while await transport.requests.count < count {
+            if ContinuousClock.now >= deadline { return false }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        return true
     }
 
     @Test func cachedFramesRoundTrip() throws {
@@ -150,6 +200,81 @@ struct TimelineStoreTests {
         #expect(await Self.windowRequests(transport).count == 7)
         #expect(reopened.replayFrames["G1"]?.count == 7)
         #expect(reopened.replayFrames["G1"]?.last?.phase == .finished)
+    }
+
+    /// Course entre l'annulation et le redémarrage : l'écran annule la relecture A (sa clé change) et lance B aussitôt sur le
+    /// même store, alors que la requête de A n'est pas revenue (le rappel d'une requête annulée arrive après coup). B doit
+    /// lire la game jusqu'à la frame `finished`, et A, qui reçoit sa réponse après le départ de B, ne rien publier.
+    @Test func aReplayStartedAfterACancelledOneStillRuns() async throws {
+        // La réponse retenue pour A décrit une première frame une minute avant celle de B : si A la publiait, le début de la
+        // game (le 0:00 du fil) serait faux.
+        let transport = HeldOpeningTransport(heldOpeningAt: gameStart.addingTimeInterval(-60))
+        let store = TimelineStore(transport: transport, cache: Self.cache())
+        let first = Task { await store.load(gameId: "G1", inProgress: false) }
+        let opened = await Self.waitForRequests(transport, atLeast: 1)
+        try #require(opened, "A n'a pas demandé l'ouverture")
+        first.cancel()
+        let second = Task { await store.load(gameId: "G1", inProgress: false) }
+        // B part de son côté : on libère A une fois sa première requête envoyée (sans l'exiger).
+        await Self.waitForRequests(transport, atLeast: 2, timeout: .seconds(2))
+        await transport.release()
+        await first.value
+        await second.value
+
+        #expect(store.firstFrames["G1"] == gameStart)
+        #expect(store.replayFrames["G1"]?.first?.timestamp == gameStart)
+        #expect(store.replayFrames["G1"]?.count == 7)
+        #expect(store.replayFrames["G1"]?.last?.phase == .finished)
+        #expect(!store.replaying.contains("G1"))
+    }
+
+    /// Un appel annulé qui revient tard ne retire pas la marque « relecture en cours » de celui qui l'a remplacé : le
+    /// gabarit du fil reste affiché tant que B lit.
+    @Test func aStaleCallDoesNotEndTheReplayOfItsReplacement() async throws {
+        let transport = HeldOpeningTransport()
+        let store = TimelineStore(transport: transport, cache: Self.cache())
+        let first = Task { await store.load(gameId: "G1", inProgress: false) }
+        let opened = await Self.waitForRequests(transport, atLeast: 1)
+        try #require(opened, "A n'a pas demandé l'ouverture")
+        first.cancel()
+        let second = Task { await store.load(gameId: "G1", inProgress: false) }
+        let resumed = await Self.waitForRequests(transport, atLeast: 2, timeout: .seconds(5))
+        try #require(resumed, "B n'a pas repris la relecture")
+        await transport.release()
+        await first.value
+        // B lit encore (six pauses de 0,5 s) : A, sorti, n'a pas levé la marque.
+        #expect(store.replaying.contains("G1"))
+        await second.value
+        #expect(!store.replaying.contains("G1"))
+        #expect(store.replayFrames["G1"]?.last?.phase == .finished)
+    }
+
+    /// Pendant la relecture, les frames lues en direct ne sont pas mélangées à celles de la relecture : la plus récente serait
+    /// comparée à un pas bien plus ancien (un gros paquet d'événements en tête, une courbe en ligne droite). Elles les
+    /// rejoignent quand la relecture est finie.
+    @Test func liveFramesJoinTheReplayOnlyOnceItIsDone() async throws {
+        let transport = HeldOpeningTransport()
+        let store = TimelineStore(transport: transport, cache: Self.cache())
+        let replay = Task { await store.load(gameId: "G1", inProgress: false) }
+        let opened = await Self.waitForRequests(transport, atLeast: 1)
+        try #require(opened, "la relecture n'a pas demandé l'ouverture")
+        // Une frame du direct, 10 minutes après le début de la game (après la frame `finished` de la relecture).
+        let liveClient = LoLClient(transport: ScriptedTransport(extra: { _ in
+            HTTPResponse(status: 200, body: Data(windowJSON(at: gameStart.addingTimeInterval(10 * 60)).utf8))
+        }))
+        let window = try await liveClient.window(gameId: "G1", startingTime: gameStart.addingTimeInterval(60))
+        let live = try #require(window.latestSnapshot())
+        store.append(live)
+        #expect(store.liveFrames["G1"]?.count == 1)
+        #expect(store.replaying.contains("G1"))
+        #expect(store.snapshots(gameId: "G1").isEmpty)
+
+        await transport.release()
+        await replay.value
+        #expect(!store.replaying.contains("G1"))
+        let frames = store.snapshots(gameId: "G1")
+        #expect(frames.count == 8)
+        #expect(frames.contains { $0.timestamp == live.timestamp })
     }
 
     @Test func statsDisabledStopsTheReplay() async {

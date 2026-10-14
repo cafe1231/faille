@@ -32,9 +32,17 @@ struct MatchDetailView: View {
         let revealed: Bool
     }
 
-    /// Ce qui relance les fonctionnalités de la game affichée (fil, détails, sorts) : une autre game, la révélation (la
-    /// game passe de nil à la game affichée), la fin de la game, et la lecture de sa frame `finished` (les détails par
-    /// joueur ne sont définitifs qu'alors : la boucle de 60 s continue jusque-là).
+    /// Ce qui relance le fil et la courbe de la game affichée : une autre game, la révélation (la game passe de nil à la
+    /// game affichée) et la fin de la game. Pas la lecture de sa frame `finished` : relancer la relecture à ce moment-là,
+    /// en pleine requête, ne servirait à rien (`TimelineStore.load`).
+    private struct TimelineKey: Equatable, Sendable {
+        let gameId: String?
+        let inProgress: Bool
+    }
+
+    /// Ce qui relance les détails par joueur (et les sorts, en attendant leur propre clé) de la game affichée : une autre
+    /// game, la révélation, la fin de la game, et la lecture de sa frame `finished` (les détails ne sont définitifs
+    /// qu'alors : la boucle de 60 s continue jusque-là).
     private struct FeatureKey: Equatable, Sendable {
         let gameId: String?
         let inProgress: Bool
@@ -64,7 +72,12 @@ struct MatchDetailView: View {
         .task(id: LoadKey(game: model.selectedGameNumber, revealed: store.settings.revealedMatchIds.contains(model.matchId))) {
             await model.loadSelectedGame(store: store)
         }
-        .task(id: featureKey) { await model.runFeatures(store: store) }
+        .task(id: timelineKey) { await model.loadTimeline(store: store) }
+        .task(id: featureKey) { await model.followDetails(store: store) }
+        .task(id: featureKey) {
+            guard model.featureGame(store: store) != nil else { return }
+            await model.lookUpSpells(store: store)
+        }
         .task(id: versionKey) { await model.loadDataDragon(store: store) }
         // Chaque frame lue en direct (10 s) allonge le fil et la courbe ; nil pour un match masqué (`featureGame`).
         .onChange(of: featureSnapshot) { _, snapshot in
@@ -78,6 +91,11 @@ struct MatchDetailView: View {
                 .environment(\.dataDragon, store.dataDragon)
                 .presentationDetents([.medium, .large])
         }
+    }
+
+    private var timelineKey: TimelineKey {
+        let game = model.featureGame(store: store)
+        return TimelineKey(gameId: game?.id, inProgress: game?.state == .inProgress)
     }
 
     private var featureKey: FeatureKey {

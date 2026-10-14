@@ -22,23 +22,20 @@ extension MatchDetailModel {
         game.state == .completed && store.snapshots[game.id]?.phase == .finished
     }
 
-    /// Données des fonctionnalités de la game affichée, tant que l'écran l'affiche (tâche annulée en le quittant) : le fil
-    /// (disque, sinon relecture du flux à pas de 60 s) et les détails par joueur (toutes les 60 s tant qu'ils ne sont pas
-    /// définitifs, une fois ensuite), en parallèle ; puis, match terminé, les sorts d'invocateur (Leaguepedia, sous sa
-    /// règle stricte).
-    func runFeatures(store: AppStore) async {
+    /// Fil et courbe de la game affichée, tant que l'écran l'affiche (tâche annulée en le quittant) : le disque, sinon la
+    /// relecture du flux à pas de 60 s. Sa propre tâche, de clé (game, en cours ?) : la fin de la relecture des détails ou
+    /// des sorts ne la relance pas (une relecture relancée en pleine requête risquait de ne rien lire, voir
+    /// `TimelineStore.load`).
+    func loadTimeline(store: AppStore) async {
         guard let game = featureGame(store: store) else { return }
-        let inProgress = game.state == .inProgress
-        let detailsFinal = detailsAreFinal(game, store: store)
-        // Les deux stores sont capturés ici, sur le fil principal : les tâches enfants n'ont qu'à les attendre.
-        let timelines = store.timelines
-        let gameDetails = store.gameDetails
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { await timelines.load(gameId: game.id, inProgress: inProgress) }
-            group.addTask { await gameDetails.follow(gameId: game.id, finished: detailsFinal) }
-        }
-        guard !Task.isCancelled, !inProgress else { return }
-        await lookUpSpells(store: store)
+        await store.timelines.load(gameId: game.id, inProgress: game.state == .inProgress)
+    }
+
+    /// Détails par joueur de la game affichée, tant que l'écran l'affiche : toutes les 60 s tant qu'ils ne sont pas
+    /// définitifs, une fois ensuite.
+    func followDetails(store: AppStore) async {
+        guard let game = featureGame(store: store) else { return }
+        await store.gameDetails.follow(gameId: game.id, finished: detailsAreFinal(game, store: store))
     }
 
     /// Version Data Dragon de la game affichée (patch lu dans son flux) et catalogues (objets, runes, sorts d'invocateur).

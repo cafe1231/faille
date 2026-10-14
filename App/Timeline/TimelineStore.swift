@@ -28,6 +28,11 @@ final class TimelineStore {
     private let client: LoLClient?
     private let cache: DiskCache?
     @ObservationIgnored private var records: [String: ReplayRecord] = [:]
+    /// Numéro du dernier appel de `load` pour chaque game. L'écran annule la relecture quand sa clé change et en lance une
+    /// autre aussitôt, sans attendre que la première soit sortie : la requête annulée ne rend la main qu'après coup (le
+    /// rappel d'`URLSession` passe par sa file). L'appel le plus récent reprend la game ; l'ancien, au retour de sa requête,
+    /// voit que son numéro n'est plus le bon et sort sans rien publier.
+    @ObservationIgnored private var generations: [String: Int] = [:]
 
     /// - Parameters:
     ///   - transport: réseau ; nil (aperçus) : aucune requête.
@@ -48,9 +53,12 @@ final class TimelineStore {
     // MARK: Lectures pour les vues
 
     /// Toutes les frames connues de la game (relecture puis direct) ; `GameTimeline` et `GoldSeries` les remettent dans
-    /// l'ordre chronologique.
+    /// l'ordre chronologique. Tant que la game est relue, les frames du direct restent à part : la plus récente serait
+    /// comparée à un pas relu bien plus ancien (un gros paquet d'événements en tête, une courbe en ligne droite) ; elles
+    /// rejoignent la relecture quand elle est finie.
     func snapshots(gameId: String) -> [GameSnapshot] {
-        (replayFrames[gameId] ?? []) + (liveFrames[gameId] ?? [])
+        let replay = replayFrames[gameId] ?? []
+        return replaying.contains(gameId) ? replay : replay + (liveFrames[gameId] ?? [])
     }
 
     /// Fil de la game, dans l'ordre chronologique (l'écran l'affiche du plus récent au plus ancien) ; vide tant que la
@@ -74,18 +82,23 @@ final class TimelineStore {
     /// `finished` et à la sortie (une relecture interrompue reprend où elle s'était arrêtée). Game terminée : jusqu'à la
     /// frame `finished`. Game en cours : jusqu'à `LiveStatsTime.startingTime(now:)` (le flux refuse une fenêtre en avance
     /// sur la diffusion), le direct prend le relais (`append`). Une erreur réseau arrête la relecture sans rien perdre ;
-    /// un 404 (stats désactivées) la clôt.
+    /// un 404 (stats désactivées) la clôt. Un appel plus récent pour la même game reprend la main : celui-ci s'arrête, sans
+    /// rien publier, dès qu'il le constate (après chaque attente), et ne lève la marque « en cours » que si elle est encore
+    /// la sienne.
     func load(gameId: String, inProgress: Bool, now: Date = Date()) async {
-        guard !unavailable.contains(gameId), !replaying.contains(gameId) else { return }
+        guard !unavailable.contains(gameId) else { return }
         if records[gameId] == nil, let saved = cache?.load(ReplayRecord.self, from: Self.path(gameId)) {
             publish(saved, gameId: gameId)
         }
         guard let client, records[gameId]?.complete != true else { return }
+        let mine = (generations[gameId] ?? 0) + 1
+        generations[gameId] = mine
         replaying.insert(gameId)
+        func isCurrent() -> Bool { generations[gameId] == mine }
         // Pas lus depuis la dernière écriture sur le disque : écrits à la sortie, quelle qu'elle soit.
         var unsaved = 0
         defer {
-            replaying.remove(gameId)
+            if isCurrent() { replaying.remove(gameId) }
             if unsaved > 0, let record = records[gameId] { persist(record, gameId: gameId) }
         }
         do {
@@ -94,7 +107,7 @@ final class TimelineStore {
                 record = known
             } else {
                 let opening = try await client.window(gameId: gameId, startingTime: nil)
-                guard let first = opening.firstFrameTime else { return }
+                guard isCurrent(), let first = opening.firstFrameTime else { return }
                 record = ReplayRecord(firstFrame: first, frames: opening.snapshots().prefix(1).map(CachedFrame.init),
                                       lastStep: nil, complete: false)
                 publish(record, gameId: gameId)
@@ -103,14 +116,17 @@ final class TimelineStore {
             let until = inProgress ? LiveStatsTime.startingTime(now: now) : nil
             for step in ReplaySchedule.steps(firstFrame: record.firstFrame, after: record.lastStep, until: until) {
                 try await Task.sleep(for: ReplaySchedule.pause)
+                guard isCurrent() else { return }
+                var window: LiveWindow?
                 do {
-                    let window = try await client.window(gameId: gameId, startingTime: step)
-                    if let last = window.latestSnapshot() {
-                        record.frames.append(CachedFrame(last))
-                        record.complete = last.phase == .finished
-                    }
+                    window = try await client.window(gameId: gameId, startingTime: step)
                 } catch LoLAPIError.noData {
                     // Fenêtre vide (début de game) : on passe au pas suivant.
+                }
+                guard isCurrent() else { return }
+                if let last = window?.latestSnapshot() {
+                    record.frames.append(CachedFrame(last))
+                    record.complete = last.phase == .finished
                 }
                 record.lastStep = step
                 publish(record, gameId: gameId)
