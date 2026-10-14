@@ -38,11 +38,21 @@ extension MatchDetailModel {
         await store.gameDetails.follow(gameId: game.id, finished: detailsAreFinal(game, store: store))
     }
 
-    /// Version Data Dragon de la game affichée (patch lu dans son flux) et catalogues (objets, runes, sorts d'invocateur).
-    func loadDataDragon(store: AppStore) async {
-        guard let game = featureGame(store: store), let patch = store.patches[game.id],
-              let version = await store.dataDragon.version(forPatch: patch) else { return }
-        await store.dataDragon.loadCatalogs(version: version)
+    /// Version Data Dragon de la game affichée (patch lu dans son flux) et catalogues (objets, runes, sorts d'invocateur),
+    /// tant que l'écran l'affiche. Si la version ou un catalogue manque (réseau en panne à l'ouverture), un nouvel essai
+    /// toutes les `retry` (une minute : `DataDragonStore.versionsRetry`), jamais plus vite, jusqu'à les avoir tous : sans
+    /// cela, les initiales et « Objet 3071 » resteraient jusqu'à la réouverture du Détail. La garde (match non masqué, patch
+    /// connu) est revérifiée à chaque tour.
+    /// - Parameter retry: délai entre deux essais (les tests le raccourcissent).
+    func loadDataDragon(store: AppStore, retry: Duration = .seconds(DataDragonStore.versionsRetry)) async {
+        while !Task.isCancelled {
+            guard let game = featureGame(store: store), let patch = store.patches[game.id] else { return }
+            if let version = await store.dataDragon.version(forPatch: patch) {
+                await store.dataDragon.loadCatalogs(version: version)
+                if store.dataDragon.hasCatalogs(version: version) { return }
+            }
+            try? await Task.sleep(for: retry)
+        }
     }
 
     /// Sorts d'invocateur d'un match terminé et non masqué : toutes ses games jouées, une seule requête Leaguepedia. La fin

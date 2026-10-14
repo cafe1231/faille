@@ -1,5 +1,6 @@
 import Foundation
 import LoLKit
+import os
 import Testing
 @testable import Faille
 
@@ -38,15 +39,18 @@ struct FeaturesIntegrationTests {
     """
 
     /// Store branché sur un faux réseau (détails du match, fenêtre de g2) qui garde toutes les requêtes ; détails chargés.
-    private static func makeStore(game2: String, spoilerFree: Bool,
-                                  stats: String = "enabled") async -> (AppStore, ScriptedTransport) {
+    /// `extra` et `failure` ajoutent d'autres réponses (Data Dragon, par exemple) et des erreurs réseau.
+    private static func makeStore(game2: String, spoilerFree: Bool, stats: String = "enabled",
+                                  extra: @escaping @Sendable (URL) -> HTTPResponse? = { _ in nil },
+                                  failure: @escaping @Sendable (URL) -> (any Error)? = { _ in nil })
+        async -> (AppStore, ScriptedTransport) {
         let details = detailsJSON(game2: game2, stats: stats)
         let window = windowJSON
         let transport = ScriptedTransport(extra: { url in
             if url.path.hasSuffix("/getEventDetails") { return HTTPResponse(status: 200, body: Data(details.utf8)) }
             if url.path.hasSuffix("/window/g2") { return HTTPResponse(status: 200, body: Data(window.utf8)) }
-            return nil
-        })
+            return extra(url)
+        }, failure: failure)
         let files = TemporaryFiles.store()
         files.save(FollowList(teams: [FollowedTeam(id: "kc", code: "KC", name: "Karmine Corp", spoilerFree: spoilerFree)]),
                    to: .follows)
@@ -108,6 +112,65 @@ struct FeaturesIntegrationTests {
         let (live, _) = await Self.makeStore(game2: "inProgress", spoilerFree: false)
         let liveGame = try #require(MatchDetailModel(matchId: Self.matchId).featureGame(store: live))
         #expect(!model.detailsAreFinal(liveGame, store: live))
+    }
+
+    /// Attend (10 s au plus) qu'une condition soit vraie.
+    private static func wait(_ what: String, until condition: () async -> Bool) async throws {
+        let deadline = ContinuousClock.now + .seconds(10)
+        while !(await condition()) {
+            try #require(ContinuousClock.now < deadline, "\(what) : trop lent")
+            try await Task.sleep(for: .milliseconds(10))
+        }
+    }
+
+    /// Data Dragon en panne à l'ouverture : tant que l'écran est là, la version et les catalogues manquants sont redemandés
+    /// (ici toutes les 30 ms, en vrai une minute), au lieu de rester « indisponibles » jusqu'à la réouverture ; ceux qui sont
+    /// déjà là ne le sont pas.
+    @Test func missingCatalogsAreAskedAgainWhileTheScreenIsOpen() async throws {
+        let itemsDown = OSAllocatedUnfairLock(initialState: true)
+        let (store, transport) = await Self.makeStore(game2: "completed", spoilerFree: false, extra: { url in
+            let path = url.path
+            let body: String
+            if path.hasSuffix("/api/versions.json") {
+                body = #"["16.19.1","16.18.1"]"#
+            } else if path.hasSuffix("/data/fr_FR/item.json") {
+                body = #"{"type":"item","version":"16.19.1","data":{"1054":{"name":"Bouclier de Doran","image":{"full":"1054.png"},"tags":["Health"]}}}"#
+            } else if path.hasSuffix("/data/fr_FR/runesReforged.json") {
+                body = #"[{"id":8400,"key":"Resolve","icon":"perk-images/Styles/7204_Resolve.png","name":"Volonté","slots":[{"runes":[{"id":8437,"key":"GraspOfTheUndying","icon":"perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png","name":"Poigne de l'immortel"}]}]}]"#
+            } else if path.hasSuffix("/data/fr_FR/summoner.json") {
+                body = #"{"type":"summoner","version":"16.19.1","data":{"SummonerFlash":{"id":"SummonerFlash","name":"Saut éclair","image":{"full":"SummonerFlash.png"}}}}"#
+            } else {
+                return nil
+            }
+            return HTTPResponse(status: 200, body: Data(body.utf8))
+        }, failure: { url in
+            if itemsDown.withLock({ $0 }), url.path.hasSuffix("/data/fr_FR/item.json") {
+                return URLError(.notConnectedToInternet)
+            }
+            return nil
+        })
+        await store.loadWindow(gameId: "g2", inProgress: false) // le patch du flux : 16.19.300.1 → Data Dragon 16.19.1
+        let model = MatchDetailModel(matchId: Self.matchId)
+        let load = Task { await model.loadDataDragon(store: store, retry: .milliseconds(30)) }
+        defer { load.cancel() }
+
+        // Les objets manquent : la version et les deux autres catalogues sont là, et les objets sont redemandés.
+        try await Self.wait("objets redemandés") {
+            await transport.requests.filter { $0.path.hasSuffix("/data/fr_FR/item.json") }.count >= 3
+        }
+        #expect(store.dataDragon.knownVersion(forPatch: "16.19.300.1") == "16.19.1")
+        #expect(store.dataDragon.items["16.19.1"] == nil)
+        #expect(store.dataDragon.runes["16.19.1"] != nil)
+        #expect(store.dataDragon.summoners["16.19.1"] != nil)
+
+        // Le réseau revient : les objets arrivent, la boucle s'arrête, rien d'autre n'est redemandé.
+        itemsDown.withLock { $0 = false }
+        try await Self.wait("objets reçus") { store.dataDragon.items["16.19.1"] != nil }
+        await load.value
+        let requests = await transport.requests
+        #expect(requests.filter { $0.path.hasSuffix("/data/fr_FR/runesReforged.json") }.count == 1)
+        #expect(requests.filter { $0.path.hasSuffix("/data/fr_FR/summoner.json") }.count == 1)
+        #expect(requests.filter { $0.path.hasSuffix("/api/versions.json") }.count == 1)
     }
 
     /// Sorts d'invocateur : jamais pendant que le match se joue (le wiki n'aurait que des games partielles).

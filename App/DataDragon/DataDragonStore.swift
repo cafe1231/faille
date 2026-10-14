@@ -123,6 +123,11 @@ final class DataDragonStore {
         }
     }
 
+    /// Les trois catalogues de la version (objets, runes, sorts d'invocateur) sont chargés.
+    func hasCatalogs(version: String) -> Bool {
+        items[version] != nil && runes[version] != nil && summoners[version] != nil
+    }
+
     /// Sorts (Q, W, E, R) et passif d'un champion : lus à l'ouverture de sa fiche seulement.
     func champion(version: String, championId: String) async -> ChampionSpells? {
         let key = "\(version)/\(championId)"
