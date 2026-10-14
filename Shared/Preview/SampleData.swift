@@ -26,8 +26,10 @@ struct PreviewData {
             catalog: SampleData.catalog,
             schedule: SampleData.schedule,
             live: SampleData.live,
-            details: Dictionary(uniqueKeysWithValues: SampleData.live.map { ($0.id, EventDetails(event: $0)) }),
-            snapshots: [SampleData.kcSnapshot.gameId: SampleData.kcSnapshot],
+            details: Dictionary(uniqueKeysWithValues: SampleData.live.map { ($0.id, EventDetails(event: $0)) })
+                .merging([SampleData.kcG2MatchId: SampleData.kcG2Details]) { live, _ in live },
+            snapshots: [SampleData.kcSnapshot.gameId: SampleData.kcSnapshot,
+                        SampleData.kcG2Final.gameId: SampleData.kcG2Final],
             firstFrames: [SampleData.kcSnapshot.gameId: SampleData.kcGameStart],
             lastUpdate: SampleData.date("2026-10-15T15:05:00Z"),
             activityMatchIds: [SampleData.kcMatchId]
@@ -53,6 +55,8 @@ enum SampleData {
     static let kcMatchId = "m-kc-c9"
     static let t1MatchId = "m-t1-fly"
     static let noStatsMatchId = "m-bro-lgd"
+    /// KC 1 – 3 G2, match terminé du calendrier : Détail « terminé » des aperçus (rediffusions, sorts d'invocateur).
+    static let kcG2MatchId = "m-kc-g2"
 
     static func date(_ iso: String) -> Date {
         LoLDate.parse(iso) ?? Date(timeIntervalSince1970: 0)
@@ -97,7 +101,12 @@ enum SampleData {
         match: MatchInfo(id: kcMatchId, teams: [side("kc", wins: 1), side("c9", wins: 0)],
                          strategy: Strategy(type: "bestOf", count: 5),
                          games: games(count: 5, current: 2, blue: "kc", red: "c9")),
-        streams: [StreamInfo(statsStatus: "enabled")]
+        // Comme `getLive` : des streams en plusieurs langues (« Regarder » choisit le français, spec fonctionnalités §1).
+        streams: [
+            StreamInfo(statsStatus: "enabled", provider: "twitch", parameter: "riotgames", locale: "en-US"),
+            StreamInfo(statsStatus: "enabled", provider: "twitch", parameter: "otplol_", locale: "fr-FR"),
+            StreamInfo(statsStatus: "enabled", provider: "youtube", parameter: "lolesports", locale: "en-US"),
+        ]
     )
 
     /// T1 – FLY en cours : T1 est en anti-spoiler, le match est masqué partout.
@@ -173,6 +182,52 @@ enum SampleData {
         ]
     )
 
+    /// `getEventDetails` de KC 1 – 3 G2 : quatre games jouées, chacune avec sa rediffusion YouTube (spec
+    /// fonctionnalités §1), la cinquième inutile.
+    static var kcG2Details: EventDetails {
+        EventDetails(
+            id: kcG2MatchId, league: worlds,
+            match: EventDetails.Match(
+                strategy: Strategy(type: "bestOf", count: 5),
+                teams: [side("kc", wins: 1, outcome: "loss"), side("g2", wins: 3, outcome: "win")],
+                games: (1...5).map { number in
+                    GameRef(number: number, id: "g\(number)-kc-g2", state: number <= 4 ? .completed : .unneeded,
+                            teams: [GameRef.Side(id: "kc", side: "blue"), GameRef.Side(id: "g2", side: "red")],
+                            vods: number <= 4
+                                ? [Vod(provider: "youtube", parameter: "kcg2-game\(number)", locale: "en-US",
+                                       startMillis: number == 1 ? 0 : 95_000)]
+                                : nil)
+                }
+            ),
+            streams: nil
+        )
+    }
+
+    /// Game 4 de KC – G2, gagnée par G2 en 34 min : sa dernière frame (`finished`), celle sur laquelle finit le fil
+    /// d'exemple (`TimelineSamples.Script.redWins`).
+    static let kcG2GameStart = date("2026-10-05T19:12:00Z")
+    static let kcG2Final = GameSnapshot(
+        gameId: "g4-kc-g2", phase: .finished, timestamp: date("2026-10-05T19:46:09Z"),
+        blueTeamId: "kc", redTeamId: "g2",
+        blue: TeamStats(kills: 5, gold: 54_400, towers: 2, inhibitors: 0, barons: 0, dragons: ["ocean"]),
+        red: TeamStats(kills: 14, gold: 69_600, towers: 11, inhibitors: 3, barons: 2,
+                       dragons: ["hextech", "hextech", "infernal", "hextech"]),
+        bluePlayers: [
+            player("top", "Gnar", "KC Top", 1, 3, 1, 268, level: 16),
+            player("jungle", "Sejuani", "KC Jungle", 1, 4, 2, 182, level: 14),
+            player("mid", "Orianna", "KC Mid", 2, 2, 1, 301, level: 16),
+            player("bottom", "Varus", "KC Bot", 1, 3, 2, 322, level: 15),
+            player("support", "Braum", "KC Support", 0, 2, 4, 41, level: 13),
+        ],
+        redPlayers: [
+            player("top", "Rumble", "G2 Top", 2, 1, 6, 281, level: 17),
+            player("jungle", "LeeSin", "G2 Jungle", 3, 1, 8, 205, level: 16),
+            player("mid", "Ahri", "G2 Mid", 5, 1, 6, 320, level: 18),
+            player("bottom", "Kalista", "G2 Bot", 4, 0, 7, 345, level: 17),
+            player("support", "Rakan", "G2 Support", 0, 2, 12, 38, level: 15),
+        ]
+    )
+
     private static func team(_ id: String, _ code: String, _ name: String, _ home: String?) -> Team {
         Team(id: id, slug: id, name: name, code: code, image: nil, status: "active",
              homeLeague: home.map { Team.HomeLeague(name: $0) })
@@ -211,8 +266,8 @@ enum SampleData {
     }
 
     private static func player(_ role: String, _ champion: String, _ name: String, _ kills: Int, _ deaths: Int,
-                               _ assists: Int, _ cs: Int) -> PlayerLine {
-        PlayerLine(role: role, champion: champion, name: name, level: 11, kills: kills, deaths: deaths,
+                               _ assists: Int, _ cs: Int, level: Int = 11) -> PlayerLine {
+        PlayerLine(role: role, champion: champion, name: name, level: level, kills: kills, deaths: deaths,
                    assists: assists, creepScore: cs, gold: 6_000 + cs * 10)
     }
 }

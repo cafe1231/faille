@@ -1,0 +1,63 @@
+import Foundation
+import LoLKit
+
+// MARK: - Fonctionnalités du Détail (fonctionnalités, Task 7)
+
+extension MatchDetailModel {
+    /// Game dont l'écran montre les fonctionnalités (draft et builds, fil, courbe, sorts d'invocateur) : la game affichée,
+    /// en cours ou jouée, d'un match NON masqué dont Riot fournit les stats. nil sinon : aucune requête, aucun affichage
+    /// (spec fonctionnalités, « Anti-spoiler d'abord » ; spec §8).
+    func featureGame(store: AppStore) -> GameRef? {
+        guard let details = store.details[matchId], let game = selectedGame(in: details),
+              !store.isMasked(details.match.teams, matchId: matchId),
+              !details.statsDisabled, store.event(id: matchId)?.statsDisabled != true,
+              !store.statsUnavailable.contains(game.id),
+              game.state == .inProgress || game.state == .completed else { return nil }
+        return game
+    }
+
+    /// Les détails par joueur de cette game sont définitifs : elle est jouée ET sa frame `finished` a été lue (avant, ils
+    /// peuvent dater d'un peu avant la fin : la boucle de 60 s continue).
+    func detailsAreFinal(_ game: GameRef, store: AppStore) -> Bool {
+        game.state == .completed && store.snapshots[game.id]?.phase == .finished
+    }
+
+    /// Données des fonctionnalités de la game affichée, tant que l'écran l'affiche (tâche annulée en le quittant) : le fil
+    /// (disque, sinon relecture du flux à pas de 60 s) et les détails par joueur (toutes les 60 s tant qu'ils ne sont pas
+    /// définitifs, une fois ensuite), en parallèle ; puis, match terminé, les sorts d'invocateur (Leaguepedia, sous sa
+    /// règle stricte).
+    func runFeatures(store: AppStore) async {
+        guard let game = featureGame(store: store) else { return }
+        let inProgress = game.state == .inProgress
+        let detailsFinal = detailsAreFinal(game, store: store)
+        // Les deux stores sont capturés ici, sur le fil principal : les tâches enfants n'ont qu'à les attendre.
+        let timelines = store.timelines
+        let gameDetails = store.gameDetails
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await timelines.load(gameId: game.id, inProgress: inProgress) }
+            group.addTask { await gameDetails.follow(gameId: game.id, finished: detailsFinal) }
+        }
+        guard !Task.isCancelled, !inProgress else { return }
+        await lookUpSpells(store: store)
+    }
+
+    /// Version Data Dragon de la game affichée (patch lu dans son flux) et catalogues (objets, runes, sorts d'invocateur).
+    func loadDataDragon(store: AppStore) async {
+        guard let game = featureGame(store: store), let patch = store.patches[game.id],
+              let version = await store.dataDragon.version(forPatch: patch) else { return }
+        await store.dataDragon.loadCatalogs(version: version)
+    }
+
+    /// Sorts d'invocateur d'un match terminé et non masqué : toutes ses games jouées, une seule requête Leaguepedia. La fin
+    /// du match est la frame `finished` de sa dernière game si l'écran l'a déjà lue (sinon `SpellSchedule` l'estime).
+    func lookUpSpells(store: AppStore) async {
+        guard let details = store.details[matchId], !store.isMasked(details.match.teams, matchId: matchId) else { return }
+        let games = details.match.games
+        let finished = !games.contains { $0.state == .inProgress }
+            && (store.event(id: matchId)?.state == .completed || !games.contains { $0.state == .unstarted })
+        let played = games.filter { $0.state == .completed }
+        guard finished, let last = played.last else { return }
+        let end = store.snapshots[last.id].flatMap { $0.phase == .finished ? $0.timestamp : nil }
+        await store.summonerSpells.lookUp(matchId: matchId, gameIds: played.map(\.id), matchEnd: end)
+    }
+}

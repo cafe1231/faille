@@ -5,6 +5,7 @@ import SwiftUI
 /// Chaque match est un lien vers son Détail ; l'anti-spoiler (§8) vient de LoLKit.
 /// Finitions : lignes qui s'enfoncent au toucher, chiffres qui défilent, halo « en direct », lueur d'équipe pour un
 /// match en direct non masqué, révélation qui sort d'un flou avec un retour haptique.
+/// Fonctionnalités : pastille « Regarder » sous le match en direct non masqué (spec fonctionnalités §1).
 struct TeamCardView: View {
     @Environment(AppStore.self) private var store
     let card: TeamCard
@@ -123,6 +124,11 @@ struct TeamCardView: View {
             .zoomSource(route.sourceID, in: zoom)
         }
         .buttonStyle(.pressable)
+        // « Regarder » (spec fonctionnalités §1) : hors du lien (un bouton dans un lien ne recevrait pas le toucher), et
+        // jamais pour un match masqué (l'image du stream montre le score).
+        if let watch = WatchLinks.live(event.streams, inProgress: event.state == .inProgress, masked: state.spoilerFree) {
+            WatchButton(live: watch, compact: true, onHaptic: { haptics.play($0) })
+        }
         if state.spoilerFree {
             RevealButton { reveal(event.id) }
         }

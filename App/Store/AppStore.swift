@@ -40,6 +40,18 @@ final class AppStore {
     /// Réveils d'arrière-plan reçus et demandés (bloc « Diagnostic Live Activity » de À propos) ; enregistré, car iOS
     /// relance l'appli pour un réveil et la mémoire du processus ne survit pas jusqu'à la prochaine ouverture.
     private(set) var backgroundDiagnostic = BackgroundDiagnostic()
+    /// Fonctionnalités (spec fonctionnalités §3-§5) : images et données Data Dragon, détails par joueur, fil et courbe de
+    /// gold, sorts d'invocateur — chacun avec son cache disque sous `cache/`, tous inertes dans les aperçus. Jamais
+    /// sollicités pour un match masqué (`MatchDetailModel.featureGame`).
+    let dataDragon: DataDragonStore
+    let gameDetails: GameDetailsStore
+    let timelines: TimelineStore
+    let summonerSpells: SummonerSpellsStore
+    /// Notifications de début de match (spec fonctionnalités §2) : `UNUserNotificationCenter` dans l'appli, inerte dans
+    /// les aperçus et les tests hébergés.
+    let reminderCenter: any ReminderCenter
+    /// Patch du flux de chaque game lue (`gameMetadata.patchVersion`) : il donne la version Data Dragon de ses images.
+    private(set) var patches: [String: String] = [:]
 
     // MARK: Interne
 
@@ -68,10 +80,12 @@ final class AppStore {
 
     private static let log = Logger(subsystem: "Faille", category: "données")
 
-    /// - Parameter liveActivities: contrôleur des Live Activities ; nil (l'appli) : celui du dossier `files`. Les tests
-    ///   en passent un (aperçu) pour simuler des Live Activities à l'écran.
+    /// - Parameters:
+    ///   - liveActivities: contrôleur des Live Activities ; nil (l'appli) : celui du dossier `files`. Les tests en passent
+    ///     un (aperçu) pour simuler des Live Activities à l'écran.
+    ///   - reminderCenter: centre des notifications ; nil : celui d'iOS (inerte dans les tests hébergés).
     init(transport: any HTTPTransport = URLSessionTransport(), files: FileStore,
-         liveActivities: LiveActivityController? = nil) {
+         liveActivities: LiveActivityController? = nil, reminderCenter: (any ReminderCenter)? = nil) {
         self.transport = transport
         client = LoLClient(transport: transport)
         self.files = files
@@ -80,6 +94,19 @@ final class AppStore {
         // Tests hébergés : aucune Live Activity réelle (les choix restent enregistrés et testables).
         self.liveActivities = liveActivities
             ?? LiveActivityController(files: files, usesActivityKit: !RunEnvironment.isTesting)
+        // Caches des fonctionnalités : `cache/` à côté des fichiers de Faille (exclu de la sauvegarde iCloud).
+        let cache = DiskCache(root: files.directory.appendingPathComponent("cache", isDirectory: true))
+        dataDragon = DataDragonStore(transport: transport, cache: cache)
+        gameDetails = GameDetailsStore(transport: transport, cache: cache)
+        timelines = TimelineStore(transport: transport, cache: cache)
+        summonerSpells = SummonerSpellsStore(transport: transport, cache: cache)
+        if let reminderCenter {
+            self.reminderCenter = reminderCenter
+        } else if RunEnvironment.isTesting {
+            self.reminderCenter = InertReminderCenter()
+        } else {
+            self.reminderCenter = SystemReminderCenter()
+        }
         loadFromDisk(files)
     }
 
@@ -92,6 +119,12 @@ final class AppStore {
         isPreview = true
         reloadsWidgets = false
         liveActivities = LiveActivityController(preview: data.activityMatchIds)
+        // Fonctionnalités figées (`FeatureSamples`) : aucune requête, aucun fichier, aucune notification.
+        dataDragon = DataDragonStore.preview()
+        gameDetails = GameDetailsStore(preview: FeatureSamples.details)
+        timelines = TimelineStore(preview: FeatureSamples.timelines)
+        summonerSpells = SummonerSpellsStore(preview: FeatureSamples.spells)
+        reminderCenter = InertReminderCenter()
         follows = data.follows
         settings = data.settings
         leagues = data.leagues
@@ -304,6 +337,21 @@ final class AppStore {
         settings.liveActivityMode = mode
         saveSettings()
         runWithScene { await self.syncLiveActivities(canStart: true) }
+    }
+
+    /// Réglage « Notifications de début de match » (spec fonctionnalités §2) : enregistré tout de suite ; la
+    /// reprogrammation suit d'elle-même (`reminderSignature` change, la scène relance `syncReminders`).
+    func setMatchReminders(enabled: Bool) {
+        syncSettingsBeforeChange()
+        settings.matchRemindersEnabled = enabled
+        saveSettings()
+    }
+
+    /// Délai des notifications de début de match : 5, 15 ou 30 min (`MatchReminders.leadOptions`).
+    func setMatchReminderLead(_ lead: TimeInterval) {
+        syncSettingsBeforeChange()
+        settings.matchReminderLead = lead
+        saveSettings()
     }
 
     // MARK: Rafraîchissements
@@ -539,6 +587,9 @@ final class AppStore {
             if let snapshot = window.latestSnapshot() {
                 snapshots[gameId] = snapshot
                 snapshotDates[gameId] = fetchedAt
+            }
+            if let patch = window.gameMetadata.patchVersion {
+                patches[gameId] = patch
             }
         } catch LoLAPIError.statsDisabled {
             statsUnavailable.insert(gameId)
