@@ -39,7 +39,7 @@ struct SettingsView: View {
                         .foregroundStyle(Palette.text)
                         .glassCard(radius: Radius.inner, padding: 14)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                 }
                 .padding(16)
             }

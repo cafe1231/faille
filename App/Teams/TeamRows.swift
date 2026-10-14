@@ -39,7 +39,7 @@ struct FollowedTeamRow: View {
                 .accessibilityLabel("Ne plus suivre")
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .padding(.vertical, 2)
     }
 
@@ -77,7 +77,7 @@ struct CatalogTeamRow: View {
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressable)
             .accessibilityLabel(followed ? "Ne plus suivre" : "Suivre")
         }
         .padding(.vertical, 2)

@@ -6,10 +6,14 @@ struct TeamColorSheet: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     let team: FollowedTeam
+    /// Couleur validée ou remise en automatique : l'onglet Équipes joue le retour « sélection » (spec finitions §3) ; la
+    /// feuille se ferme aussitôt, le retour est donc joué par l'écran qui reste.
+    let onPicked: () -> Void
     @State private var color: Color
 
-    init(team: FollowedTeam) {
+    init(team: FollowedTeam, onPicked: @escaping () -> Void = {}) {
         self.team = team
+        self.onPicked = onPicked
         _color = State(initialValue: Palette.team(team.colorHex))
     }
 
@@ -39,6 +43,7 @@ struct TeamColorSheet: View {
                     .glassCard(radius: Radius.inner, padding: 14)
                 Button("Couleur automatique (tirée du logo)") {
                     store.setColorOverride(nil, id: team.id)
+                    onPicked()
                     dismiss()
                 }
                 .font(Typo.bodyMedium)
@@ -58,6 +63,7 @@ struct TeamColorSheet: View {
                         // Aucun changement : rien n'est écrit (une couleur automatique ne devient pas un choix manuel).
                         if let hex = Self.hexToSave(team: team, picked: color) {
                             store.setColorOverride(hex, id: team.id)
+                            onPicked()
                         }
                         dismiss()
                     }

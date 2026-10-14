@@ -2,12 +2,17 @@ import LoLKit
 import SwiftUI
 
 /// Onglet Équipes (spec §5.2) : recherche, mes équipes (œil, étoile, couleur), toutes les ligues en pilules, réglages.
+/// Finitions : boutons qui s'enfoncent, retours haptiques (suivre, ne plus suivre, œil, couleur), lignes de « Mes
+/// équipes » qui arrivent et partent en douceur, squelettes pendant le chargement du catalogue, bandeau qui glisse.
 struct TeamsView: View {
     @Environment(AppStore.self) private var store
+    @ReduceMotion var reduceMotion
     @State private var query = ""
     @State private var selectedLeagueId: String?
     @State private var showSettings = false
     @State private var colorTeam: FollowedTeam?
+    /// Retours haptiques de l'onglet : l'écran reste quand une ligne disparaît ou qu'une feuille se ferme.
+    @State private var haptics = HapticTrigger()
 
     var body: some View {
         ScrollView {
@@ -18,12 +23,13 @@ struct TeamsView: View {
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                     .foregroundStyle(Palette.text)
                     .accessibilityLabel("Réglages")
                 }
                 if let banner = store.bannerText {
                     ErrorBanner(text: banner)
+                        .transition(Motion.bannerTransition(reduceMotion: reduceMotion))
                 }
                 searchField
                 if query.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -33,19 +39,23 @@ struct TeamsView: View {
                     searchResults
                 }
             }
+            // Bandeau (spec finitions §11) et lignes de « Mes équipes » (§7) : seules ces deux valeurs animent l'écran.
+            .animation(Motion.animation(.snappy, reduceMotion: reduceMotion), value: store.isFailing)
+            .animation(Motion.animation(.list, reduceMotion: reduceMotion), value: store.follows.teams.map(\.id))
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
             .frame(maxWidth: 640)
             .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.immediately)
+        .haptics(haptics)
         .abyssBackground()
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showSettings) {
             SettingsView().environment(store)
         }
         .sheet(item: $colorTeam) { team in
-            TeamColorSheet(team: team).environment(store)
+            TeamColorSheet(team: team, onPicked: { haptics.play(.colorPicked) }).environment(store)
         }
     }
 
@@ -66,7 +76,7 @@ struct TeamsView: View {
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
                 .foregroundStyle(Palette.secondary)
                 .accessibilityLabel("Effacer")
                 .padding(.trailing, -14)
@@ -88,12 +98,16 @@ struct TeamsView: View {
                     FollowedTeamRow(
                         team: team,
                         logoFile: store.logoFile(for: team.image),
-                        onToggleSpoiler: { store.setSpoilerFree(!team.spoilerFree, id: team.id) },
-                        onUnfollow: { store.unfollow(id: team.id) }
+                        onToggleSpoiler: { toggleSpoiler(team) },
+                        onUnfollow: { unfollow(team) }
                     )
+                    .transition(Motion.listTransition(reduceMotion: reduceMotion))
                     .contextMenu {
                         Button("Changer la couleur") { colorTeam = team }
-                        Button("Couleur automatique") { store.setColorOverride(nil, id: team.id) }
+                        Button("Couleur automatique") {
+                            haptics.play(.colorPicked)
+                            store.setColorOverride(nil, id: team.id)
+                        }
                     }
                 }
             }
@@ -122,8 +136,11 @@ struct TeamsView: View {
             .contentMargins(.horizontal, 16, for: .scrollContent)
             .padding(.horizontal, -16)
             teamList(store.teams(in: selected))
+        } else if store.isFailing {
+            NoteCard(icon: .refresh, text: "Ligues indisponibles pour l'instant.")
         } else {
-            NoteCard(icon: .refresh, text: store.isFailing ? "Ligues indisponibles pour l'instant." : "Chargement des ligues…")
+            // Chargement (spec finitions §10) : le gabarit des pilules et des lignes, à la place d'un texte d'attente.
+            LeagueLoadingSkeleton()
         }
     }
 
@@ -131,7 +148,11 @@ struct TeamsView: View {
         let results = store.search(query)
         SectionLabel(text: "Résultats")
         if results.isEmpty {
-            NoteCard(icon: .search, text: store.catalog.isEmpty ? "Chargement des équipes…" : "Aucune équipe ne correspond.")
+            if store.catalog.isEmpty && !store.isFailing {
+                TeamRowsSkeleton(count: 4)
+            } else {
+                NoteCard(icon: .search, text: store.catalog.isEmpty ? "Équipes indisponibles pour l'instant." : "Aucune équipe ne correspond.")
+            }
         } else {
             teamList(results)
         }
@@ -143,11 +164,31 @@ struct TeamsView: View {
             ForEach(teams) { team in
                 CatalogTeamRow(team: team, followed: store.follows.contains(id: team.id),
                                logoFile: store.logoFile(for: team.image)) {
-                    store.toggleFollow(team)
+                    toggleFollow(team)
                 }
             }
         }
         .glassCard(radius: Radius.inner, padding: 12)
+    }
+
+    /// Étoile du catalogue (spec finitions §3) : suivre (succès) ou ne plus suivre (impact léger).
+    private func toggleFollow(_ team: Team) {
+        haptics.play(store.follows.contains(id: team.id) ? .unfollow : .follow)
+        store.toggleFollow(team)
+    }
+
+    /// Étoile de « Mes équipes » : ne plus suivre (impact léger) ; la ligne part en fondu.
+    private func unfollow(_ team: FollowedTeam) {
+        haptics.play(.unfollow)
+        store.unfollow(id: team.id)
+    }
+
+    /// Œil (spec §8) : masquer ou afficher en simple fondu (spec finitions §8), retour « sélection ».
+    private func toggleSpoiler(_ team: FollowedTeam) {
+        haptics.play(.spoilerToggle)
+        withAnimation(Motion.fade) {
+            store.setSpoilerFree(!team.spoilerFree, id: team.id)
+        }
     }
 }
 
