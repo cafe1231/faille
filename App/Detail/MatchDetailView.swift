@@ -286,7 +286,9 @@ struct MatchDetailView: View {
     }
 
     /// Stats et joueurs de la game affichée. Le conteneur anime l'arrivée des panneaux (`Motion.reveal`) quand la première
-    /// frame de la game arrive : le squelette est remplacé en fondu, à la même hauteur, sans pousser le bouton « Épingler ».
+    /// frame de la game arrive : le squelette est remplacé en fondu, à la même hauteur pour la draft, les stats, la courbe
+    /// et les joueurs. Le fil, lui, peut grandir pendant sa relecture (de trois lignes de squelette à dix et « Tout le fil »,
+    /// environ 170 pt) : le bouton « Épingler » en dessous peut alors descendre ; sa position reste à juger par Dan.
     /// Ce conteneur n'existe que pour un match non masqué (branche `details`) : rien ne peut fuiter.
     @ViewBuilder private func gameStats(game: GameRef, teams: [MatchTeam]) -> some View {
         let ids = teams.compactMap(\.id)

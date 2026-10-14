@@ -117,8 +117,11 @@ struct TimelineSkeleton: View {
 }
 
 /// Squelette de la zone des stats d'une game, dans l'ordre de `MatchDetailView.gameStats` : la draft, le panneau d'équipe,
-/// la courbe de gold, la section « Joueurs » enrichie (`BuildPlayersSkeleton`, spec fonctionnalités §3) et le fil. Chaque
-/// bloc a la hauteur du vrai : quand ils arrivent, le bouton « Épingler » en dessous ne saute pas.
+/// la courbe de gold, la section « Joueurs » enrichie (`BuildPlayersSkeleton`, spec fonctionnalités §3) et le fil. La
+/// draft, le panneau d'équipe, la courbe et les joueurs ont la hauteur du vrai. Le fil, non : il grossit pendant la
+/// relecture d'une game en direct révélée ou non suivie (de trois lignes de squelette à dix et « Tout le fil », environ
+/// 170 pt) et le bouton « Épingler » en dessous peut descendre alors ; sa position est à juger par Dan après l'essai sur
+/// l'iPhone (le remonter, ou une hauteur minimale du fil).
 struct GameStatsSkeleton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {

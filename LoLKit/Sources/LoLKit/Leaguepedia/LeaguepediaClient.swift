@@ -11,7 +11,8 @@ public enum LeaguepediaError: Error, Equatable, Sendable {
 }
 
 /// Client de Leaguepedia (`lol.fandom.com`, API Cargo, sans clé) pour les sorts d'invocateur des games terminées, absents
-/// du flux de Riot (spec fonctionnalités §3). Une requête par game au plus : l'appli met la réponse en cache disque.
+/// du flux de Riot (spec fonctionnalités §3). Une requête par match au plus (toutes ses games) : l'appli met la réponse en
+/// cache disque.
 public struct LeaguepediaClient: Sendable {
     /// User-Agent identifiable demandé par le wiki.
     public static let userAgent = "Faille (usage personnel)"
