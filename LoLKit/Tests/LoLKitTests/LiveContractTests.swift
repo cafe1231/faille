@@ -115,6 +115,19 @@ import Testing
         #expect(state.stats?.first?.gold == 2500)
     }
 
+    @Test func aRealLiveFrameGivesEachTeamItsOwnStats() throws {
+        // Fenêtre réelle en direct (KT vs BFX, Demacia Cup, 14/10/2026) : l'API liste KT d'abord, le flux met BFX en bleu.
+        let live = try snapshot("window_live")
+        let details = makeDetails(wins: [0, 0], games: [(1, live.gameId, .inProgress)],
+                                  teams: [("99566404579461230", "KT"), ("100725845022060229", "BFX")])
+        let state = LiveMatchBuilder.state(details: details, snapshot: live, firstFrameTime: nil,
+                                           statsDisabled: false, follows: FollowList(), revealed: [], now: now)
+        #expect(state.phase == .inGame)
+        #expect(state.stats?.map(\.kills) == [8, 19])
+        #expect(state.stats?.map(\.gold) == [53218, 63414])
+        #expect(state.gameClockStoppedAt == nil)
+    }
+
     @Test func clockRunsEvenWhenStatsAreDisabled() throws {
         // Spec §6.3 : sans stats, la Live Activity affiche quand même score + chrono + message.
         let details = makeDetails(wins: [0, 0], games: [(1, game, .inProgress)])

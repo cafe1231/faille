@@ -71,6 +71,24 @@ import Testing
         #expect(snap.redPlayers.count == 5)
     }
 
+    /// Vraie fenêtre capturée en direct (Demacia Cup, KT vs BFX, game 1, 14/10/2026 09:40 UTC) : BFX joue côté bleu
+    /// alors que l'API liste KT en premier — les stats se rattachent par id d'équipe, jamais par position.
+    @Test func liveWindowFromTheFeed() throws {
+        let live = try window("window_live")
+        let snap = try #require(live.latestSnapshot())
+        #expect(snap.gameId == "117133830110912118")
+        #expect(snap.phase == .inGame)
+        #expect(snap.timestamp == date("2026-10-14T09:40:39.821Z"))
+        #expect(snap.blueTeamId == "100725845022060229")
+        #expect(snap.redTeamId == "99566404579461230")
+        #expect(snap.blue == TeamStats(kills: 19, gold: 63414, towers: 8, inhibitors: 2, barons: 1,
+                                       dragons: ["hextech", "cloud", "cloud"]))
+        #expect(snap.stats(for: "99566404579461230") == TeamStats(kills: 8, gold: 53218, towers: 3, inhibitors: 0,
+                                                                   barons: 0, dragons: ["mountain"]))
+        #expect(snap.bluePlayers.count == 5)
+        #expect(snap.redPlayers.count == 5)
+    }
+
     @Test func pausedStateIsRecognised() {
         #expect(GamePhase(apiValue: "paused") == .paused)
         #expect(GamePhase(apiValue: "in_game") == .inGame)
