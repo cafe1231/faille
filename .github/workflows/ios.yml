@@ -41,13 +41,17 @@ jobs:
           # Réglages du petit widget (AppIntent) : métadonnées extraites à la compilation.
           ls "$APPEX/Metadata.appintents" || echo "::warning::Metadata.appintents absent de l'extension : le choix d'équipe du petit widget risque de manquer"
 
-      - name: Vérifier l'Info.plist de l'appli (Live Activities, arrière-plan)
+      - name: Vérifier l'Info.plist de l'appli (Live Activities, arrière-plan, icône)
         # Sans ces clés, iOS refuse les Live Activities ou ne réveille jamais l'appli en arrière-plan (spec §6.4).
+        # Icône (finitions §1) : actool n'inscrit CFBundleIcons que si le catalogue contient le jeu AppIcon.
         run: |
-          PLIST=build/Build/Products/Release-iphoneos/Faille.app/Info.plist
+          APP=build/Build/Products/Release-iphoneos/Faille.app
+          PLIST="$APP/Info.plist"
           /usr/libexec/PlistBuddy -c "Print :NSSupportsLiveActivities" "$PLIST" | grep -qx true
           /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$PLIST" | grep -q fetch
           /usr/libexec/PlistBuddy -c "Print :BGTaskSchedulerPermittedIdentifiers" "$PLIST" | grep -q faille.live-refresh
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName" "$PLIST" | grep -qx AppIcon
+          ls "$APP"/AppIcon*.png || echo "::warning::aucun PNG AppIcon* à la racine de l'appli : l'icône n'est que dans Assets.car"
 
       - name: Signer en ad hoc avec les entitlements
         # AltServer re-signe ensuite avec l'Apple ID de Dan ; il lit les entitlements embarqués ici.
