@@ -1,0 +1,20 @@
+name: Strings
+
+# Chaque texte de l'appli a sa traduction anglaise (spec saison §3.8) ; aucun littéral nu passé à un composant.
+on:
+  push:
+    branches: [main, 'nuit2/**']
+    paths: ["App/**", "Shared/**", "Widgets/**", "Resources/Localizable.xcstrings", "scripts/strings-check.py",
+            ".github/workflows/strings.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  strings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Catalogue de chaînes (fr, en)
+        run: python3 scripts/strings-check.py

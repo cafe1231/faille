@@ -141,14 +141,14 @@ struct MatchDetailView: View {
                     ReplayButton(gameNumber: game.number, link: replay, onHaptic: { haptics.play($0) })
                 }
                 if details.statsDisabled || event?.statsDisabled == true {
-                    NoteCard(icon: .off, text: "Stats live non fournies par Riot pour ce match")
+                    NoteCard(icon: .off, text: String(localized: "Stats live non fournies par Riot pour ce match"))
                 } else if let game = model.selectedGame(in: details) {
                     gameStats(game: game, teams: ordered)
                 }
             }
             .transition(Motion.revealTransition(reduceMotion: reduceMotion))
         } else if model.attempted {
-            NoteCard(icon: .refresh, text: "Détails du match indisponibles pour l'instant")
+            NoteCard(icon: .refresh, text: String(localized: "Détails du match indisponibles pour l'instant"))
         } else {
             // Chargement (spec finitions §10) : le gabarit des pilules et des stats, à la place d'un `ProgressView`.
             DetailLoadingSkeleton()
@@ -199,11 +199,11 @@ struct MatchDetailView: View {
                         state: LiveMatchState?, masked: Bool, tint: Color?) -> some View {
         let league = details?.league.name ?? event?.league.name ?? ""
         let bestOf = details?.bestOf ?? event?.bestOf ?? 1
-        let meta = [league, event?.blockName ?? "", "Bo\(bestOf)"].filter { !$0.isEmpty }.joined(separator: " · ")
+        let meta = [league, event?.blockName ?? "", String(localized: "Bo\(bestOf)")].filter { !$0.isEmpty }.joined(separator: " · ")
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center) {
                 Text(meta)
-                    .font(Typo.secondary)
+                    .sora(.secondary)
                     .foregroundStyle(Palette.secondary)
                     .lineLimit(1)
                 Spacer(minLength: 8)
@@ -255,7 +255,7 @@ struct MatchDetailView: View {
         case .upcoming:
             Chip(muted: true) {
                 IconView(icon: .clock, size: 12)
-                Text(event.map { Format.matchDate($0.startTime) } ?? "À venir")
+                Text(event.map { Format.matchDate($0.startTime) } ?? String(localized: "À venir"))
             }
         }
     }
@@ -279,7 +279,7 @@ struct MatchDetailView: View {
                 ForEach(games, id: \.number) { game in
                     PillButton(selected: game.number == selected, selection: slide,
                                action: { selectGame(game.number, shown: selected) }) {
-                        Text(game.state == .inProgress ? "G\(game.number) · en direct" : "G\(game.number)")
+                        Text(game.state == .inProgress ? String(localized: "G\(game.number) · en direct") : String(localized: "G\(game.number)"))
                         if game.state == .inProgress {
                             LiveIndicator(size: 12)
                         }
@@ -302,9 +302,9 @@ struct MatchDetailView: View {
         let ids = teams.compactMap(\.id)
         VStack(alignment: .leading, spacing: 14) {
             if game.state == .unstarted {
-                NoteCard(icon: .clock, text: "La game \(game.number) n'a pas commencé")
+                NoteCard(icon: .clock, text: String(localized: "La game \(game.number) n'a pas commencé"))
             } else if store.statsUnavailable.contains(game.id) {
-                NoteCard(icon: .off, text: "Stats live non fournies par Riot pour ce match")
+                NoteCard(icon: .off, text: String(localized: "Stats live non fournies par Riot pour ce match"))
             } else if let snapshot = store.snapshots[game.id], ids.count == 2,
                       let left = snapshot.stats(for: ids[0]), let right = snapshot.stats(for: ids[1]) {
                 // Draft, stats, courbe de gold, joueurs enrichis, fil (spec fonctionnalités §3-§5).
@@ -320,7 +320,7 @@ struct MatchDetailView: View {
                 // le gabarit des panneaux. « Indisponibles » n'apparaît qu'une fois le chargement fini sans stats.
                 GameStatsSkeleton()
             } else {
-                NoteCard(icon: .refresh, text: "Stats de cette game indisponibles")
+                NoteCard(icon: .refresh, text: String(localized: "Stats de cette game indisponibles"))
             }
         }
         .animation(Motion.animation(.reveal, reduceMotion: reduceMotion), value: store.snapshots[game.id] == nil)

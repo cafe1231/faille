@@ -43,7 +43,7 @@ struct WatchButton: View {
                 IconView(icon: .play, size: 12)
                 Text("Regarder")
             }
-            .font(Typo.chip)
+            .sora(.chip)
             .foregroundStyle(Palette.text)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -60,7 +60,7 @@ struct WatchButton: View {
                     .foregroundStyle(Palette.secondary)
                     .lineLimit(1)
             }
-            .font(Typo.bodyMedium)
+            .sora(.bodyMedium)
             .foregroundStyle(Palette.text)
             .frame(maxWidth: .infinity, minHeight: 44)
             .contentShape(Rectangle())
@@ -98,7 +98,7 @@ struct ReplayButton: View {
                     .foregroundStyle(Palette.secondary)
                     .lineLimit(1)
             }
-            .font(Typo.bodyMedium)
+            .sora(.bodyMedium)
             .foregroundStyle(Palette.text)
             .frame(maxWidth: .infinity, minHeight: 44)
             .contentShape(Rectangle())

@@ -20,7 +20,7 @@ struct DraftStrip: View {
             ForEach(Array(teams.enumerated()), id: \.offset) { _, team in
                 HStack(spacing: 8) {
                     Text(team.code)
-                        .font(Typo.label)
+                        .sora(.label)
                         .tracking(Typo.labelTracking)
                         .foregroundStyle(team.tint ?? Palette.secondary)
                         .lineLimit(1)

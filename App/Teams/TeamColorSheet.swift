@@ -32,13 +32,13 @@ struct TeamColorSheet: View {
                     SectionLabel(text: team.name, dot: color)
                     HStack(spacing: 10) {
                         TeamBadge(code: team.code, tint: color, size: 34)
-                        Text(team.code).font(Typo.score)
+                        Text(team.code).sora(.score)
                     }
                 }
                 .foregroundStyle(Palette.text)
                 .glassCard(tint: color)
                 ColorPicker("Couleur de l'équipe", selection: $color, supportsOpacity: false)
-                    .font(Typo.body)
+                    .sora(.body)
                     .foregroundStyle(Palette.text)
                     .glassCard(radius: Radius.inner, padding: 14)
                 Button("Couleur automatique (tirée du logo)") {
@@ -46,7 +46,7 @@ struct TeamColorSheet: View {
                     onPicked()
                     dismiss()
                 }
-                .font(Typo.bodyMedium)
+                .sora(.bodyMedium)
                 .foregroundStyle(Palette.accent)
                 Spacer()
             }

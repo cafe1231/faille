@@ -60,7 +60,7 @@ struct TeamCardView: View {
             }
             if card.live == nil, card.last == nil, case .none = nextLine {
                 Text("Aucun match dans le calendrier récent")
-                    .font(Typo.secondary)
+                    .sora(.secondary)
                     .foregroundStyle(Palette.secondary)
             }
         }
@@ -115,7 +115,7 @@ struct TeamCardView: View {
                             MiniStatsSkeleton()
                         } else if !state.statsAvailable {
                             Text("Stats live non fournies par Riot")
-                                .font(Typo.secondary)
+                                .sora(.secondary)
                                 .foregroundStyle(Palette.secondary)
                         }
                     }
@@ -145,7 +145,7 @@ struct TeamCardView: View {
             IconView(icon: .eyeOff, size: 13)
             Text("Prochain · masqué")
         }
-        .font(Typo.secondary)
+        .sora(.secondary)
         .foregroundStyle(Palette.secondary)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -162,13 +162,13 @@ struct TeamCardView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     if card.live == nil {
                         Text(codes.joined(separator: " vs "))
-                            .font(Typo.bodyMedium)
+                            .sora(.bodyMedium)
                         Text("Prochain · \(date)")
-                            .font(Typo.secondary)
+                            .sora(.secondary)
                             .foregroundStyle(Palette.secondary)
                     } else {
                         Text("Ensuite · \(date) vs \(codes.last ?? "")")
-                            .font(Typo.secondary)
+                            .sora(.secondary)
                             .foregroundStyle(Palette.secondary)
                     }
                 }
@@ -190,7 +190,7 @@ struct TeamCardView: View {
         let route = MatchRoute(teamId: card.team.id, row: .last, matchId: event.id)
         return NavigationLink(value: route) {
             Text(text)
-                .font(Typo.secondary)
+                .sora(.secondary)
                 .foregroundStyle(Palette.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())

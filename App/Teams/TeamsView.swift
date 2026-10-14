@@ -17,7 +17,7 @@ struct TeamsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                ScreenHeader("Équipes", subtitle: Format.followCount(store.follows.teams.count)) {
+                ScreenHeader(String(localized: "Équipes"), subtitle: Format.followCount(store.follows.teams.count)) {
                     Button { showSettings = true } label: {
                         IconView(icon: .settings, size: 22)
                             .frame(width: 44, height: 44)
@@ -64,7 +64,7 @@ struct TeamsView: View {
             IconView(icon: .search, size: 16)
                 .foregroundStyle(Palette.secondary)
             TextField("", text: $query, prompt: Text("Rechercher une équipe").foregroundStyle(Palette.secondary))
-                .font(Typo.body)
+                .sora(.body)
                 .foregroundStyle(Palette.text)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -89,9 +89,9 @@ struct TeamsView: View {
     }
 
     @ViewBuilder private var myTeams: some View {
-        SectionLabel(text: "Mes équipes")
+        SectionLabel(text: String(localized: "Mes équipes"))
         if store.follows.teams.isEmpty {
-            NoteCard(icon: .star, text: "Touche l'étoile d'une équipe pour la suivre.")
+            NoteCard(icon: .star, text: String(localized: "Touche l'étoile d'une équipe pour la suivre."))
         } else {
             VStack(spacing: 4) {
                 ForEach(store.follows.teams) { team in
@@ -116,7 +116,7 @@ struct TeamsView: View {
     }
 
     @ViewBuilder private var leagueSection: some View {
-        SectionLabel(text: "Toutes les ligues")
+        SectionLabel(text: String(localized: "Toutes les ligues"))
         let pills = store.leaguePills
         if let first = pills.first {
             let selected = pills.first(where: { $0.id == selectedLeagueId }) ?? first
@@ -146,7 +146,7 @@ struct TeamsView: View {
                             onToggleNotifications: { store.setLeagueNotifications($0, leagueId: selected.id) })
             teamList(leagueTeams)
         } else if store.isFailing {
-            NoteCard(icon: .refresh, text: "Ligues indisponibles pour l'instant.")
+            NoteCard(icon: .refresh, text: String(localized: "Ligues indisponibles pour l'instant."))
         } else {
             // Chargement (spec finitions §10) : le gabarit des pilules et des lignes, à la place d'un texte d'attente.
             LeagueLoadingSkeleton()
@@ -155,7 +155,7 @@ struct TeamsView: View {
 
     @ViewBuilder private var searchResults: some View {
         let results = store.search(query)
-        SectionLabel(text: "Résultats")
+        SectionLabel(text: String(localized: "Résultats"))
         if results.isEmpty {
             if store.catalog.isEmpty && !store.isFailing {
                 TeamRowsSkeleton(count: 4)

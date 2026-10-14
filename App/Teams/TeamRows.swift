@@ -16,11 +16,11 @@ struct FollowedTeamRow: View {
                     TeamBadge(code: team.code, logoFile: logoFile, tint: Palette.team(team.colorHex), size: 34)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(team.name)
-                            .font(Typo.bodyMedium)
+                            .sora(.bodyMedium)
                             .foregroundStyle(Palette.text)
                             .lineLimit(1)
                         Text(subtitle)
-                            .font(Typo.secondary)
+                            .sora(.secondary)
                             .foregroundStyle(Palette.secondary)
                     }
                     Spacer(minLength: 8)
@@ -34,7 +34,7 @@ struct FollowedTeamRow: View {
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
                 }
-                .accessibilityLabel(team.spoilerFree ? "Afficher les scores" : "Masquer les scores")
+                .accessibilityLabel(team.spoilerFree ? Text("Afficher les scores") : Text("Masquer les scores"))
                 Button(action: onUnfollow) {
                     IconView(icon: .starFill, size: 20)
                         .foregroundStyle(Palette.accent)
@@ -69,12 +69,12 @@ struct CatalogTeamRow: View {
                     TeamBadge(code: team.code, logoFile: logoFile, size: 34)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(team.name)
-                            .font(Typo.bodyMedium)
+                            .sora(.bodyMedium)
                             .foregroundStyle(Palette.text)
                             .lineLimit(1)
                         if let league = team.homeLeague?.name {
                             Text(league)
-                                .font(Typo.secondary)
+                                .sora(.secondary)
                                 .foregroundStyle(Palette.secondary)
                         }
                     }
@@ -88,7 +88,7 @@ struct CatalogTeamRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
-            .accessibilityLabel(followed ? "Ne plus suivre" : "Suivre")
+            .accessibilityLabel(followed ? Text("Ne plus suivre") : Text("Suivre"))
         }
         .padding(.vertical, 2)
     }

@@ -32,17 +32,17 @@ struct OnboardingExampleCard: View {
         let game = phase + 1
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Compétition d'exemple · Bo5").font(Typo.secondary).foregroundStyle(Palette.secondary)
+                Text("Compétition d'exemple · Bo5").sora(.secondary).foregroundStyle(Palette.secondary)
                 Spacer()
                 Chip { Text("Exemple") }
             }
             HStack(spacing: 8) {
                 TeamBadge(code: "AUR", tint: Palette.accent, size: 34)
-                Text("AUR").font(Typo.headline)
+                Text("AUR").sora(.headline)
                 Spacer()
-                Text("\(score.left) – \(score.right)").font(Typo.scoreLarge).monospacedDigit()
+                Text("\(score.left) – \(score.right)").sora(.scoreLarge).monospacedDigit()
                 Spacer()
-                Text("ZYX").font(Typo.headline)
+                Text("ZYX").sora(.headline)
                 TeamBadge(code: "ZYX", size: 34)
             }
             HStack(spacing: 14) {
@@ -54,7 +54,7 @@ struct OnboardingExampleCard: View {
                 Label { Text("+2,1 k").monospacedDigit() } icon: { IconView(icon: .gold, size: 13) }
                 Label { Text("3").monospacedDigit() } icon: { IconView(icon: .tower, size: 13) }
             }
-            .font(Typo.secondaryMedium)
+            .sora(.secondaryMedium)
         }
         .foregroundStyle(Palette.text)
         .glassCard(tint: Palette.accent)

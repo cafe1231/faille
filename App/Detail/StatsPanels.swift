@@ -10,13 +10,13 @@ struct TeamStatsPanel: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            row(.swords, "Kills", "\(left.kills)", "\(right.kills)")
-            row(.gold, "Gold", Format.gold(left.gold), Format.gold(right.gold))
+            row(.swords, String(localized: "Kills"), "\(left.kills)", "\(right.kills)")
+            row(.gold, String(localized: "Gold"), Format.gold(left.gold), Format.gold(right.gold))
             GoldBar(left: left.gold, right: right.gold, tint: tint)
-            row(.tower, "Tours", "\(left.towers)", "\(right.towers)")
-            row(.inhib, "Inhibs", "\(left.inhibitors)", "\(right.inhibitors)")
+            row(.tower, String(localized: "Tours"), "\(left.towers)", "\(right.towers)")
+            row(.inhib, String(localized: "Inhibs"), "\(left.inhibitors)", "\(right.inhibitors)")
             dragonRow
-            row(.baron, "Barons", "\(left.barons)", "\(right.barons)")
+            row(.baron, String(localized: "Barons"), "\(left.barons)", "\(right.barons)")
         }
         .foregroundStyle(Palette.text)
         .glassCard(radius: Radius.inner, padding: 14)
@@ -26,35 +26,42 @@ struct TeamStatsPanel: View {
         // Les chiffres défilent quand ils changent (spec finitions §4) ; le panneau n'existe que pour un match non masqué.
         HStack {
             Text(a)
-                .font(Typo.stat)
+                .sora(.stat)
                 .numericChange(a)
                 .frame(maxWidth: .infinity, alignment: .leading)
             StatLabel(icon: icon, text: label)
             Text(b)
-                .font(Typo.stat)
+                .sora(.stat)
                 .numericChange(b)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .monospacedDigit()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(Self.spoken(label, a, b)))
+    }
+
+    /// « Kills : 7 à 4 » : une ligne de stats lue d'un bloc.
+    static func spoken(_ label: String, _ left: String, _ right: String) -> String {
+        String(localized: "\(label) : \(left) à \(right)")
     }
 
     private var dragonRow: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 1) {
-                Text("\(left.dragons.count)").font(Typo.stat).numericChange(left.dragons.count)
+                Text("\(left.dragons.count)").sora(.stat).numericChange(left.dragons.count)
                 if !left.dragons.isEmpty {
                     Text(Format.dragons(left.dragons))
-                        .font(Typo.secondary)
+                        .sora(.secondary)
                         .foregroundStyle(Palette.secondary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            StatLabel(icon: .drake, text: "Drakes")
+            StatLabel(icon: .drake, text: String(localized: "Drakes"))
             VStack(alignment: .trailing, spacing: 1) {
-                Text("\(right.dragons.count)").font(Typo.stat).numericChange(right.dragons.count)
+                Text("\(right.dragons.count)").sora(.stat).numericChange(right.dragons.count)
                 if !right.dragons.isEmpty {
                     Text(Format.dragons(right.dragons))
-                        .font(Typo.secondary)
+                        .sora(.secondary)
                         .foregroundStyle(Palette.secondary)
                         .multilineTextAlignment(.trailing)
                 }
@@ -62,6 +69,9 @@ struct TeamStatsPanel: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .monospacedDigit()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(Self.spoken(String(localized: "Drakes"), "\(left.dragons.count)",
+                                             "\(right.dragons.count)")))
     }
 }
 
@@ -74,7 +84,7 @@ struct StatLabel: View {
         HStack(spacing: 5) {
             IconView(icon: icon, size: 13)
             Text(text)
-                .font(Typo.label)
+                .sora(.label)
                 .tracking(Typo.labelTracking)
                 .textCase(.uppercase)
         }
@@ -103,6 +113,7 @@ struct GoldBar: View {
             }
         }
         .frame(height: 5)
+        .accessibilityHidden(true)
         .animation(Motion.animation(.smooth, reduceMotion: reduceMotion), value: share)
     }
 }

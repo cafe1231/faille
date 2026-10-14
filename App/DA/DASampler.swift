@@ -17,14 +17,14 @@ struct DASampler: View {
                 ScreenHeader("Planche DA", subtitle: "Abysse · Verre · Sora · Vitrail")
                 SectionLabel(text: "Typographie")
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Titre 32").font(Typo.title).tracking(Typo.titleTracking)
-                    Text("Score 1 – 0").font(Typo.score)
-                    Text("Corps 15 regular").font(Typo.body)
-                    Text("Corps 15 medium").font(Typo.bodyMedium)
-                    Text("Titre 15 semibold").font(Typo.headline)
-                    Text("Secondaire 12").font(Typo.secondary).foregroundStyle(Palette.secondary)
+                    Text("Titre 32").sora(.title).tracking(Typo.titleTracking)
+                    Text("Score 1 – 0").sora(.score)
+                    Text("Corps 15 regular").sora(.body)
+                    Text("Corps 15 medium").sora(.bodyMedium)
+                    Text("Titre 15 semibold").sora(.headline)
+                    Text("Secondaire 12").sora(.secondary).foregroundStyle(Palette.secondary)
                     Text("Étiquette 11")
-                        .font(Typo.label)
+                        .sora(.label)
                         .tracking(Typo.labelTracking)
                         .textCase(.uppercase)
                         .foregroundStyle(Palette.secondary)
@@ -43,7 +43,7 @@ struct DASampler: View {
                         SectionLabel(text: "Équipe \(sample.code)", dot: Palette.team(sample.hex))
                         HStack {
                             TeamBadge(code: sample.code, tint: Palette.team(sample.hex))
-                            Text(sample.code).font(Typo.headline)
+                            Text(sample.code).sora(.headline)
                             Spacer()
                             Chip {
                                 IconView(icon: .live, size: 12)
@@ -56,7 +56,7 @@ struct DASampler: View {
                 }
                 HStack {
                     TeamBadge(code: "C9")
-                    Text("Verre neutre").font(Typo.body)
+                    Text("Verre neutre").sora(.body)
                     Spacer()
                     Chip(muted: true) {
                         IconView(icon: .eyeOff, size: 12)

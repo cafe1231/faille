@@ -34,7 +34,7 @@ struct LiveChipText: View {
     /// Texte d'un match masqué : seulement l'état (entre deux games, un match masqué reste « En direct »).
     static func maskedText(phase: LiveMatchState.Phase, opponent: String?) -> String {
         let label = Format.maskedStatus(phase)
-        return opponent.map { "\(label) vs \($0)" } ?? label
+        return opponent.map { String(localized: "\(label) vs \($0)") } ?? label
     }
 
     var body: some View {
@@ -62,13 +62,13 @@ struct LiveChipText: View {
     static func prefix(for state: LiveMatchState) -> String {
         switch state.phase {
         case .inGame:
-            return state.gameNumber.map { "En direct · Game \($0)" } ?? "En direct"
+            return state.gameNumber.map { String(localized: "En direct · Game \($0)") } ?? String(localized: "En direct")
         case .betweenGames:
-            return state.gameNumber.map { "En direct · Game \($0) bientôt" } ?? "En direct"
+            return state.gameNumber.map { String(localized: "En direct · Game \($0) bientôt") } ?? String(localized: "En direct")
         case .finished:
-            return "Terminé"
+            return String(localized: "Terminé")
         case .upcoming:
-            return "À venir"
+            return String(localized: "À venir")
         }
     }
 }
@@ -87,7 +87,7 @@ struct ScoreRow: View {
             if let left = teams.first {
                 badge(left, tint: tints.first ?? nil)
                 Text(left.code)
-                    .font(Typo.headline)
+                    .sora(.headline)
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
@@ -95,23 +95,36 @@ struct ScoreRow: View {
                 // Score non masqué (nil quand masqué : rien ne peut défiler) ; à la révélation, il sort d'un flou
                 // (spec finitions §4, §8).
                 Text(Format.score(score))
-                    .font(large ? Typo.scoreLarge : Typo.score)
+                    .sora(large ? .scoreLarge : .score)
                     .monospacedDigit()
                     .numericChange(score)
                     .transition(Motion.revealTransition(reduceMotion: reduceMotion))
             } else {
                 Text("vs")
-                    .font(Typo.bodyMedium)
+                    .sora(.bodyMedium)
                     .foregroundStyle(Palette.secondary)
             }
             Spacer(minLength: 8)
             if teams.count > 1 {
                 Text(teams[1].code)
-                    .font(Typo.headline)
+                    .sora(.headline)
                     .lineLimit(1)
                 badge(teams[1], tint: tints.count > 1 ? tints[1] : nil)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(Self.spoken(teams: teams, score: score)))
+    }
+
+    /// « Karmine Corp 2, G2 Esports 1 » ; sans score (masqué ou à venir) : « Karmine Corp contre G2 Esports » (le
+    /// bouton « Score masqué · toucher pour révéler » est lu à part).
+    static func spoken(teams: [MatchTeam], score: [Int]?) -> String {
+        let names = teams.map(\.name)
+        guard names.count == 2 else { return names.joined(separator: ", ") }
+        if let score, score.count == 2 {
+            return String(localized: "\(names[0]) \(score[0]), \(names[1]) \(score[1])")
+        }
+        return String(localized: "\(names[0]) contre \(names[1])")
     }
 
     private func badge(_ team: MatchTeam, tint: Color?) -> some View {
@@ -141,9 +154,20 @@ struct MiniStats: View {
                 item(.drake, "\(stats[0].dragons.count) – \(stats[1].dragons.count)")
                 item(.tower, "\(stats[0].towers) – \(stats[1].towers)")
             }
-            .font(Typo.secondaryMedium)
+            .sora(.secondaryMedium)
             .monospacedDigit()
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(Self.spoken(stats: stats)))
         }
+    }
+
+    /// « Kills 7 à 4, écart de gold +2,1 k, drakes 2 à 1, tours 3 à 1 » (valeurs de la première équipe, puis de la
+    /// seconde).
+    static func spoken(stats: [TeamStats]) -> String {
+        guard stats.count == 2 else { return "" }
+        let diff = Format.goldDiff(stats[0].gold - stats[1].gold)
+        let drakes = (stats[0].dragons.count, stats[1].dragons.count)
+        return String(localized: "Kills \(stats[0].kills) à \(stats[1].kills), écart de gold \(diff), drakes \(drakes.0) à \(drakes.1), tours \(stats[0].towers) à \(stats[1].towers)")
     }
 
     private func item(_ icon: Icon, _ text: String) -> some View {
@@ -161,7 +185,7 @@ struct MiniStats: View {
 struct MiniStatsSkeleton: View {
     var body: some View {
         Text("0")
-            .font(Typo.secondaryMedium)
+            .sora(.secondaryMedium)
             .hidden()
             .frame(maxWidth: .infinity, alignment: .leading)
             .overlay(alignment: .leading) {
@@ -188,7 +212,7 @@ struct RevealButton: View {
                 Text("toucher pour révéler")
                     .foregroundStyle(Palette.accent)
             }
-            .font(Typo.secondaryMedium)
+            .sora(.secondaryMedium)
             .foregroundStyle(Palette.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)

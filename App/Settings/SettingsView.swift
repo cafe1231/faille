@@ -11,7 +11,7 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    SectionLabel(text: "Live Activity")
+                    SectionLabel(text: String(localized: "Live Activity"))
                     VStack(alignment: .leading, spacing: 10) {
                         Picker("Live Activity", selection: mode) {
                             Text("Automatique").tag(LiveActivityMode.automatic)
@@ -19,26 +19,26 @@ struct SettingsView: View {
                         }
                         .pickerStyle(.segmented)
                         Text(explanation)
-                            .font(Typo.secondary)
+                            .sora(.secondary)
                             .foregroundStyle(Palette.secondary)
                         Text("Sans serveur de push, la Live Activity se met à jour quand Faille est ouverte, et en arrière-plan quand iOS le permet (environ toutes les 15 min, si l'actualisation en arrière-plan est activée). Sinon elle affiche « màj il y a X minutes ».")
-                            .font(Typo.secondary)
+                            .sora(.secondary)
                             .foregroundStyle(Palette.secondary)
                     }
                     .glassCard(radius: Radius.inner, padding: 14)
 
-                    SectionLabel(text: "Notifications")
+                    SectionLabel(text: String(localized: "Notifications"))
                     MatchRemindersSection(enabled: store.settings.matchRemindersEnabled,
                                           lead: store.settings.matchReminderLead, center: store.reminderCenter,
                                           setEnabled: { store.setMatchReminders(enabled: $0) },
                                           setLead: { store.setMatchReminderLead($0) })
 
-                    SectionLabel(text: "Faille")
+                    SectionLabel(text: String(localized: "Faille"))
                     NavigationLink {
                         AboutView()
                     } label: {
                         HStack {
-                            Text("À propos").font(Typo.body)
+                            Text("À propos").sora(.body)
                             Spacer()
                             IconView(icon: .arrow, size: 15)
                                 .foregroundStyle(Palette.secondary)
@@ -89,7 +89,7 @@ struct AboutView: View {
                       ?? "Aucun groupe d'apps : les données restent dans l'appli seule.")
                 diagnostic
                 Text("Police Sora, sous licence SIL Open Font License.")
-                    .font(Typo.secondary)
+                    .sora(.secondary)
                     .foregroundStyle(Palette.secondary)
             }
             .padding(16)
@@ -106,11 +106,11 @@ struct AboutView: View {
     private var diagnostic: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Diagnostic Live Activity")
-                .font(Typo.headline)
+                .sora(.headline)
                 .foregroundStyle(Palette.text)
             ForEach(store.liveActivityDiagnosticLines()) { line in
                 Text("\(line.title) : \(line.value)")
-                    .font(Typo.secondary)
+                    .sora(.secondary)
                     .foregroundStyle(Palette.secondary)
             }
         }
@@ -120,10 +120,10 @@ struct AboutView: View {
     private func block(_ title: String, _ text: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(Typo.headline)
+                .sora(.headline)
                 .foregroundStyle(Palette.text)
             Text(text)
-                .font(Typo.secondary)
+                .sora(.secondary)
                 .foregroundStyle(Palette.secondary)
         }
         .glassCard(radius: Radius.inner, padding: 14)
