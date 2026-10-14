@@ -42,6 +42,7 @@ public enum SpellMatcher {
     /// Sorts d'invocateur de la game dont les champions sont exactement `champions` (comparés par `ChampionKey`) et dont le
     /// début est à `window` au plus de `around` ; la plus proche dans le temps s'il y en a plusieurs. nil si aucune (le
     /// wiki n'a pas encore la game) ou si `champions` contient un doublon.
+    /// Anti-spoiler : l'appli ne l'appelle jamais pour un match masqué.
     /// - Parameters:
     ///   - champions: ids Data Dragon du flux (`participantMetadata[].championId`), les 10 de la game.
     ///   - around: début de la game (`LiveWindow.firstFrameTime` de la fenêtre lue sans `startingTime`).
