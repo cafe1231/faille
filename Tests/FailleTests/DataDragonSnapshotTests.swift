@@ -16,6 +16,11 @@ extension ApercuTests {
         let spell = DataDragon.summonerSpellImage(version: version, spellId: "SummonerFlash")
         TestImages.seed(cache, [(champion, .systemIndigo, "K"), (item, .systemGreen, "D"), (rune, .systemTeal, "R"),
                                 (spell, .systemYellow, "F")])
+        // Les quatre icônes sont décodées avant la capture : l'aperçu ne dépend plus du délai de `Snapshot.write` (1 s).
+        let store = DataDragonStore(transport: nil, cache: cache)
+        for icon in [champion, item, rune, spell] {
+            _ = await store.image(icon)
+        }
         let board = ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 ScreenHeader("Data Dragon", subtitle: "Icônes en cache · vignettes de repli")
@@ -40,7 +45,7 @@ extension ApercuTests {
             .padding(.horizontal, 16)
         }
         .abyssBackground()
-        .environment(\.dataDragon, DataDragonStore(transport: nil, cache: cache))
+        .environment(\.dataDragon, store)
         let url = try await Snapshot.write(board, named: "18-data-dragon")
         expectNotBlank(url)
     }
