@@ -1,4 +1,4 @@
-# Faille — checklist de test sur l'iPhone (étapes 2, 3 et 4)
+# Faille — checklist de test sur l'iPhone (étapes 2, 3, 4 et finitions)
 
 À faire avec la dernière IPA (`C:\Users\Dan\Downloads\faille\Faille-etape4.ipa`), idéalement pendant un vrai match des Worlds d'une équipe suivie (premier match : **jeudi 15/10 à 20 h, C9 vs KC**). Pour chaque ligne : OK / KO + une remarque. Les KO deviennent des corrections.
 
@@ -78,3 +78,23 @@ Note : les planches PNG de l'écran verrouillé sont approximatives (iOS pose sa
 ## Une question de design pour toi (après le test)
 
 Quand la Live Activity n'a pas été mise à jour depuis 3 min (téléphone verrouillé, iOS n'a pas réveillé l'appli), elle remplace le chrono par « màj il y a X minutes » (c'est la spec). Variante possible : garder le chrono **et** ajouter un petit « màj il y a X min ». Le chrono reste juste (il est calculé à partir du début de la game), sauf si la game s'est terminée entre-temps. À toi de choisir après l'avoir vu en vrai.
+
+## D. Finitions (animations, retours tactiles, icône)
+
+À faire avec `C:\Users\Dan\Downloads\faille\Faille-finitions.ipa` (installer comme au §0). Un match en direct d'une équipe suivie aide pour D.4, D.5, D.12 et D.14 ; le reste se vérifie à tout moment. Pour chaque ligne : OK / KO + une remarque (« trop lent », « trop fort », « on ne le voit pas »…) : c'est ici que se juge le style « sobre et fluide ».
+
+1. **Icône** : sur l'écran d'accueil, l'icône Faille (fond abysse, faille verticale lumineuse cyan, halo doux, aucun texte) remplace l'icône vide ; la même dans Réglages › Faille, Spotlight et le sélecteur d'applis. Appui long sur l'accueil › Personnaliser › **Sombre** : la faille sur fond sombre ; **Teinté** : une version d'une seule teinte, lisible.
+2. **Toucher** : le bloc « En direct » d'une carte, les lignes Prochain et Dernier, une pilule de ligue ou de game, l'étoile, l'œil, « Choisir mes équipes », « Épingler », « À propos » s'enfoncent légèrement et pâlissent pendant l'appui, puis reviennent sans rebond. Les zones de toucher n'ont pas rétréci (œil et étoile toujours faciles à viser).
+3. **Retours haptiques**, un seul par action : suivre une équipe (succès) ; ne plus suivre (léger) ; œil (petit clic) ; Épingler (succès) ; Retirer (léger) ; toucher pour révéler (moyen) ; tirer pour rafraîchir (succès ; en mode avion : avertissement) ; Valider une couleur ou « Couleur automatique » (petit clic) ; changer de pilule de game (petit clic). **Aucun** retour pendant un match quand les stats se mettent à jour toutes les 10 s.
+4. **Chiffres qui défilent** (match en direct) : sur la carte et dans le Détail, kills, gold, tours, inhibs, barons, drakes et le score de série changent en faisant défiler leurs chiffres ; le sous-titre « N en direct · N à venir » aussi. Sur une carte masquée : aucun chiffre, donc rien ne défile.
+5. **« En direct »** : un halo doux respire lentement (≈ 1,6 s) derrière l'icône « en direct » de la pastille de la carte, de la pastille du Détail et de la pilule de la game en cours ; il ne clignote pas.
+6. **Zoom** : toucher le bloc « En direct » d'une carte → le Détail s'ouvre en zoomant depuis ce bloc ; revenir (bouton retour, glisser depuis le bord gauche ou vers le bas) → il se referme vers le même bloc. Pareil depuis « Prochain » et « Dernier ». Si les deux équipes d'un match sont suivies (deux cartes), le zoom part de la carte touchée.
+7. **Listes** : dans Équipes, suivre / ne plus suivre fait apparaître (fondu, léger grossissement) ou disparaître (fondu) la ligne dans « Mes équipes », sans saut. À l'ouverture de l'appli, les cartes de Matchs arrivent en cascade rapide, une fois ; en revenant du Détail, pas de nouvelle cascade.
+8. **Révéler** : sur une carte masquée, « toucher pour révéler » → le score et les stats sortent d'un flou en fondu (≈ 0,5 s), avec un retour moyen ; pareil dans le Détail. Remettre l'œil dans Équipes → la carte redevient masquée en simple fondu. Aucun chiffre n'apparaît, même un instant, sur un match encore masqué.
+9. **Détail** : la capsule blanche glisse d'une pilule de game à l'autre ; la barre de gold change de largeur en douceur ; changer d'équipe dans « Joueurs » fait un fondu des lignes.
+10. **Chargement** : ouvrir un match pas encore chargé (ou, au premier lancement, l'onglet Équipes) → des formes grises arrondies au gabarit du contenu, parcourues d'un reflet lent, au lieu d'une roue ; le contenu les remplace dès qu'il arrive.
+11. **Bandeau d'erreur** : mode avion puis tirer pour rafraîchir → le bandeau descend du haut en fondu ; sortir du mode avion → il remonte et disparaît.
+12. **Lueur d'équipe** : une carte dont le match est en direct et non masqué a un contour qui luit doucement à la couleur de l'équipe et respire lentement (≈ 2,4 s) ; une carte masquée (équipe en anti-spoiler) n'a **aucune** lueur.
+13. **Réduire les animations** (Réglages › Accessibilité › Mouvement › Réduire les animations, activé) : plus de zoom (transition standard), plus de cascade, halo et lueur fixes, squelettes sans reflet, les surfaces ne s'enfoncent plus (elles pâlissent seulement), la capsule des pilules ne glisse plus, chiffres et révélation en simple fondu ; les retours haptiques sont toujours là. Désactiver ensuite.
+14. **Widgets et Live Activity** : quand le score ou une stat change, les chiffres défilent au passage (si iOS l'anime) ; rien ne bouge en continu (pas de halo, pas de pulsation).
+15. **Fluidité** : pendant un match en direct, faire défiler Matchs et le Détail : aucun à-coup ; le téléphone ne chauffe pas plus qu'avant.
