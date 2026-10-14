@@ -17,17 +17,25 @@ public struct AppSettings: Codable, Sendable, Equatable {
             }
         }
     }
+    /// Premier lancement passé (onboarding vu ou utilisateur existant, spec saison §3.7).
+    public var onboardingDone: Bool
+    /// Tournois dont le classement a été révélé malgré l'anti-spoiler (spec saison §3.5) : ne révèle aucun match.
+    public var revealedStandingIds: Set<String>
 
     public init(liveActivityMode: LiveActivityMode = .automatic, revealedMatchIds: Set<String> = [],
-                matchRemindersEnabled: Bool = false, matchReminderLead: TimeInterval = MatchReminders.defaultLead) {
+                matchRemindersEnabled: Bool = false, matchReminderLead: TimeInterval = MatchReminders.defaultLead,
+                onboardingDone: Bool = false, revealedStandingIds: Set<String> = []) {
         self.liveActivityMode = liveActivityMode
         self.revealedMatchIds = revealedMatchIds
         self.matchRemindersEnabled = matchRemindersEnabled
         self.matchReminderLead = Self.lead(matchReminderLead)
+        self.onboardingDone = onboardingDone
+        self.revealedStandingIds = revealedStandingIds
     }
 
     private enum CodingKeys: String, CodingKey {
-        case liveActivityMode, revealedMatchIds, matchRemindersEnabled, matchReminderLead
+        case liveActivityMode, revealedMatchIds, matchRemindersEnabled, matchReminderLead, onboardingDone
+        case revealedStandingIds
     }
 
     /// Décodage tolérant : champ absent ou valeur inconnue (version plus récente, ou plus ancienne sans ce champ) → valeur
@@ -39,6 +47,8 @@ public struct AppSettings: Codable, Sendable, Equatable {
         matchRemindersEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .matchRemindersEnabled)) ?? false
         matchReminderLead = Self.lead((try? container.decodeIfPresent(TimeInterval.self, forKey: .matchReminderLead))
             ?? MatchReminders.defaultLead)
+        onboardingDone = (try? container.decodeIfPresent(Bool.self, forKey: .onboardingDone)) ?? false
+        revealedStandingIds = (try? container.decodeIfPresent(Set<String>.self, forKey: .revealedStandingIds)) ?? []
     }
 
     /// Délai proposé dans les réglages, sinon le délai par défaut.
