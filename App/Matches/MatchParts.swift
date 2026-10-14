@@ -155,6 +155,27 @@ struct MiniStats: View {
     }
 }
 
+/// Place de `MiniStats` tant que la première frame du match n'est pas arrivée (spec finitions §10) : quatre blocs de
+/// squelette sur une ligne de la hauteur de `MiniStats` (le texte masqué porte la même police), pour que la carte garde
+/// sa taille quand les stats la remplacent.
+struct MiniStatsSkeleton: View {
+    var body: some View {
+        Text("0")
+            .font(Typo.secondaryMedium)
+            .hidden()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(alignment: .leading) {
+                HStack(spacing: 14) {
+                    ForEach(0..<4, id: \.self) { _ in
+                        SkeletonBlock(width: 44, height: 11)
+                    }
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Stats en chargement")
+    }
+}
+
 /// « Score masqué · toucher pour révéler » (spec §8) : la révélation est mémorisée pour ce match.
 struct RevealButton: View {
     let action: () -> Void

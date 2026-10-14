@@ -202,23 +202,29 @@ struct MatchDetailView: View {
         .scrollIndicators(.hidden)
     }
 
+    /// Stats et joueurs de la game affichée. Le conteneur anime l'arrivée des panneaux (`Motion.reveal`) quand la première
+    /// frame de la game arrive : le squelette est remplacé en fondu, à la même hauteur, sans pousser le bouton « Épingler ».
+    /// Ce conteneur n'existe que pour un match non masqué (branche `details`) : rien ne peut fuiter.
     @ViewBuilder private func gameStats(game: GameRef, teams: [MatchTeam]) -> some View {
         let ids = teams.compactMap(\.id)
-        if game.state == .unstarted {
-            NoteCard(icon: .clock, text: "La game \(game.number) n'a pas commencé")
-        } else if store.statsUnavailable.contains(game.id) {
-            NoteCard(icon: .off, text: "Stats live non fournies par Riot pour ce match")
-        } else if let snapshot = store.snapshots[game.id], ids.count == 2,
-                  let left = snapshot.stats(for: ids[0]), let right = snapshot.stats(for: ids[1]) {
-            TeamStatsPanel(left: left, right: right, tint: store.tint(for: teams[0]) ?? Palette.accent)
-            PlayersPanel(teams: teams, snapshot: snapshot,
-                         selection: $model.playersTeamIndex.animation(Motion.animation(.snappy, reduceMotion: reduceMotion)))
-        } else if game.state == .inProgress {
-            // Première frame pas encore arrivée (spec finitions §10) : le gabarit du panneau.
-            StatsSkeleton()
-        } else {
-            NoteCard(icon: .refresh, text: "Stats de cette game indisponibles")
+        VStack(alignment: .leading, spacing: 14) {
+            if game.state == .unstarted {
+                NoteCard(icon: .clock, text: "La game \(game.number) n'a pas commencé")
+            } else if store.statsUnavailable.contains(game.id) {
+                NoteCard(icon: .off, text: "Stats live non fournies par Riot pour ce match")
+            } else if let snapshot = store.snapshots[game.id], ids.count == 2,
+                      let left = snapshot.stats(for: ids[0]), let right = snapshot.stats(for: ids[1]) {
+                TeamStatsPanel(left: left, right: right, tint: store.tint(for: teams[0]) ?? Palette.accent)
+                PlayersPanel(teams: teams, snapshot: snapshot,
+                             selection: $model.playersTeamIndex.animation(Motion.animation(.snappy, reduceMotion: reduceMotion)))
+            } else if game.state == .inProgress {
+                // Première frame pas encore arrivée (spec finitions §10) : le gabarit des panneaux.
+                GameStatsSkeleton()
+            } else {
+                NoteCard(icon: .refresh, text: "Stats de cette game indisponibles")
+            }
         }
+        .animation(Motion.animation(.reveal, reduceMotion: reduceMotion), value: store.snapshots[game.id] == nil)
     }
 }
 

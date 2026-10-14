@@ -21,6 +21,27 @@ struct MatchesMotionTests {
         #expect(!TeamCardView.glows(nil))
     }
 
+    /// Révélation (I1) : la carte garde la place de la ligne de stats (squelette) tant que la première frame n'est pas
+    /// arrivée ; jamais pour un état masqué, sans stats fournies, entre deux games ou une fois les stats là.
+    @Test func theCardKeepsTheStatsLineWhileTheFirstFrameIsPending() {
+        func cardState(_ phase: LiveMatchState.Phase, spoilerFree: Bool = false, available: Bool = true,
+                       stats: [TeamStats]? = nil) -> LiveMatchState {
+            LiveMatchState(phase: phase, seriesScore: spoilerFree ? nil : [1, 0], gameNumber: spoilerFree ? nil : 2,
+                           gameClockStart: nil, gameClockStoppedAt: nil, stats: stats, statsAvailable: available,
+                           spoilerFree: spoilerFree, winnerCode: nil, updatedAt: Date())
+        }
+        let team = TeamStats(kills: 3, gold: 5000, towers: 1, inhibitors: 0, barons: 0, dragons: [])
+        #expect(TeamCardView.showsStatsSkeleton(cardState(.inGame)))
+        #expect(!TeamCardView.showsStatsSkeleton(cardState(.inGame, stats: [team, team])))
+        #expect(!TeamCardView.showsStatsSkeleton(cardState(.inGame, available: false)))
+        #expect(!TeamCardView.showsStatsSkeleton(cardState(.betweenGames)))
+        #expect(!TeamCardView.showsStatsSkeleton(cardState(.finished)))
+        #expect(!TeamCardView.showsStatsSkeleton(cardState(.upcoming)))
+        // Anti-spoiler (spec §8) : un état masqué (stats nil, phase « en direct ») ne montre jamais ce squelette.
+        #expect(!TeamCardView.showsStatsSkeleton(cardState(.inGame, spoilerFree: true)))
+        #expect(!TeamCardView.showsStatsSkeleton(cardState(.inGame).masked()))
+    }
+
     /// Cartes de l'aperçu : KC (en direct, non masqué) brille ; T1 (en direct, anti-spoiler) et GEN (à venir) non.
     @Test func inThePreviewOnlyKCGlows() throws {
         let store = AppStore(preview: .standard)

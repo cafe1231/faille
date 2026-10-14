@@ -68,7 +68,49 @@ struct StatsSkeleton: View {
     }
 }
 
-/// Squelette du Détail avant `getEventDetails` : pilules de games, puis panneau de stats.
+/// Squelette du panneau des joueurs d'une game : sélecteur d'équipe, en-tête et cinq lignes « rôle · champion · KDA · CS »,
+/// à peu près à la hauteur de `PlayersPanel`.
+struct PlayersSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SkeletonBlock(height: 32, radius: 8)
+            HStack {
+                SkeletonBlock(width: 60, height: 9)
+                Spacer()
+                SkeletonBlock(width: 24, height: 9)
+            }
+            .frame(height: 14)
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(0..<5, id: \.self) { _ in
+                    HStack {
+                        SkeletonBlock(width: 28, height: 11)
+                        SkeletonBlock(width: 90, height: 11)
+                        Spacer()
+                        SkeletonBlock(width: 52, height: 11)
+                        SkeletonBlock(width: 28, height: 11)
+                    }
+                    .frame(height: 16)
+                }
+            }
+        }
+        .glassCard(radius: Radius.inner, padding: 14)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Joueurs en chargement")
+    }
+}
+
+/// Squelette de la zone des stats d'une game : le panneau d'équipe, puis celui des joueurs. Il a la hauteur des deux vrais
+/// panneaux : quand ils arrivent, le bouton « Épingler » en dessous ne saute pas.
+struct GameStatsSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            StatsSkeleton()
+            PlayersSkeleton()
+        }
+    }
+}
+
+/// Squelette du Détail avant `getEventDetails` : pilules de games, puis stats et joueurs.
 struct DetailLoadingSkeleton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -77,7 +119,7 @@ struct DetailLoadingSkeleton: View {
                     SkeletonBlock(width: 48, height: 30, radius: 15)
                 }
             }
-            StatsSkeleton()
+            GameStatsSkeleton()
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Chargement du match")

@@ -25,6 +25,14 @@ struct TeamCardView: View {
         return state.phase == .inGame || state.phase == .betweenGames
     }
 
+    /// Squelette de la ligne de stats : match en jeu, non masqué, dont Riot fournit les stats mais dont la première frame
+    /// n'est pas encore arrivée (typiquement juste après « toucher pour révéler », les stats d'un match masqué n'étant
+    /// jamais demandées). Il tient la place de `MiniStats` : la carte ne grandit pas d'un coup quand elles arrivent.
+    /// Jamais pour un état masqué, même si la vue ne l'appelle déjà que dans la branche non masquée.
+    static func showsStatsSkeleton(_ state: LiveMatchState) -> Bool {
+        !state.spoilerFree && state.phase == .inGame && state.statsAvailable && state.stats == nil
+    }
+
     var body: some View {
         // Jamais `card.next` directement : la ligne « Prochain » passe par LoLKit (anti-spoiler, spec §8).
         let nextLine = store.nextLine(for: card)
@@ -91,18 +99,23 @@ struct TeamCardView: View {
                 }
                 if !state.spoilerFree {
                     // Jamais rendus tant que le match est masqué ; à la révélation, ils sortent d'un flou (spec
-                    // finitions §8). Même espacement que le bloc : la mise en page ne change pas.
+                    // finitions §8). Même espacement que le bloc : la mise en page ne change pas. Les stats d'un match
+                    // masqué n'étant jamais demandées, elles arrivent après la révélation : un squelette tient leur place
+                    // (même hauteur), puis elles le remplacent en fondu (`Motion.reveal`) sans que les cartes sautent.
                     VStack(alignment: .leading, spacing: 8) {
                         ScoreRow(teams: teams, score: state.seriesScore.flatMap { reorder($0, order) },
                                  tints: teams.map { store.tint(for: $0) })
                         if let stats = state.stats.flatMap({ reorder($0, order) }) {
                             MiniStats(stats: stats, tint: tint)
+                        } else if Self.showsStatsSkeleton(state) {
+                            MiniStatsSkeleton()
                         } else if !state.statsAvailable {
                             Text("Stats live non fournies par Riot")
                                 .font(Typo.secondary)
                                 .foregroundStyle(Palette.secondary)
                         }
                     }
+                    .animation(Motion.animation(.reveal, reduceMotion: reduceMotion), value: state.stats == nil)
                     .transition(Motion.revealTransition(reduceMotion: reduceMotion))
                 }
             }
