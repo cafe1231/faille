@@ -92,12 +92,14 @@ struct LiveActivityStatusView: View {
                 Text(text)
                     .monospacedDigit()
             case let .stale(since):
-                // « màj il y a X min », sans les secondes que donne `.relative` : le format de référence d'iOS, limité
-                // aux heures et aux minutes, écrit lui-même « il y a » et se met à jour sans relance de la Live Activity.
-                Text("màj")
-                Text(.currentDate, format: .reference(to: since, allowedFields: [.hour, .minute]))
+                // « màj il y a 9 minutes », sans les secondes que donne `.relative` : le format de référence d'iOS,
+                // limité à une unité (minutes, puis heures), écrit lui-même « il y a » (d'où « màj » seul, et non le
+                // `label` du statut) et se met à jour sans relance de la Live Activity. Comme un minuteur natif, il
+                // occupe toute la largeur proposée : largeur fixe, de quoi écrire « màj il y a 59 minutes », alignée
+                // à droite pour que le bord de l'en-tête reste net.
+                Text("màj \(Text(.currentDate, format: .reference(to: since, allowedFields: [.hour, .minute], maxFieldCount: 1)))")
                     .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: 120, alignment: .trailing)
+                    .frame(width: 124, alignment: .trailing)
             default:
                 Text(status.label ?? "")
             }
