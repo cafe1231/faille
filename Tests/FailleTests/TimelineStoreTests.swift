@@ -29,12 +29,6 @@ private func replayTransport(statsDisabled: Bool = false) -> ScriptedTransport {
         if statsDisabled { return HTTPResponse(status: 404, body: Data()) }
         let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
         let start = query?.first { $0.name == "startingTime" }?.value.flatMap(LoLDate.parse)
-        if start != nil, holdsFirstStep, !stepGate {
-            stepGate = true
-            if !stepReleased {
-                await withCheckedContinuation { stepHeld = $0 }
-            }
-        }
         let time = start.map { $0.addingTimeInterval(9) } ?? gameStart
         return HTTPResponse(status: 200, body: Data(windowJSON(at: time).utf8))
     })
@@ -70,6 +64,12 @@ private actor HeldOpeningTransport: HTTPTransport {
                 await withCheckedContinuation { held = $0 }
             }
             return HTTPResponse(status: 200, body: Data(windowJSON(at: heldOpeningAt).utf8))
+        }
+        if start != nil, holdsFirstStep, !stepGate {
+            stepGate = true
+            if !stepReleased {
+                await withCheckedContinuation { stepHeld = $0 }
+            }
         }
         let time = start.map { $0.addingTimeInterval(9) } ?? gameStart
         return HTTPResponse(status: 200, body: Data(windowJSON(at: time).utf8))
