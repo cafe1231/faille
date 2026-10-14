@@ -1,7 +1,8 @@
 import LoLKit
 import SwiftUI
 
-/// Réglages (spec §5.4) : mode de la Live Activity et À propos.
+/// Réglages (spec §5.4) : mode de la Live Activity, notifications de début de match (spec fonctionnalités §2) et
+/// À propos.
 struct SettingsView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -25,6 +26,12 @@ struct SettingsView: View {
                             .foregroundStyle(Palette.secondary)
                     }
                     .glassCard(radius: Radius.inner, padding: 14)
+
+                    SectionLabel(text: "Notifications")
+                    MatchRemindersSection(enabled: store.settings.matchRemindersEnabled,
+                                          lead: store.settings.matchReminderLead, center: store.reminderCenter,
+                                          setEnabled: { store.setMatchReminders(enabled: $0) },
+                                          setLead: { store.setMatchReminderLead($0) })
 
                     SectionLabel(text: "Faille")
                     NavigationLink {

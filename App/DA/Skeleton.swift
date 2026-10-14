@@ -68,44 +68,65 @@ struct StatsSkeleton: View {
     }
 }
 
-/// Squelette du panneau des joueurs d'une game : sélecteur d'équipe, en-tête et cinq lignes « rôle · champion · KDA · CS »,
-/// à peu près à la hauteur de `PlayersPanel`.
-struct PlayersSkeleton: View {
+/// Squelette de la draft (`DraftStrip`) : deux rangées « code · cinq champions de 40 pt ».
+struct DraftSkeleton: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SkeletonBlock(height: 32, radius: 8)
-            HStack {
-                SkeletonBlock(width: 60, height: 9)
-                Spacer()
-                SkeletonBlock(width: 24, height: 9)
-            }
-            .frame(height: 14)
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(0..<5, id: \.self) { _ in
-                    HStack {
-                        SkeletonBlock(width: 28, height: 11)
-                        SkeletonBlock(width: 90, height: 11)
-                        Spacer()
-                        SkeletonBlock(width: 52, height: 11)
-                        SkeletonBlock(width: 28, height: 11)
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(0..<2, id: \.self) { _ in
+                HStack(spacing: 8) {
+                    SkeletonBlock(width: 36, height: 11)
+                    ForEach(0..<5, id: \.self) { _ in
+                        SkeletonBlock(width: 40, height: 40, radius: 40 * 0.22)
                     }
-                    .frame(height: 16)
+                    Spacer(minLength: 0)
                 }
             }
         }
         .glassCard(radius: Radius.inner, padding: 14)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Joueurs en chargement")
+        .accessibilityLabel("Draft en chargement")
     }
 }
 
-/// Squelette de la zone des stats d'une game : le panneau d'équipe, puis celui des joueurs. Il a la hauteur des deux vrais
-/// panneaux : quand ils arrivent, le bouton « Épingler » en dessous ne saute pas.
+/// Squelette de la courbe de l'écart de gold (`GoldChartCard`) : l'en-tête, puis la courbe à sa hauteur.
+struct GoldCurveSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SkeletonBlock(width: 96, height: 11)
+            SkeletonBlock(height: GoldChartCard.height, radius: 12)
+        }
+        .glassCard(radius: Radius.inner, padding: 14)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Courbe de gold en chargement")
+    }
+}
+
+/// Squelette du fil de la game (`TimelineCard`) : l'en-tête, puis trois lignes.
+struct TimelineSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SkeletonBlock(width: 110, height: 11)
+            ForEach(0..<3, id: \.self) { _ in
+                SkeletonBlock(height: 14)
+            }
+        }
+        .glassCard(radius: Radius.inner, padding: 14)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Fil de la game en chargement")
+    }
+}
+
+/// Squelette de la zone des stats d'une game, dans l'ordre de `MatchDetailView.gameStats` : la draft, le panneau d'équipe,
+/// la courbe de gold, la section « Joueurs » enrichie (`BuildPlayersSkeleton`, spec fonctionnalités §3) et le fil. Chaque
+/// bloc a la hauteur du vrai : quand ils arrivent, le bouton « Épingler » en dessous ne saute pas.
 struct GameStatsSkeleton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
+            DraftSkeleton()
             StatsSkeleton()
-            PlayersSkeleton()
+            GoldCurveSkeleton()
+            BuildPlayersSkeleton()
+            TimelineSkeleton()
         }
     }
 }

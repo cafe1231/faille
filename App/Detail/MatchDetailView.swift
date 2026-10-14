@@ -7,6 +7,9 @@ import SwiftUI
 /// révéler » (ni pilules de games, ni stats, ni joueurs).
 /// Finitions : capsule des pilules qui glisse, barre de gold et chiffres animés, révélation qui sort d'un flou,
 /// squelettes de chargement, onglet des joueurs animé, retours haptiques (pilule, révélation, épingler, retirer).
+/// Fonctionnalités : « Regarder » (match en direct) et « Revoir la game N » (game jouée), draft, courbe de l'écart de gold,
+/// joueurs avec icônes, objets, runes et sorts d'invocateur (fiche au toucher), fil des événements. Rien de tout cela pour
+/// un match masqué : ni affichage, ni requête (`MatchDetailModel.featureGame`).
 struct MatchDetailView: View {
     @Environment(AppStore.self) private var store
     @State private var model: MatchDetailModel
@@ -15,6 +18,8 @@ struct MatchDetailView: View {
     @State private var haptics = HapticTrigger()
     /// Capsule de sélection des pilules de games, qui glisse de l'une à l'autre (`matchedGeometryEffect`).
     @Namespace private var pillSelection
+    /// Fiche du joueur touché dans « Joueurs » (spec fonctionnalités §3).
+    @State private var player: PlayerSheetItem?
 
     init(matchId: String) {
         _model = State(initialValue: MatchDetailModel(matchId: matchId))
@@ -25,6 +30,21 @@ struct MatchDetailView: View {
     private struct LoadKey: Equatable, Sendable {
         let game: Int?
         let revealed: Bool
+    }
+
+    /// Ce qui relance les fonctionnalités de la game affichée (fil, détails, sorts) : une autre game, la révélation (la
+    /// game passe de nil à la game affichée), la fin de la game, et la lecture de sa frame `finished` (les détails par
+    /// joueur ne sont définitifs qu'alors : la boucle de 60 s continue jusque-là).
+    private struct FeatureKey: Equatable, Sendable {
+        let gameId: String?
+        let inProgress: Bool
+        let detailsFinal: Bool
+    }
+
+    /// Ce qui relance la version Data Dragon : une autre game, ou son patch enfin connu (première frame lue).
+    private struct VersionKey: Equatable, Sendable {
+        let gameId: String?
+        let patch: String?
     }
 
     var body: some View {
@@ -44,6 +64,36 @@ struct MatchDetailView: View {
         .task(id: LoadKey(game: model.selectedGameNumber, revealed: store.settings.revealedMatchIds.contains(model.matchId))) {
             await model.loadSelectedGame(store: store)
         }
+        .task(id: featureKey) { await model.runFeatures(store: store) }
+        .task(id: versionKey) { await model.loadDataDragon(store: store) }
+        // Chaque frame lue en direct (10 s) allonge le fil et la courbe ; nil pour un match masqué (`featureGame`).
+        .onChange(of: featureSnapshot) { _, snapshot in
+            if let snapshot {
+                store.timelines.append(snapshot)
+            }
+        }
+        .environment(\.dataDragon, store.dataDragon)
+        .sheet(item: $player) { item in
+            PlayerSheet(item: item)
+                .environment(\.dataDragon, store.dataDragon)
+                .presentationDetents([.medium, .large])
+        }
+    }
+
+    private var featureKey: FeatureKey {
+        let game = model.featureGame(store: store)
+        return FeatureKey(gameId: game?.id, inProgress: game?.state == .inProgress,
+                          detailsFinal: game.map { model.detailsAreFinal($0, store: store) } ?? false)
+    }
+
+    private var versionKey: VersionKey {
+        let game = model.featureGame(store: store)
+        return VersionKey(gameId: game?.id, patch: game.flatMap { store.patches[$0.id] })
+    }
+
+    /// Dernière frame de la game des fonctionnalités ; nil pour un match masqué ou sans stats.
+    private var featureSnapshot: GameSnapshot? {
+        model.featureGame(store: store).flatMap { store.snapshots[$0.id] }
     }
 
     @ViewBuilder private var content: some View {
@@ -56,6 +106,11 @@ struct MatchDetailView: View {
         let state = store.detailState(matchId: model.matchId)
         let tint = ordered.compactMap { store.tint(for: $0) }.first
         header(event: event, details: details, teams: ordered, order: order, state: state, masked: masked, tint: tint)
+        // « Regarder » (spec fonctionnalités §1) : match en direct non masqué seulement (l'image montre le score).
+        if let watch = WatchLinks.live(event?.streams ?? details?.streams, inProgress: event?.state == .inProgress,
+                                       masked: masked) {
+            WatchButton(live: watch, onHaptic: { haptics.play($0) })
+        }
         if masked {
             RevealButton { reveal() }
         } else if let details {
@@ -63,6 +118,10 @@ struct MatchDetailView: View {
             // que l'écran : la mise en page ne change pas.
             VStack(alignment: .leading, spacing: 14) {
                 gamePills(details)
+                // « Revoir la game N » (spec fonctionnalités §1) : game jouée, même sans stats live.
+                if let game = model.selectedGame(in: details), let replay = WatchLinks.replay(game, masked: masked) {
+                    ReplayButton(gameNumber: game.number, link: replay, onHaptic: { haptics.play($0) })
+                }
                 if details.statsDisabled || event?.statsDisabled == true {
                     NoteCard(icon: .off, text: "Stats live non fournies par Riot pour ce match")
                 } else if let game = model.selectedGame(in: details) {
@@ -79,6 +138,12 @@ struct MatchDetailView: View {
         if showsPinButton(event: event) {
             LiveActivityPinButton(matchId: model.matchId, onHaptic: { haptics.play($0) })
         }
+    }
+
+    /// Fiche d'un joueur (spec fonctionnalités §3), avec un retour « sélection ».
+    private func openPlayer(_ item: PlayerSheetItem) {
+        haptics.play(.playerPicked)
+        player = item
     }
 
     /// « Toucher pour révéler » (spec §8) : le score et les stats sortent d'un flou en fondu, avec un retour haptique.
@@ -214,9 +279,14 @@ struct MatchDetailView: View {
                 NoteCard(icon: .off, text: "Stats live non fournies par Riot pour ce match")
             } else if let snapshot = store.snapshots[game.id], ids.count == 2,
                       let left = snapshot.stats(for: ids[0]), let right = snapshot.stats(for: ids[1]) {
+                // Draft, stats, courbe de gold, joueurs enrichis, fil (spec fonctionnalités §3-§5).
+                DraftSection(game: game, teams: teams, snapshot: snapshot)
                 TeamStatsPanel(left: left, right: right, tint: store.tint(for: teams[0]) ?? Palette.accent)
-                PlayersPanel(teams: teams, snapshot: snapshot,
-                             selection: $model.playersTeamIndex.animation(Motion.animation(.snappy, reduceMotion: reduceMotion)))
+                GoldCurveSection(game: game, teams: teams)
+                PlayersSection(game: game, teams: teams, snapshot: snapshot,
+                               selection: $model.playersTeamIndex.animation(Motion.animation(.snappy, reduceMotion: reduceMotion)),
+                               onSelect: { openPlayer($0) })
+                TimelineSection(game: game, teams: teams)
             } else if game.state == .inProgress || !model.hasLoaded(game) {
                 // Première frame (game en cours) ou première réponse (game jouée) pas encore arrivée (spec finitions §10) :
                 // le gabarit des panneaux. « Indisponibles » n'apparaît qu'une fois le chargement fini sans stats.
