@@ -8,6 +8,8 @@ enum Icon: String, CaseIterable, Sendable {
     case star
     case starFill = "star-fill"
     case trophy, settings, search, back, arrow, pin, check, refresh, off, pause
+    /// « Regarder » / « Revoir » (spec fonctionnalités §1) : écran avec un triangle de lecture.
+    case play
 
     var assetName: String {
         "icon-" + rawValue

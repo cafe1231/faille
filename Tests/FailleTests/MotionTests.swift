@@ -99,6 +99,8 @@ struct MotionTests {
         #expect(Haptic.refreshFailed.style == .warning)
         #expect(Haptic.colorPicked.style == .selection)
         #expect(Haptic.gamePicked.style == .selection)
+        #expect(Haptic.watch.style == .lightImpact)
+        #expect(Haptic.playerPicked.style == .selection)
     }
 
     /// Deux révélations de suite jouent deux retours : la valeur observée par `.sensoryFeedback` change à chaque fois.
