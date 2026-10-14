@@ -26,11 +26,13 @@ public struct LeaguepediaClient: Sendable {
     /// Sorts d'invocateur d'une game terminée, par champion : `champions` = ids Data Dragon du flux (les 10 de la game),
     /// `start` = début de la game. Réponse : ids Data Dragon des sorts (« SummonerFlash ») par id de champion ; nil si le
     /// wiki n'a pas (encore) la game.
+    /// Anti-spoiler : l'appli ne l'appelle jamais pour un match masqué (les sorts sont ceux d'une game jouée).
     public func summonerSpells(champions: [String], around start: Date) async throws -> [String: [String]]? {
         SpellMatcher.match(champions: champions, around: start, rows: try await scoreboard(around: start))
     }
 
     /// Lignes `ScoreboardPlayers` des games commencées à ± 3 h de `start` (une seule requête, 500 lignes au plus).
+    /// Anti-spoiler : jamais pour un match masqué, et seulement quand `SpellLookupPolicy` le permet.
     public func scoreboard(around start: Date) async throws -> [ScoreboardRow] {
         let response = try await transport.get(Self.scoreboardURL(around: start), headers: ["User-Agent": Self.userAgent])
         guard response.status == 200 else { throw LeaguepediaError.http(status: response.status) }
