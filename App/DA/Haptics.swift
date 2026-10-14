@@ -10,19 +10,23 @@ enum Haptic: Equatable, Sendable {
     case refreshSucceeded, refreshFailed
     case colorPicked
     case gamePicked
+    /// « Regarder » / « Revoir » (spec fonctionnalités §1).
+    case watch
+    /// Fiche d'un joueur ouverte depuis « Joueurs » (spec fonctionnalités §3).
+    case playerPicked
 
     /// Nature du retour, testable sans `SensoryFeedback`.
     enum Style: Equatable, Sendable {
         case success, lightImpact, mediumImpact, selection, warning
     }
 
-    /// Suivre, épingler, rafraîchir : succès ; ne plus suivre, retirer : impact léger ; œil, couleur, pilule :
-    /// sélection ; révéler : impact moyen ; rafraîchir en échec : avertissement.
+    /// Suivre, épingler, rafraîchir : succès ; ne plus suivre, retirer, regarder : impact léger ; œil, couleur, pilule,
+    /// joueur : sélection ; révéler : impact moyen ; rafraîchir en échec : avertissement.
     var style: Style {
         switch self {
         case .follow, .pin, .refreshSucceeded: return .success
-        case .unfollow, .unpin: return .lightImpact
-        case .spoilerToggle, .colorPicked, .gamePicked: return .selection
+        case .unfollow, .unpin, .watch: return .lightImpact
+        case .spoilerToggle, .colorPicked, .gamePicked, .playerPicked: return .selection
         case .reveal: return .mediumImpact
         case .refreshFailed: return .warning
         }
