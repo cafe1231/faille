@@ -65,9 +65,9 @@ public struct LoLClient: Sendable {
         }
     }
 
-    /// Dernières frames d'une game en cours. Le flux refuse (400) une fenêtre « en avance sur la diffusion », avec un seuil
-    /// qui dépend du match (vu le 14/10/2026 : une fin de fenêtre de moins d'environ 62 s refusée) : on recule par
-    /// paliers (`LiveStatsTime.delays`) et on retient, pour cette game, le premier délai accepté.
+    /// Dernières frames d'une game en cours. Le flux refuse (400 « ahead of broadcast ») une fenêtre dont la fin a moins
+    /// de 80 s (mesuré le 14/10/2026 à 0,5 s près sur 78 requêtes) : on recule par paliers (`LiveStatsTime.delays`) et on
+    /// retient, pour cette game, le premier délai accepté.
     public func liveWindow(gameId: String, now: Date) async throws -> LiveWindow {
         let first = await LiveStatsTime.memory.delayIndex(for: gameId)
         for index in first..<LiveStatsTime.delays.count {
@@ -95,7 +95,9 @@ public struct LoLClient: Sendable {
 /// Heure à demander au flux livestats : un délai dans le passé, arrondi aux 10 s inférieures. Le flux refuse une fenêtre
 /// trop récente (en avance sur la diffusion) : `LoLClient.liveWindow` essaie ces délais dans l'ordre.
 public enum LiveStatsTime {
-    public static let delays: [TimeInterval] = [90, 120, 180, 300, 600]
+    /// 90 s : fin de fenêtre entre 80 et 90 s, la donnée la plus fraîche que le flux accepte ; 100 s couvre une horloge
+    /// en retard d'une seconde ; les paliers suivants, un seuil plus long sur un autre match.
+    public static let delays: [TimeInterval] = [90, 100, 120, 180, 300, 600]
 
     public static func startingTime(now: Date, delay: TimeInterval = delays[0]) -> Date {
         let seconds = now.timeIntervalSince1970 - delay

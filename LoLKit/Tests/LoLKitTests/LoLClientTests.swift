@@ -101,13 +101,13 @@ import Testing
         let window = try await client.liveWindow(gameId: "step-back", now: date("2026-10-13T12:00:37Z"))
         #expect(window.latestSnapshot()?.blue.kills == 7)
         let urls = await fake.requests.map(\.url)
-        #expect(urls.compactMap { queryValue($0, "startingTime") } == ["2026-10-13T11:59:00.000Z", "2026-10-13T11:58:30.000Z"])
+        #expect(urls.compactMap { queryValue($0, "startingTime") } == ["2026-10-13T11:59:00.000Z", "2026-10-13T11:58:50.000Z"])
 
-        // Le délai qui a marché est retenu pour cette game : la relecture suivante ne refait pas l'essai refusé.
-        _ = try await client.liveWindow(gameId: "step-back", now: date("2026-10-13T12:00:47Z"))
+        // Le délai qui a marché (100 s) est retenu pour cette game : la relecture suivante ne refait pas l'essai refusé.
+        _ = try await client.liveWindow(gameId: "step-back", now: date("2026-10-13T12:00:57Z"))
         let next = try #require(await fake.requests.last?.url)
         #expect(await fake.requests.count == 3)
-        #expect(queryValue(next, "startingTime") == "2026-10-13T11:58:40.000Z")
+        #expect(queryValue(next, "startingTime") == "2026-10-13T11:59:10.000Z")
     }
 
     @Test func liveWindowGivesUpAfterTheLongestDelay() async throws {
