@@ -35,5 +35,8 @@ extension ApercuTests {
         .abyssBackground()
         let url = try await Snapshot.write(board, named: "19-fil-et-courbe")
         expectNotBlank(url)
+        // La planche dépasse l'écran : la seconde capture montre le bas (courbe d'une game jouée et gabarits).
+        let bottom = try await Snapshot.write(board.defaultScrollAnchor(.bottom), named: "19-fil-et-courbe-bas")
+        expectNotBlank(bottom)
     }
 }
