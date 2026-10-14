@@ -22,12 +22,22 @@ final class DataDragonStore {
 
     /// Résultat d'un chargement d'image, transporté d'un fil à l'autre : l'image n'est jamais modifiée après sa création.
     struct LoadedImage: @unchecked Sendable {
+        /// Pourquoi il n'y a pas d'image.
+        enum Failure: Sendable {
+            /// Absente chez Data Dragon (403 ou 404, ce que le CDN répond pour un fichier qui n'existe pas) : inutile de la
+            /// redemander pendant la session.
+            case missing
+            /// Panne passagère (réseau, 5xx, 429, portail Wi-Fi, réponse illisible) : un nouvel essai, mais pas avant
+            /// `versionsRetry`.
+            case temporary
+        }
+
         let image: UIImage?
-        /// Absente chez Data Dragon (réponse autre que 200, ou illisible) : inutile de la redemander pendant la session.
-        let missing: Bool
+        /// nil : image chargée, ou rien à retenir (aperçus, sans réseau).
+        let failure: Failure?
     }
 
-    /// Pas plus d'un essai par minute pour la liste des versions quand le réseau échoue.
+    /// Pas plus d'un essai par minute quand le réseau échoue : la liste des versions, et chaque image.
     static let versionsRetry: TimeInterval = 60
 
     private let transport: (any HTTPTransport)?
@@ -38,6 +48,9 @@ final class DataDragonStore {
     @ObservationIgnored private var catalogsLoading: Set<String> = []
     @ObservationIgnored private var imageLoads: [URL: Task<LoadedImage, Never>] = [:]
     @ObservationIgnored private var missingImages: Set<URL> = []
+    /// Date du dernier échec passager de chaque image : tant qu'une minute ne s'est pas écoulée, la requête n'est pas
+    /// renvoyée (une icône qui réapparaît à chaque changement d'équipe ou de pilule la redemanderait sans cela).
+    @ObservationIgnored private var failedImages: [URL: Date] = [:]
 
     /// - Parameters:
     ///   - transport: réseau ; nil (aperçus) : aucune requête.
@@ -149,10 +162,16 @@ final class DataDragonStore {
     }
 
     /// Image Data Dragon : mémoire, sinon disque, sinon réseau (puis disque) ; décodée hors du fil principal. nil si
-    /// introuvable ; une image absente chez Data Dragon n'est plus redemandée pendant la session (une panne réseau, si).
-    func image(_ url: URL) async -> UIImage? {
+    /// introuvable. Une image absente chez Data Dragon (403, 404) n'est plus redemandée pendant la session ; après une panne
+    /// passagère (réseau, 5xx, 429, réponse illisible), pas de nouvel essai avant `versionsRetry`.
+    /// - Parameter now: l'heure de l'appel (les tests la fournissent).
+    func image(_ url: URL, now: Date = Date()) async -> UIImage? {
         if let hit = cachedImage(url) { return hit }
         guard !missingImages.contains(url), let path = DataDragon.cachePath(for: url) else { return nil }
+        if let failedAt = failedImages[url] {
+            let elapsed = now.timeIntervalSince(failedAt)
+            if elapsed >= 0, elapsed < Self.versionsRetry { return nil }
+        }
         let load = imageLoads[url] ?? Task.detached(priority: .utility) {
             [transport = self.transport, cache = self.cache] in
             await Self.fetchImage(url, path: path, transport: transport, cache: cache)
@@ -160,7 +179,15 @@ final class DataDragonStore {
         imageLoads[url] = load
         let loaded = await load.value
         imageLoads[url] = nil
-        if loaded.missing { missingImages.insert(url) }
+        switch loaded.failure {
+        case .missing:
+            missingImages.insert(url)
+            failedImages[url] = nil
+        case .temporary:
+            failedImages[url] = now
+        case nil:
+            failedImages[url] = nil
+        }
         guard let image = loaded.image else { return nil }
         images.setObject(image, forKey: url as NSURL)
         return image
@@ -169,18 +196,21 @@ final class DataDragonStore {
     private nonisolated static func fetchImage(_ url: URL, path: String, transport: (any HTTPTransport)?,
                                                cache: DiskCache?) async -> LoadedImage {
         if let data = cache?.data(path), let image = decode(data) {
-            return LoadedImage(image: image, missing: false)
+            return LoadedImage(image: image, failure: nil)
         }
-        guard let transport else { return LoadedImage(image: nil, missing: false) }
+        guard let transport else { return LoadedImage(image: nil, failure: nil) }
         do {
             let response = try await transport.get(url, headers: [:])
+            if response.status == 403 || response.status == 404 {
+                return LoadedImage(image: nil, failure: .missing)
+            }
             guard response.status == 200, let image = decode(response.body) else {
-                return LoadedImage(image: nil, missing: true)
+                return LoadedImage(image: nil, failure: .temporary)
             }
             cache?.write(response.body, to: path)
-            return LoadedImage(image: image, missing: false)
+            return LoadedImage(image: image, failure: nil)
         } catch {
-            return LoadedImage(image: nil, missing: false)
+            return LoadedImage(image: nil, failure: .temporary)
         }
     }
 

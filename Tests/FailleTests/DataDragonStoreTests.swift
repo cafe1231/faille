@@ -113,6 +113,77 @@ struct DataDragonStoreTests {
         #expect(await transport.requests.filter { $0 == missing }.count == 1)
     }
 
+    /// Une panne passagère (5xx, 429) est retenue : l'icône qui réapparaît ne renvoie pas la requête avant une minute, puis
+    /// la renvoie.
+    @Test(arguments: [429, 500, 503])
+    func aTemporaryFailureIsNotAskedAgainForAMinute(status: Int) async {
+        let transport = ScriptedTransport(extra: { _ in HTTPResponse(status: status, body: Data()) })
+        let store = DataDragonStore(transport: transport, cache: Self.cache())
+        let url = DataDragon.championImage(version: "16.18.1", championId: "KSante")
+        let start = Date()
+        #expect(await store.image(url, now: start) == nil)
+        #expect(await store.image(url, now: start.addingTimeInterval(DataDragonStore.versionsRetry - 1)) == nil)
+        #expect(await transport.requests.count == 1)
+        // Une minute plus tard : un nouvel essai, et le compte repart de là.
+        let retry = start.addingTimeInterval(DataDragonStore.versionsRetry)
+        #expect(await store.image(url, now: retry) == nil)
+        #expect(await transport.requests.count == 2)
+        #expect(await store.image(url, now: retry.addingTimeInterval(10)) == nil)
+        #expect(await transport.requests.count == 2)
+    }
+
+    /// Réponse illisible (un portail Wi-Fi qui répond 200 avec une page) ou erreur réseau : passagères aussi.
+    @Test func anUnreadableResponseOrANetworkErrorIsTemporary() async {
+        let url = DataDragon.championImage(version: "16.18.1", championId: "KSante")
+        let start = Date()
+        let page = ScriptedTransport(extra: { _ in HTTPResponse(status: 200, body: Data("<html>portail</html>".utf8)) })
+        let unreadable = DataDragonStore(transport: page, cache: Self.cache())
+        #expect(await unreadable.image(url, now: start) == nil)
+        #expect(await unreadable.image(url, now: start.addingTimeInterval(30)) == nil)
+        #expect(await page.requests.count == 1)
+        #expect(await unreadable.image(url, now: start.addingTimeInterval(61)) == nil)
+        #expect(await page.requests.count == 2)
+
+        let down = ScriptedTransport(failure: { _ in URLError(.notConnectedToInternet) })
+        let offline = DataDragonStore(transport: down, cache: Self.cache())
+        #expect(await offline.image(url, now: start) == nil)
+        #expect(await offline.image(url, now: start.addingTimeInterval(30)) == nil)
+        #expect(await down.requests.count == 1)
+        #expect(await offline.image(url, now: start.addingTimeInterval(61)) == nil)
+        #expect(await down.requests.count == 2)
+    }
+
+    /// Seuls 403 et 404 (ce que le CDN répond pour un fichier qui n'existe pas) rendent l'image absente pour la session.
+    @Test(arguments: [403, 404])
+    func aMissingImageIsNeverAskedAgain(status: Int) async {
+        let transport = ScriptedTransport(extra: { _ in HTTPResponse(status: status, body: Data()) })
+        let store = DataDragonStore(transport: transport, cache: Self.cache())
+        let url = DataDragon.itemImage(version: "16.18.1", itemId: 9999)
+        let start = Date()
+        #expect(await store.image(url, now: start) == nil)
+        #expect(await store.image(url, now: start.addingTimeInterval(10 * 60)) == nil)
+        #expect(await store.image(url, now: start.addingTimeInterval(24 * 3600)) == nil)
+        #expect(await transport.requests.count == 1)
+    }
+
+    /// Le réseau revient : l'image arrive au premier essai permis, et plus aucune requête ensuite.
+    @Test func anImageArrivesOnceTheNetworkIsBack() async {
+        let png = TestImages.png(.systemTeal, letter: "K")
+        let transport = Self.transport(png: png)
+        await transport.setMode(.failing)
+        let store = DataDragonStore(transport: transport, cache: Self.cache())
+        let url = DataDragon.championImage(version: "16.18.1", championId: "KSante")
+        let start = Date()
+        #expect(await store.image(url, now: start) == nil)
+        await transport.setMode(.ok)
+        #expect(await store.image(url, now: start.addingTimeInterval(20)) == nil) // trop tôt : pas de requête
+        #expect(await transport.requests.count == 1)
+        #expect(await store.image(url, now: start.addingTimeInterval(61)) != nil)
+        #expect(await transport.requests.count == 2)
+        #expect(await store.image(url, now: start.addingTimeInterval(62)) != nil)
+        #expect(await transport.requests.count == 2)
+    }
+
     @Test func previewStoreAsksNothing() async {
         let store = DataDragonStore.preview()
         #expect(await store.version(forPatch: "16.18.819.1060") == nil)
