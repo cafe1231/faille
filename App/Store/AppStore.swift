@@ -419,8 +419,14 @@ final class AppStore {
             scheduleFetched = await fetch(.schedule)
             if Task.isCancelled { return }
         }
-        // Un direct qui vient d'échouer n'est pas une raison de demander les stats de ses matchs (ils échoueraient aussi).
-        if liveFetched { await refreshLiveStats() }
+        // Stats des cartes à chaque tour (10 s) : le flux n'a une nouvelle donnée que toutes les 10 s, alors que le direct
+        // reste relu toutes les 60 s (cache CloudFront de 60 s, spec §4.1). Pas de stats quand le direct vient d'échouer
+        // (elles échoueraient aussi), quand l'API est en échec, ni sur un direct trop vieux pour être cru. Les détails des
+        // Live Activities orphelines restent relus à la cadence du direct.
+        let liveTrusted = lastSuccess[.live].map { Date().timeIntervalSince($0) <= RefreshPolicy.liveTrust } ?? false
+        if liveFetched || (!due.contains(.live) && liveTrusted && !isFailing) {
+            await refreshLiveStats(includingDetails: liveFetched)
+        }
     }
 
     private var wantedLeagueIds: [String] {
@@ -497,14 +503,14 @@ final class AppStore {
     }
 
     /// Stats des matchs en direct des équipes suivies (cartes) et de ceux qui ont une Live Activity (match épinglé
-    /// d'équipes non suivies), à la cadence du direct. Les matchs masqués ne sont pas demandés. Une game en cours est
+    /// d'équipes non suivies), à chaque tour du premier plan (10 s). Les matchs masqués ne sont pas demandés. Une game en cours est
     /// interrogée même quand Riot n'en fournit pas les stats (`statsDisabled`) : le chrono (spec §4.3, §5.1) n'en
     /// dépend pas, et les stats restent cachées par LoLKit. Un 404 arrête ensuite les nouvelles tentatives pour cette
     /// game (`statsUnavailable`).
     /// Un match dont la Live Activity est à l'écran, sorti du direct et pas terminé au calendrier (compétition hors des
     /// ligues suivies, équipe plus suivie), est relu par ses détails : seuls eux disent que sa série est gagnée
     /// (`activityContent`).
-    func refreshLiveStats() async {
+    func refreshLiveStats(includingDetails: Bool = true) async {
         guard !isPreview, let live else { return }
         for event in live where follows.involves(event.match.teams) || liveActivities.shownMatchIds.contains(event.id) {
             if Task.isCancelled { return }
@@ -512,6 +518,7 @@ final class AppStore {
                   let game = EventDetails(event: event).currentGame else { continue }
             await loadWindow(gameId: game.id, inProgress: true)
         }
+        guard includingDetails else { return }
         for matchId in liveActivities.shownMatchIds where !live.contains(where: { $0.id == matchId })
             && schedule.first(where: { $0.id == matchId })?.state != .completed {
             if Task.isCancelled { return }

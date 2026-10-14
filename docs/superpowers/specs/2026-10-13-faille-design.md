@@ -70,7 +70,7 @@ App Esport en direct/            (dépôt « faille »)
 | Calendrier, résultats | `…/getSchedule?hl=fr-FR&leagueId=a,b,c` (ligues d'attache des équipes suivies + Mondial, MSI, First Stand ; une seule page, qui couvre environ ±6 semaines) | toutes les 30 min, et à chaque ouverture |
 | Matchs en cours | `…/getLive?hl=fr-FR` | 60 s (le CDN met en cache 60 s) |
 | Games d'un match | `…/getEventDetails?hl=fr-FR&id=…` | à l'ouverture d'un match en direct, puis à chaque changement de game |
-| Stats d'équipe **et des joueurs** en direct | `feed.lolesports.com/livestats/v1/window/{gameId}?startingTime=…` (les joueurs : `frames[].*.participants` + `gameMetadata` pour champion, rôle et pseudo) | 10 s, uniquement pour les games affichées |
+| Stats d'équipe **et des joueurs** en direct | `feed.lolesports.com/livestats/v1/window/{gameId}?startingTime=…` (les joueurs : `frames[].*.participants` + `gameMetadata` pour champion, rôle et pseudo) | 10 s (une nouvelle donnée au plus toutes les 10 s), pour les matchs en direct des équipes suivies (cartes, Live Activities) et la game du Détail |
 | Début d'une game (pour le chrono) | `…/window/{gameId}` **sans** `startingTime` : renvoie les premières frames | une fois par game |
 
 - L'API `persisted/gw` exige l'en-tête `x-api-key` : la clé publique que le site lolesports.com envoie à chaque visiteur. Elle vit dans une seule constante de `LoLKit/API`.

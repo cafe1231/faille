@@ -244,6 +244,29 @@ struct StoreRefreshTests {
         #expect(windows.count == 1)
     }
 
+    /// Les stats des cartes suivent chaque tour (10 s) sans attendre la relecture du direct (60 s).
+    @Test func liveStatsFollowEveryTickBetweenLiveFetches() async throws {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let event = try encoder.encode(SampleData.noStatsLive)
+        let liveBody = Data(#"{"data":{"schedule":{"events":["#.utf8) + event + Data("]}}}".utf8)
+        let window = Self.windowJSON(gameId: "g2-bro-lgd", blue: "bro", red: "lgd")
+        let transport = ScriptedTransport(extra: { url in
+            if url.path.hasSuffix("/getLive") { return HTTPResponse(status: 200, body: liveBody) }
+            if url.absoluteString.contains("/window/") { return HTTPResponse(status: 200, body: window) }
+            return nil
+        })
+        let store = AppStore(transport: transport, files: seededFiles())
+        await store.refreshDue(opening: true)
+        let afterFirst = await transport.requests.filter { $0.absoluteString.contains("/window/") }.count
+        #expect(afterFirst > 0)
+
+        await store.refreshDue(opening: false)
+        let requests = await transport.requests
+        #expect(requests.filter { $0.path.hasSuffix("/getLive") }.count == 1) // le direct n'est pas relu avant 60 s
+        #expect(requests.filter { $0.absoluteString.contains("/window/") }.count > afterFirst)
+    }
+
     // MARK: Couleurs d'équipe
 
     /// Un logo qui échoue ne bloque pas les équipes suivantes, et n'est pas réessayé à chaque tick.
