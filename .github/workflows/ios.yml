@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Seul le dernier commit d'une branche compte : un push plus récent annule la vérification en cours (il contient tout).
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     # Si ce label n'existe pas sur GitHub, utiliser macos-latest.
