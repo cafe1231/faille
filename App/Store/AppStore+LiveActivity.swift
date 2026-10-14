@@ -86,7 +86,10 @@ extension AppStore {
     /// Réveil par iOS (`BGAppRefreshTask`, spec §6.4) : le direct et les stats des matchs suivis (ni logos ni couleurs :
     /// le temps accordé est compté, environ 30 s), puis les Live Activities — sans en démarrer, iOS ne le permet pas
     /// en arrière-plan —, puis la demande du réveil suivant. Sans effet dans les aperçus et les tests.
+    /// Le réveil suivant est demandé dès le début : si le temps accordé expire pendant les requêtes, la chaîne de réveils
+    /// ne s'arrête pas là ; la demande de la fin, plus fraîche (le direct vient d'être relu), remplace la première.
     func refreshInBackground() async {
+        scheduleBackgroundRefresh()
         await refreshDue(opening: false)
         await syncLiveActivities(canStart: false)
         scheduleBackgroundRefresh()
