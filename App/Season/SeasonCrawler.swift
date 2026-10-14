@@ -43,6 +43,7 @@ struct SeasonCrawler {
     private func enumerate(_ context: SeasonContext) async throws {
         let now = context.now
         let leagueIds = SeasonPlanning.leagueIds(context)
+        var wrote = false
         for leagueId in leagueIds {
             let key = SeasonStore.tournamentsKey(leagueId)
             guard CrawlPlanner.needsRefresh(fetchedAt: store.lastFetch(key), now: now,
@@ -53,7 +54,6 @@ struct SeasonCrawler {
             }
         }
         let today = SeasonPlanning.day(now)
-        var wrote = false
         for tournament in SeasonPlanning.startedTournaments(store.tournaments, leagueIds: leagueIds, now: now) {
             // En cours : relu après 30 min ; terminé et déjà lu : jamais relu (`CrawlPlanner.maxAge` nil).
             let maxAge = CrawlPlanner.maxAge(of: tournament, today: today)
