@@ -39,6 +39,8 @@ public enum MatchReminders {
     /// que sa notification tombe après `now`, et que `Presenter.nextLine` l'affiche (`.match`) sur la carte d'au moins une
     /// équipe suivie qui y joue : jamais un prochain match caché par la règle F1 (dernier match masqué) ou la règle C
     /// (adversaire suivi en anti-spoiler au dernier match masqué). Donc au plus un match par équipe suivie : son prochain.
+    /// Ligues suivies avec `notifyStarts` (spec saison §3.5) : en plus, chacun de leurs matchs à venir qui n'oppose
+    /// aucune équipe suivie (ceux-là restent soumis à la règle ci-dessus) ni une équipe encore inconnue (« TBD »).
     /// - Parameters:
     ///   - schedule: calendrier en cache (`getSchedule`).
     ///   - revealed: ids des matchs révélés par l'utilisateur.
@@ -54,6 +56,17 @@ public enum MatchReminders {
             guard case let .match(event) = Presenter.nextLine(for: card, follows: follows, revealed: revealed,
                                                               maskedLatestTeamIds: maskedLatest),
                   event.state == .unstarted, !planned.contains(event.id) else { continue }
+            let fireDate = event.startTime.addingTimeInterval(-lead)
+            guard fireDate > now else { continue }
+            planned.insert(event.id)
+            reminders.append(MatchReminder(id: identifier(matchId: event.id), matchId: event.id, fireDate: fireDate,
+                                           title: title(event, follows: follows, lead: lead),
+                                           subtitle: subtitle(event)))
+        }
+        let notifiedSlugs = Set(follows.leagues.filter(\.notifyStarts).map(\.slug))
+        for event in schedule where notifiedSlugs.contains(event.league.slug) && event.state == .unstarted
+            && !planned.contains(event.id) && !follows.involves(event.match.teams)
+            && !event.match.teams.contains(where: \.isPlaceholder) {
             let fireDate = event.startTime.addingTimeInterval(-lead)
             guard fireDate > now else { continue }
             planned.insert(event.id)

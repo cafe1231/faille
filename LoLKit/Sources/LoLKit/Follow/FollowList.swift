@@ -68,22 +68,86 @@ extension MatchTeam {
     }
 }
 
-/// Les équipes suivies, dans l'ordre où elles ont été suivies.
-public struct FollowList: Codable, Sendable, Equatable {
-    public private(set) var teams: [FollowedTeam]
+/// Une ligue suivie (spec saison §3.5) : ses matchs vont dans le calendrier, l'Accueil et « À ne pas rater ».
+public struct FollowedLeague: Codable, Sendable, Equatable, Identifiable {
+    public let id: String
+    public var slug: String
+    public var name: String
+    public var image: String?
+    /// Notifications de début de match pour tous les matchs de la ligue (désactivées par défaut).
+    public var notifyStarts: Bool
 
-    public init(teams: [FollowedTeam] = []) {
-        self.teams = teams
+    public init(id: String, slug: String, name: String, image: String? = nil, notifyStarts: Bool = false) {
+        self.id = id
+        self.slug = slug
+        self.name = name
+        self.image = image
+        self.notifyStarts = notifyStarts
+    }
+
+    public init(league: League) {
+        self.init(id: league.id, slug: league.slug, name: league.name, image: league.image)
     }
 
     private enum CodingKeys: String, CodingKey {
-        case teams
+        case id, slug, name, image, notifyStarts
     }
 
-    /// Une entrée illisible est ignorée : les autres équipes suivies sont conservées.
+    /// `id`, `slug` et `name` indispensables ; logo illisible → nil, interrupteur illisible → désactivé.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        slug = try container.decode(String.self, forKey: .slug)
+        name = try container.decode(String.self, forKey: .name)
+        image = try? container.decodeIfPresent(String.self, forKey: .image)
+        notifyStarts = (try? container.decodeIfPresent(Bool.self, forKey: .notifyStarts)) ?? false
+    }
+}
+
+/// Les équipes suivies, dans l'ordre où elles ont été suivies, et les ligues suivies.
+public struct FollowList: Codable, Sendable, Equatable {
+    public private(set) var teams: [FollowedTeam]
+    /// Ligues suivies, dans l'ordre où elles ont été suivies (spec saison §3.5).
+    public private(set) var leagues: [FollowedLeague]
+
+    public init(teams: [FollowedTeam] = [], leagues: [FollowedLeague] = []) {
+        self.teams = teams
+        self.leagues = leagues
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case teams, leagues
+    }
+
+    /// Une entrée illisible est ignorée : les autres équipes suivies sont conservées. `leagues` absent (liste
+    /// enregistrée avant les ligues) ou illisible → aucune ligue.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         teams = try container.decode(LossyArray<FollowedTeam>.self, forKey: .teams).elements
+        leagues = (try? container.decodeIfPresent(LossyArray<FollowedLeague>.self, forKey: .leagues))?.elements ?? []
+    }
+
+    public func containsLeague(id: String) -> Bool {
+        leagues.contains { $0.id == id }
+    }
+
+    /// Ligue suivie de ce slug (les matchs du calendrier portent `league.slug`, pas toujours l'id).
+    public func league(slug: String) -> FollowedLeague? {
+        leagues.first { $0.slug == slug }
+    }
+
+    public mutating func follow(league: League) {
+        guard !containsLeague(id: league.id) else { return }
+        leagues.append(FollowedLeague(league: league))
+    }
+
+    public mutating func unfollowLeague(id: String) {
+        leagues.removeAll { $0.id == id }
+    }
+
+    public mutating func setNotifyStarts(_ on: Bool, leagueId: String) {
+        guard let index = leagues.firstIndex(where: { $0.id == leagueId }) else { return }
+        leagues[index].notifyStarts = on
     }
 
     public func contains(id: String) -> Bool {

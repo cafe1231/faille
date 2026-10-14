@@ -73,6 +73,19 @@ import LoLKit
         #expect(card.id == followed.id)
     }
 
+    /// Ligues suivies et nouveaux réglages (spec saison §3.5, §3.7) : construits par l'appli (onboarding, Réglages).
+    @Test func followedLeaguesAndSettings() {
+        let league = League(id: "98767991302996019", slug: "lec", name: "LEC", region: "EMEA", image: nil, priority: 3)
+        let followed = FollowedLeague(league: league)
+        #expect(followed == FollowedLeague(id: "98767991302996019", slug: "lec", name: "LEC"))
+        let list = FollowList(teams: [], leagues: [FollowedLeague(id: "1", slug: "lck", name: "LCK", image: nil,
+                                                                  notifyStarts: true)])
+        #expect(list.leagues.first?.notifyStarts == true)
+        let settings = AppSettings(liveActivityMode: .manual, revealedMatchIds: [], matchRemindersEnabled: false,
+                                   matchReminderLead: 900, onboardingDone: true, revealedStandingIds: ["t"])
+        #expect(settings.onboardingDone && settings.revealedStandingIds == ["t"])
+    }
+
     @Test func scoreLine() {
         let line = ScoreLine(matchId: "m1", leagueName: "Mondial", bestOf: 5, teamCodes: ["KC", "C9"], score: [1, 0],
                              status: .live(gameNumber: 2), isMasked: false)
