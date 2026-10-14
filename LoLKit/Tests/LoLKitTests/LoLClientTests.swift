@@ -82,8 +82,49 @@ import Testing
         #expect(request.value(forHTTPHeaderField: "x-api-key") == "k")
     }
 
-    @Test func startingTimeIsOneMinuteBackRoundedToTenSeconds() {
-        #expect(LiveStatsTime.startingTime(now: date("2026-10-13T12:00:37Z")) == date("2026-10-13T11:59:30Z"))
-        #expect(LiveStatsTime.startingTime(now: date("2026-10-13T12:00:00Z")) == date("2026-10-13T11:59:00Z"))
+    @Test func startingTimeIsTheDelayBackRoundedToTenSeconds() {
+        #expect(LiveStatsTime.delays.first == 90)
+        #expect(LiveStatsTime.startingTime(now: date("2026-10-13T12:00:37Z")) == date("2026-10-13T11:59:00Z"))
+        #expect(LiveStatsTime.startingTime(now: date("2026-10-13T12:00:00Z")) == date("2026-10-13T11:58:30Z"))
+        #expect(LiveStatsTime.startingTime(now: date("2026-10-13T12:00:37Z"), delay: 120) == date("2026-10-13T11:58:30Z"))
+    }
+
+    /// Réponse réelle du flux (14/10/2026, Demacia Cup) quand la fenêtre demandée est trop récente.
+    private let aheadOfBroadcast = #"{"httpStatus":400,"errorCode":"BAD_QUERY_PARAMETER","message":"disallowed window with end time less than 80 sec old (was -9.73 sec old). requested window: [2026-10-14T09:37:30Z, 2026-10-14T09:37:40Z]) ahead of broadcast."}"#
+
+    @Test func liveWindowStepsBackWhenTheFeedIsAheadOfTheBroadcast() async throws {
+        let fake = FakeTransport()
+        try await fake.on("startingTime=2026-10-13T11:59:00", status: 400, body: aheadOfBroadcast)
+        try await fake.on("window/step-back", fixture: "window_ingame")
+        let client = LoLClient(transport: fake)
+
+        let window = try await client.liveWindow(gameId: "step-back", now: date("2026-10-13T12:00:37Z"))
+        #expect(window.latestSnapshot()?.blue.kills == 7)
+        let urls = await fake.requests.map(\.url)
+        #expect(urls.compactMap { queryValue($0, "startingTime") } == ["2026-10-13T11:59:00.000Z", "2026-10-13T11:58:30.000Z"])
+
+        // Le délai qui a marché est retenu pour cette game : la relecture suivante ne refait pas l'essai refusé.
+        _ = try await client.liveWindow(gameId: "step-back", now: date("2026-10-13T12:00:47Z"))
+        let next = try #require(await fake.requests.last?.url)
+        #expect(await fake.requests.count == 3)
+        #expect(queryValue(next, "startingTime") == "2026-10-13T11:58:40.000Z")
+    }
+
+    @Test func liveWindowGivesUpAfterTheLongestDelay() async throws {
+        let fake = FakeTransport()
+        try await fake.on("window/always-ahead", status: 400, body: aheadOfBroadcast)
+        await #expect(throws: LoLAPIError.http(status: 400)) {
+            try await LoLClient(transport: fake).liveWindow(gameId: "always-ahead", now: date("2026-10-13T12:00:37Z"))
+        }
+        #expect(await fake.requests.count == LiveStatsTime.delays.count)
+    }
+
+    @Test func liveWindowDoesNotRetryOtherErrors() async throws {
+        let fake = FakeTransport()
+        try await fake.on("window/no-stats", status: 404, body: "Stats are disabled")
+        await #expect(throws: LoLAPIError.statsDisabled) {
+            try await LoLClient(transport: fake).liveWindow(gameId: "no-stats", now: date("2026-10-13T12:00:37Z"))
+        }
+        #expect(await fake.requests.count == 1)
     }
 }

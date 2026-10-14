@@ -65,6 +65,24 @@ public struct LoLClient: Sendable {
         }
     }
 
+    /// Dernières frames d'une game en cours. Le flux refuse (400) une fenêtre « en avance sur la diffusion », avec un seuil
+    /// qui dépend du match (vu le 14/10/2026 : une fin de fenêtre de moins d'environ 62 s refusée) : on recule par
+    /// paliers (`LiveStatsTime.delays`) et on retient, pour cette game, le premier délai accepté.
+    public func liveWindow(gameId: String, now: Date) async throws -> LiveWindow {
+        let first = await LiveStatsTime.memory.delayIndex(for: gameId)
+        for index in first..<LiveStatsTime.delays.count {
+            do {
+                let window = try await window(gameId: gameId,
+                                              startingTime: LiveStatsTime.startingTime(now: now, delay: LiveStatsTime.delays[index]))
+                await LiveStatsTime.memory.remember(index, for: gameId)
+                return window
+            } catch LoLAPIError.http(status: 400) {
+                continue
+            }
+        }
+        throw LoLAPIError.http(status: 400)
+    }
+
     private func api<T: Decodable>(_ endpoint: String, query: [URLQueryItem] = [], as type: T.Type) async throws -> T {
         var components = URLComponents(string: "\(Self.apiBase)/\(endpoint)")!
         components.queryItems = [URLQueryItem(name: "hl", value: language)] + query
@@ -74,12 +92,24 @@ public struct LoLClient: Sendable {
     }
 }
 
-/// Heure à demander au flux livestats : environ 1 min dans le passé, arrondie aux 10 s inférieures.
+/// Heure à demander au flux livestats : un délai dans le passé, arrondi aux 10 s inférieures. Le flux refuse une fenêtre
+/// trop récente (en avance sur la diffusion) : `LoLClient.liveWindow` essaie ces délais dans l'ordre.
 public enum LiveStatsTime {
-    public static let delay: TimeInterval = 60
+    public static let delays: [TimeInterval] = [90, 120, 180, 300, 600]
 
-    public static func startingTime(now: Date) -> Date {
+    public static func startingTime(now: Date, delay: TimeInterval = delays[0]) -> Date {
         let seconds = now.timeIntervalSince1970 - delay
         return Date(timeIntervalSince1970: (seconds / 10).rounded(.down) * 10)
+    }
+
+    /// Délai accepté par game, gardé pour la durée du processus (le seuil ne change pas pendant un match).
+    static let memory = DelayMemory()
+
+    actor DelayMemory {
+        private var indexByGame: [String: Int] = [:]
+
+        func delayIndex(for gameId: String) -> Int { indexByGame[gameId] ?? 0 }
+
+        func remember(_ index: Int, for gameId: String) { indexByGame[gameId] = index }
     }
 }

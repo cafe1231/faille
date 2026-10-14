@@ -74,7 +74,7 @@ App Esport en direct/            (dépôt « faille »)
 | Début d'une game (pour le chrono) | `…/window/{gameId}` **sans** `startingTime` : renvoie les premières frames | une fois par game |
 
 - L'API `persisted/gw` exige l'en-tête `x-api-key` : la clé publique que le site lolesports.com envoie à chaque visiteur. Elle vit dans une seule constante de `LoLKit/API`.
-- `startingTime` est arrondi aux 10 s et décalé d'environ 1 min dans le passé (le flux livestats a ce retard sur le direct).
+- `startingTime` est arrondi aux 10 s et décalé dans le passé : le flux refuse (400 « ahead of broadcast ») une fenêtre trop récente, avec un seuil qui dépend du match (le 14/10/2026 : fin de fenêtre de moins d'environ 62 s refusée). LoLKit essaie 90 s, puis 120, 180, 300 et 600 s, et retient par game le premier délai accepté (`LoLClient.liveWindow`).
 - `frames[].gameState` vaut `in_game`, `paused` ou `finished`.
 - **Stats indisponibles** : `streams[].statsStatus == "disabled"` (vu sur `getLive`) ou une 404 sur `window`. Vérifié le 13/10 : un match aux stats désactivées peut aussi renvoyer `window` en 200 avec des frames à zéro, donc **c'est `statsStatus` qui fait foi**. Le match passe alors en **score seul**.
 - Le flux `livestats/v1/details` n'est pas utilisé en v1 (`window` suffit).
@@ -305,7 +305,7 @@ Plans : `docs/superpowers/plans/2026-10-13-etape-0-chaine.md` et `docs/superpowe
 - **L'API lolesports change** (des indices montrent une migration vers GraphQL côté site) : toute la dépendance est dans `LoLKit/API`, et les fixtures permettent de voir tout de suite ce qui a cassé.
 - **Signature avec un compte gratuit (étape 0, 13/10)** : Sideloadly 0.70.1 laisse l'extension sans profil (widget et Live Activity invisibles) ; **AltServer** signe l'appli et l'extension avec le groupe `group.com.cafe1231.faille.TA6JYZWPU9`, conteneur OK des deux côtés. Outil retenu : AltServer. Repli : Impactor, puis compte payant.
 - **Compte gratuit** : appli à réinstaller tous les 7 jours, 3 applis sideloadées maximum, 10 identifiants d'app par semaine (l'appli en consomme 2).
-- **Retard des stats** : environ 1 min derrière le direct, ce qui est normal pour ce flux.
+- **Retard des stats** : une à deux minutes derrière le direct (le flux suit la diffusion), ce qui est normal pour ce flux.
 - **Confirmé par Dan (13/10/2026)** :
   - iPhone sous iOS 26 : minimum iOS 26.0 retenu.
   - Nom « Faille » et identifiant `com.cafe1231.faille` retenus.

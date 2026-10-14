@@ -528,7 +528,7 @@ final class AppStore {
                 firstFrames[gameId] = try await client.window(gameId: gameId, startingTime: nil).firstFrameTime
             }
             let fetchedAt = Date()
-            let window = try await client.window(gameId: gameId, startingTime: LiveStatsTime.startingTime(now: fetchedAt))
+            let window = try await client.liveWindow(gameId: gameId, now: fetchedAt)
             if let snapshot = window.latestSnapshot() {
                 snapshots[gameId] = snapshot
                 snapshotDates[gameId] = fetchedAt

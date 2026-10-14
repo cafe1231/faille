@@ -77,7 +77,7 @@ struct AboutView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 block("Faille", "Version \(Self.version)")
-                block("Données", "Matchs, équipes et stats viennent de l'API de lolesports.com (non officielle) et du flux livestats de Riot, avec environ une minute de retard sur le direct. Usage strictement personnel.")
+                block("Données", "Matchs, équipes et stats viennent de l'API de lolesports.com (non officielle) et du flux livestats de Riot, avec une à deux minutes de retard sur le direct (le flux de Riot suit la diffusion). Usage strictement personnel.")
                 block("Stockage", AppGroup.identifier.map { "Groupe d'apps : \($0)" }
                       ?? "Aucun groupe d'apps : les données restent dans l'appli seule.")
                 diagnostic

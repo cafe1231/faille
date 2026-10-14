@@ -57,7 +57,7 @@ struct LoLKitCLI {
                 continue
             }
             do {
-                let window = try await client.window(gameId: game.id, startingTime: LiveStatsTime.startingTime(now: Date()))
+                let window = try await client.liveWindow(gameId: game.id, now: Date())
                 guard let snapshot = window.latestSnapshot() else {
                     print("  Pas encore de frames.")
                     continue
