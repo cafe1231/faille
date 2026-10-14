@@ -29,4 +29,21 @@ extension ApercuTests {
         let url = try await Snapshot.write(detail(SampleData.t1MatchId), named: "06-detail-masque")
         expectNotBlank(url)
     }
+
+    /// Squelettes de chargement (spec finitions §10), figés comme tous les aperçus : Détail, puis « Toutes les ligues ».
+    @Test func loadingSkeletons() async throws {
+        let board = ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                ScreenHeader("Chargement", subtitle: "Squelettes · Détail et catalogue")
+                SectionLabel(text: "Détail d'un match")
+                DetailLoadingSkeleton()
+                SectionLabel(text: "Toutes les ligues")
+                LeagueLoadingSkeleton()
+            }
+            .padding(.horizontal, 16)
+        }
+        .abyssBackground()
+        let url = try await Snapshot.write(board, named: "15-chargement")
+        expectNotBlank(url)
+    }
 }

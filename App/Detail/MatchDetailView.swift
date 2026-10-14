@@ -5,9 +5,16 @@ import SwiftUI
 /// stats d'équipe et joueurs de la game choisie, et bouton « Épingler sur l'écran verrouillé » (iPhone, spec §6.4).
 /// Anti-spoiler (spec §8) : tant que le match est masqué, rien ne s'affiche sauf l'en-tête sans score et « toucher pour
 /// révéler » (ni pilules de games, ni stats, ni joueurs).
+/// Finitions : capsule des pilules qui glisse, barre de gold et chiffres animés, révélation qui sort d'un flou,
+/// squelettes de chargement, onglet des joueurs animé, retours haptiques (pilule, révélation, épingler, retirer).
 struct MatchDetailView: View {
     @Environment(AppStore.self) private var store
     @State private var model: MatchDetailModel
+    @ReduceMotion var reduceMotion
+    /// Retours haptiques de l'écran : il reste affiché quand « toucher pour révéler » ou le bouton « Épingler » disparaît.
+    @State private var haptics = HapticTrigger()
+    /// Capsule de sélection des pilules de games, qui glisse de l'une à l'autre (`matchedGeometryEffect`).
+    @Namespace private var pillSelection
 
     init(matchId: String) {
         _model = State(initialValue: MatchDetailModel(matchId: matchId))
@@ -32,6 +39,7 @@ struct MatchDetailView: View {
         }
         .abyssBackground()
         .navigationBarTitleDisplayMode(.inline)
+        .haptics(haptics)
         .task { await model.run(store: store) }
         .task(id: LoadKey(game: model.selectedGameNumber, revealed: store.settings.revealedMatchIds.contains(model.matchId))) {
             await model.loadSelectedGame(store: store)
@@ -49,23 +57,45 @@ struct MatchDetailView: View {
         let tint = ordered.compactMap { store.tint(for: $0) }.first
         header(event: event, details: details, teams: ordered, order: order, state: state, masked: masked, tint: tint)
         if masked {
-            RevealButton { store.reveal(matchId: model.matchId) }
+            RevealButton { reveal() }
         } else if let details {
-            gamePills(details)
-            if details.statsDisabled || event?.statsDisabled == true {
-                NoteCard(icon: .off, text: "Stats live non fournies par Riot pour ce match")
-            } else if let game = model.selectedGame(in: details) {
-                gameStats(game: game, teams: ordered)
+            // Pilules, stats et joueurs ; à la révélation, ils sortent d'un flou (spec finitions §8). Même espacement
+            // que l'écran : la mise en page ne change pas.
+            VStack(alignment: .leading, spacing: 14) {
+                gamePills(details)
+                if details.statsDisabled || event?.statsDisabled == true {
+                    NoteCard(icon: .off, text: "Stats live non fournies par Riot pour ce match")
+                } else if let game = model.selectedGame(in: details) {
+                    gameStats(game: game, teams: ordered)
+                }
             }
+            .transition(Motion.revealTransition(reduceMotion: reduceMotion))
         } else if model.attempted {
             NoteCard(icon: .refresh, text: "Détails du match indisponibles pour l'instant")
         } else {
-            ProgressView()
-                .tint(Palette.secondary)
-                .frame(maxWidth: .infinity)
+            // Chargement (spec finitions §10) : le gabarit des pilules et des stats, à la place d'un `ProgressView`.
+            DetailLoadingSkeleton()
         }
         if showsPinButton(event: event) {
-            LiveActivityPinButton(matchId: model.matchId)
+            LiveActivityPinButton(matchId: model.matchId, onHaptic: { haptics.play($0) })
+        }
+    }
+
+    /// « Toucher pour révéler » (spec §8) : le score et les stats sortent d'un flou en fondu, avec un retour haptique.
+    private func reveal() {
+        haptics.play(.reveal)
+        withAnimation(Motion.animation(.reveal, reduceMotion: reduceMotion)) {
+            store.reveal(matchId: model.matchId)
+        }
+    }
+
+    /// Choix d'une pilule : la capsule glisse (`Motion.snappy`) ; retour « sélection » si la game affichée change.
+    private func selectGame(_ number: Int, shown: Int?) {
+        if number != shown {
+            haptics.play(.gamePicked)
+        }
+        withAnimation(Motion.animation(.snappy, reduceMotion: reduceMotion)) {
+            model.selectedGameNumber = number
         }
     }
 
@@ -119,7 +149,7 @@ struct MatchDetailView: View {
         switch shown?.phase ?? phase(of: event) {
         case .inGame, .betweenGames:
             Chip {
-                IconView(icon: .live, size: 12)
+                LiveIndicator(size: 12)
                 if let shown {
                     LiveChipText(state: shown, opponent: nil)
                 } else {
@@ -147,15 +177,21 @@ struct MatchDetailView: View {
         }
     }
 
-    /// « G1 ✓ », « G2 · en direct », « G3 »… une pilule par game jouée ou à venir.
+    /// « G1 ✓ », « G2 · en direct » (avec le halo « en direct »), « G3 »… une pilule par game jouée ou à venir ; la
+    /// capsule blanche glisse vers la pilule touchée (spec finitions §9), sauf sous « Réduire les animations ».
     private func gamePills(_ details: EventDetails) -> some View {
         let games = details.match.games.filter { $0.state != .unneeded }
         let selected = model.selectedGame(in: details)?.number
+        let slide: Namespace.ID? = Motion.runs(.pillSlide, reduceMotion: reduceMotion) ? pillSelection : nil
         return ScrollView(.horizontal) {
             HStack(spacing: 6) {
                 ForEach(games, id: \.number) { game in
-                    PillButton(selected: game.number == selected, action: { model.selectedGameNumber = game.number }) {
+                    PillButton(selected: game.number == selected, selection: slide,
+                               action: { selectGame(game.number, shown: selected) }) {
                         Text(game.state == .inProgress ? "G\(game.number) · en direct" : "G\(game.number)")
+                        if game.state == .inProgress {
+                            LiveIndicator(size: 12)
+                        }
                         if game.state == .completed {
                             IconView(icon: .check, size: 12)
                         }
@@ -175,9 +211,13 @@ struct MatchDetailView: View {
         } else if let snapshot = store.snapshots[game.id], ids.count == 2,
                   let left = snapshot.stats(for: ids[0]), let right = snapshot.stats(for: ids[1]) {
             TeamStatsPanel(left: left, right: right, tint: store.tint(for: teams[0]) ?? Palette.accent)
-            PlayersPanel(teams: teams, snapshot: snapshot, selection: $model.playersTeamIndex)
+            PlayersPanel(teams: teams, snapshot: snapshot,
+                         selection: $model.playersTeamIndex.animation(Motion.animation(.snappy, reduceMotion: reduceMotion)))
+        } else if game.state == .inProgress {
+            // Première frame pas encore arrivée (spec finitions §10) : le gabarit du panneau.
+            StatsSkeleton()
         } else {
-            NoteCard(icon: .refresh, text: game.state == .inProgress ? "Stats en chargement…" : "Stats de cette game indisponibles")
+            NoteCard(icon: .refresh, text: "Stats de cette game indisponibles")
         }
     }
 }

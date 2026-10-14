@@ -91,8 +91,11 @@ struct Chip<Content: View>: View {
 }
 
 /// Pilule sélectionnable (ligues, games) : blanche quand elle est choisie, verre sinon (onglets d'Échap).
+/// `selection` : espace de noms de la capsule blanche, qui glisse alors d'une pilule à l'autre (spec finitions §9) ;
+/// nil : la capsule change de place sans glisser (ligues, « Réduire les animations »).
 struct PillButton<Content: View>: View {
     let selected: Bool
+    var selection: Namespace.ID? = nil
     let action: () -> Void
     @ViewBuilder var label: Content
 
@@ -105,10 +108,30 @@ struct PillButton<Content: View>: View {
             .foregroundStyle(selected ? Palette.abyss : Palette.secondary)
             .padding(.horizontal, 13)
             .padding(.vertical, 7)
-            .background(selected ? Color.white.opacity(0.92) : Color.white.opacity(0.05), in: Capsule())
+            .background {
+                if selected {
+                    Capsule()
+                        .fill(Color.white.opacity(0.92))
+                        .slidingSelection(selection)
+                } else {
+                    Capsule()
+                        .fill(Color.white.opacity(0.05))
+                }
+            }
             .overlay(Capsule().strokeBorder(selected ? Color.clear : Palette.glassBorder, lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
+    }
+}
+
+private extension View {
+    /// Capsule de sélection partagée par les pilules (`matchedGeometryEffect`) ; rien sans espace de noms.
+    @ViewBuilder func slidingSelection(_ namespace: Namespace.ID?) -> some View {
+        if let namespace {
+            matchedGeometryEffect(id: "pill-selection", in: namespace)
+        } else {
+            self
+        }
     }
 }
 

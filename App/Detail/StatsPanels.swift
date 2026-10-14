@@ -23,13 +23,16 @@ struct TeamStatsPanel: View {
     }
 
     private func row(_ icon: Icon, _ label: String, _ a: String, _ b: String) -> some View {
+        // Les chiffres défilent quand ils changent (spec finitions §4) ; le panneau n'existe que pour un match non masqué.
         HStack {
             Text(a)
                 .font(Typo.stat)
+                .numericChange(a)
                 .frame(maxWidth: .infinity, alignment: .leading)
             StatLabel(icon: icon, text: label)
             Text(b)
                 .font(Typo.stat)
+                .numericChange(b)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .monospacedDigit()
@@ -38,7 +41,7 @@ struct TeamStatsPanel: View {
     private var dragonRow: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 1) {
-                Text("\(left.dragons.count)").font(Typo.stat)
+                Text("\(left.dragons.count)").font(Typo.stat).numericChange(left.dragons.count)
                 if !left.dragons.isEmpty {
                     Text(Format.dragons(left.dragons))
                         .font(Typo.secondary)
@@ -48,7 +51,7 @@ struct TeamStatsPanel: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             StatLabel(icon: .drake, text: "Drakes")
             VStack(alignment: .trailing, spacing: 1) {
-                Text("\(right.dragons.count)").font(Typo.stat)
+                Text("\(right.dragons.count)").font(Typo.stat).numericChange(right.dragons.count)
                 if !right.dragons.isEmpty {
                     Text(Format.dragons(right.dragons))
                         .font(Typo.secondary)
@@ -80,11 +83,13 @@ struct StatLabel: View {
     }
 }
 
-/// Barre d'écart de gold : la part de l'équipe de gauche, à sa couleur.
+/// Barre d'écart de gold : la part de l'équipe de gauche, à sa couleur. Sa largeur glisse vers la nouvelle part
+/// (`Motion.smooth`, spec finitions §9) ; immédiate sous « Réduire les animations ».
 struct GoldBar: View {
     let left: Int
     let right: Int
     let tint: Color
+    @ReduceMotion var reduceMotion
 
     var body: some View {
         let share = CGFloat(left) / CGFloat(max(1, left + right))
@@ -98,6 +103,7 @@ struct GoldBar: View {
             }
         }
         .frame(height: 5)
+        .animation(Motion.animation(.smooth, reduceMotion: reduceMotion), value: share)
     }
 }
 
@@ -127,25 +133,31 @@ struct PlayersPanel: View {
             .tracking(Typo.labelTracking)
             .textCase(.uppercase)
             .foregroundStyle(Palette.secondary)
-            ForEach(Array(players.enumerated()), id: \.offset) { _, player in
-                HStack {
-                    Text(Format.role(player.role))
-                        .foregroundStyle(Palette.secondary)
-                        .frame(width: 38, alignment: .leading)
-                    Text(Format.champion(player.champion))
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(Format.kda(player)).frame(width: 64, alignment: .leading)
-                    Text("\(player.creepScore)").frame(width: 40, alignment: .trailing)
+            // Changement d'équipe animé (spec finitions §9) : les lignes de l'autre équipe arrivent en fondu (l'animation
+            // vient de la liaison `selection`). Même espacement que le panneau : la mise en page ne change pas.
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(players.enumerated()), id: \.offset) { _, player in
+                    HStack {
+                        Text(Format.role(player.role))
+                            .foregroundStyle(Palette.secondary)
+                            .frame(width: 38, alignment: .leading)
+                        Text(Format.champion(player.champion))
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(Format.kda(player)).frame(width: 64, alignment: .leading)
+                        Text("\(player.creepScore)").frame(width: 40, alignment: .trailing)
+                    }
+                    .font(Typo.secondaryMedium)
+                    .monospacedDigit()
                 }
-                .font(Typo.secondaryMedium)
-                .monospacedDigit()
+                if players.isEmpty {
+                    Text("Joueurs indisponibles")
+                        .font(Typo.secondary)
+                        .foregroundStyle(Palette.secondary)
+                }
             }
-            if players.isEmpty {
-                Text("Joueurs indisponibles")
-                    .font(Typo.secondary)
-                    .foregroundStyle(Palette.secondary)
-            }
+            .id(index)
+            .transition(.opacity)
         }
         .foregroundStyle(Palette.text)
         .glassCard(radius: Radius.inner, padding: 14)

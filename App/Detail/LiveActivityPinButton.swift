@@ -7,6 +7,9 @@ struct LiveActivityPinButton: View {
     @Environment(AppStore.self) private var store
     let matchId: String
     @State private var refused: PinOutcome?
+    /// Retour haptique de l'action (spec finitions §3), joué par l'écran Détail : ce bouton peut disparaître juste après
+    /// « Retirer » (match terminé). Épinglé : succès ; retiré : impact léger ; refusé : rien.
+    var onHaptic: (Haptic) -> Void = { _ in }
 
     var body: some View {
         let controller = store.liveActivities
@@ -16,9 +19,13 @@ struct LiveActivityPinButton: View {
                 if shown {
                     refused = nil
                     store.removeActivity(matchId: matchId)
+                    onHaptic(.unpin)
                 } else {
                     let outcome = store.pinActivity(matchId: matchId)
                     refused = outcome == .pinned ? nil : outcome
+                    if outcome == .pinned {
+                        onHaptic(.pin)
+                    }
                 }
             } label: {
                 HStack(spacing: 6) {
@@ -30,7 +37,7 @@ struct LiveActivityPinButton: View {
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressable)
             .glassCard(radius: Radius.inner, padding: 4)
             if let note = note(enabled: controller.isEnabled) {
                 Text(note)
