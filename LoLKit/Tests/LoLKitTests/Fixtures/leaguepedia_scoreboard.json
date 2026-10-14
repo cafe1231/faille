@@ -1,0 +1,134 @@
+{
+ "cargoquery": [
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "Berserker",
+    "Champion": "Yunara",
+    "SummonerSpells": "Exhaust,Flash",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "CoreJJ",
+    "Champion": "Renata Glasc",
+    "SummonerSpells": "Flash,Heal",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "Dhokla",
+    "Champion": "K'Sante",
+    "SummonerSpells": "Flash,Teleport",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "Inspired",
+    "Champion": "Trundle",
+    "SummonerSpells": "Smite,Flash",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "Isles",
+    "Champion": "Lulu",
+    "SummonerSpells": "Heal,Flash",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "Josedeodo",
+    "Champion": "Lee Sin",
+    "SummonerSpells": "Flash,Smite",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "Morgan",
+    "Champion": "Ambessa",
+    "SummonerSpells": "Teleport,Flash",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "Quid",
+    "Champion": "Orianna",
+    "SummonerSpells": "Teleport,Flash",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "Saint",
+    "Champion": "Syndra",
+    "SummonerSpells": "Teleport,Flash",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LCS/2026 Season/Summer Playoffs_Finals_1_1",
+    "Link": "Yeon",
+    "Champion": "Kalista",
+    "SummonerSpells": "Flash,Barrier",
+    "DateTime UTC": "2026-10-04 20:18:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LEC/2026 Season/Summer Playoffs_Round 2_1_1",
+    "Link": "Busio",
+    "Champion": "Karma",
+    "SummonerSpells": "Heal,Flash",
+    "DateTime UTC": "2026-09-19 17:17:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LEC/2026 Season/Summer Playoffs_Round 2_1_1",
+    "Link": "Caliste",
+    "Champion": "Ezreal",
+    "SummonerSpells": "Flash,Exhaust",
+    "DateTime UTC": "2026-09-19 17:17:00",
+    "DateTime UTC__precision": "0"
+   }
+  },
+  {
+   "title": {
+    "GameId": "LEC/2026 Season/Summer Playoffs_Round 2_1_1",
+    "Link": "kyeahoo",
+    "Champion": "LeBlanc",
+    "SummonerSpells": "Teleport,Flash",
+    "DateTime UTC": "2026-09-19 17:17:00",
+    "DateTime UTC__precision": "0"
+   }
+  }
+ ]
+}
