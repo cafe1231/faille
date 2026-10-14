@@ -92,6 +92,37 @@ private actor HeldFirstFeedTransport: HTTPTransport {
     }
 }
 
+/// Faux réseau dont la première requête Leaguepedia reste suspendue jusqu'à `release()`, sans tenir compte de l'annulation
+/// de la tâche qui l'attend. Le reste passe au faux réseau de base.
+private actor HeldFirstWikiTransport: HTTPTransport {
+    private(set) var requests: [URL] = []
+    private let base: ScriptedTransport
+    private var holdsFirst = true
+    private var released = false
+    private var held: CheckedContinuation<Void, Never>?
+
+    init(base: ScriptedTransport) {
+        self.base = base
+    }
+
+    func get(_ url: URL, headers: [String: String]) async throws -> HTTPResponse {
+        requests.append(url)
+        if holdsFirst, url.host() == "lol.fandom.com" {
+            holdsFirst = false
+            if !released {
+                await withCheckedContinuation { held = $0 }
+            }
+        }
+        return try await base.get(url, headers: headers)
+    }
+
+    func release() {
+        released = true
+        held?.resume()
+        held = nil
+    }
+}
+
 /// Sorts d'invocateur des games terminées (spec fonctionnalités §3) : une requête Leaguepedia par match, jamais avant
 /// 30 min après la fin, une heure au moins entre deux essais, gardés sur disque.
 @MainActor
@@ -174,6 +205,35 @@ struct SummonerSpellsTests {
         #expect(store.spells(gameId: "G2", championId: "Kaisa") == ["SummonerFlash", "SummonerHeal"])
         let wiki = await transport.requests.filter { $0.host() == "lol.fandom.com" }.count
         #expect(wiki == 1)
+    }
+
+    /// L'écran annule sa recherche (la fin du match devient connue) alors que la requête au wiki est partie : elle va à son
+    /// terme, ses sorts sont publiés et l'essai est noté pour ce qu'il est — la relance ne demande rien de plus.
+    @Test func aCancelledLookUpStillRecordsItsRealWikiOutcome() async throws {
+        let cache = Self.cache()
+        let transport = HeldFirstWikiTransport(base: spellsTransport { scoreboardJSON(["G1", "G2"]) })
+        let store = SummonerSpellsStore(transport: transport, cache: cache)
+        let now = Self.end.addingTimeInterval(3_600)
+        let first = Task { await store.lookUp(matchId: "M1", gameIds: ["G1", "G2"], matchEnd: nil, now: now) }
+        let deadline = ContinuousClock.now + .seconds(10)
+        while await transport.requests.filter({ $0.host() == "lol.fandom.com" }).isEmpty {
+            try #require(ContinuousClock.now < deadline, "la requête au wiki n'est pas partie")
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        first.cancel()
+        let second = Task { await store.lookUp(matchId: "M1", gameIds: ["G1", "G2"], matchEnd: Self.end, now: now) }
+        try await Task.sleep(for: .milliseconds(100))
+        await transport.release()
+        await first.value
+        await second.value
+
+        #expect(store.spells(gameId: "G1", championId: "LeeSin") == ["SummonerFlash", "SummonerSmite"])
+        #expect(store.spells(gameId: "G2", championId: "Kaisa") == ["SummonerFlash", "SummonerHeal"])
+        let wiki = await transport.requests.filter { $0.host() == "lol.fandom.com" }.count
+        #expect(wiki == 1)
+        let record = try #require(cache.load(SpellRecord.self, from: SummonerSpellsStore.path("M1")))
+        #expect(record.policy.attempts == 1)
+        #expect(record.policy.succeeded)
     }
 
     /// Trop tôt (moins de 30 min après la fin connue) : aucune requête, même au flux.

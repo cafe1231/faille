@@ -29,6 +29,12 @@ private func replayTransport(statsDisabled: Bool = false) -> ScriptedTransport {
         if statsDisabled { return HTTPResponse(status: 404, body: Data()) }
         let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
         let start = query?.first { $0.name == "startingTime" }?.value.flatMap(LoLDate.parse)
+        if start != nil, holdsFirstStep, !stepGate {
+            stepGate = true
+            if !stepReleased {
+                await withCheckedContinuation { stepHeld = $0 }
+            }
+        }
         let time = start.map { $0.addingTimeInterval(9) } ?? gameStart
         return HTTPResponse(status: 200, body: Data(windowJSON(at: time).utf8))
     })
@@ -44,9 +50,14 @@ private actor HeldOpeningTransport: HTTPTransport {
     private var holdsOpening = true
     private var released = false
     private var held: CheckedContinuation<Void, Never>?
+    private let holdsFirstStep: Bool
+    private var stepHeld: CheckedContinuation<Void, Never>?
+    private var stepReleased = false
+    private var stepGate = false
 
-    init(heldOpeningAt: Date = gameStart) {
+    init(heldOpeningAt: Date = gameStart, holdsFirstStep: Bool = false) {
         self.heldOpeningAt = heldOpeningAt
+        self.holdsFirstStep = holdsFirstStep
     }
 
     func get(_ url: URL, headers: [String: String]) async throws -> HTTPResponse {
@@ -62,6 +73,13 @@ private actor HeldOpeningTransport: HTTPTransport {
         }
         let time = start.map { $0.addingTimeInterval(9) } ?? gameStart
         return HTTPResponse(status: 200, body: Data(windowJSON(at: time).utf8))
+    }
+
+    /// Rend la première requête de pas retenue (`holdsFirstStep`).
+    func releaseStep() {
+        stepReleased = true
+        stepHeld?.resume()
+        stepHeld = nil
     }
 
     /// Rend la réponse retenue : la requête suspendue reprend, annulée ou non.
@@ -231,19 +249,20 @@ struct TimelineStoreTests {
     /// Un appel annulé qui revient tard ne retire pas la marque « relecture en cours » de celui qui l'a remplacé : le
     /// gabarit du fil reste affiché tant que B lit.
     @Test func aStaleCallDoesNotEndTheReplayOfItsReplacement() async throws {
-        let transport = HeldOpeningTransport()
+        let transport = HeldOpeningTransport(holdsFirstStep: true)
         let store = TimelineStore(transport: transport, cache: Self.cache())
         let first = Task { await store.load(gameId: "G1", inProgress: false) }
         let opened = await Self.waitForRequests(transport, atLeast: 1)
         try #require(opened, "A n'a pas demandé l'ouverture")
         first.cancel()
         let second = Task { await store.load(gameId: "G1", inProgress: false) }
-        let resumed = await Self.waitForRequests(transport, atLeast: 2, timeout: .seconds(5))
-        try #require(resumed, "B n'a pas repris la relecture")
+        // A (ouverture), B (ouverture), B (premier pas, retenu) : B lit, rien ne dépend de la durée.
+        let stepped = await Self.waitForRequests(transport, atLeast: 3, timeout: .seconds(5))
+        try #require(stepped, "B n'a pas repris la relecture")
         await transport.release()
         await first.value
-        // B lit encore (six pauses de 0,5 s) : A, sorti, n'a pas levé la marque.
         #expect(store.replaying.contains("G1"))
+        await transport.releaseStep()
         await second.value
         #expect(!store.replaying.contains("G1"))
         #expect(store.replayFrames["G1"]?.last?.phase == .finished)

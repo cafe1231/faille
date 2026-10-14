@@ -100,8 +100,8 @@ extension AppStore {
         scheduleBackgroundRefresh()
         await refreshDue(opening: false)
         await syncLiveActivities(canStart: false)
-        await syncReminders(center: reminderCenter)
         scheduleBackgroundRefresh()
+        await syncReminders(center: reminderCenter)
     }
 
     /// Passage en arrière-plan (spec §6.4) : une dernière mise à jour des Live Activities et des notifications avec ce que

@@ -127,7 +127,10 @@ final class SummonerSpellsStore {
                                        now: now) else { return }
         let outcome: SpellLookupPolicy.Outcome
         do {
-            let rows = try await wiki.scoreboard(around: center)
+            // Hors de la tâche de l'écran : si SwiftUI l'annule (la clé change quand la frame `finished` arrive), la requête
+            // déjà partie va à son terme et son vrai résultat est noté — la relance de l'écran le trouve, au lieu d'un
+            // faux échec qui lui fermerait la porte une heure.
+            let rows = try await Task.detached { try await wiki.scoreboard(around: center) }.value
             for gameId in wanted {
                 guard let opening = record.openings[gameId],
                       let found = SpellMatcher.match(champions: opening.champions, around: opening.start, rows: rows)
