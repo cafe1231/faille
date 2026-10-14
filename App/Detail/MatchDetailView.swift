@@ -121,8 +121,11 @@ struct MatchDetailView: View {
         let state = store.detailState(matchId: model.matchId)
         let tint = ordered.compactMap { store.tint(for: $0) }.first
         header(event: event, details: details, teams: ordered, order: order, state: state, masked: masked, tint: tint)
-        // « Regarder » (spec fonctionnalités §1) : match en direct non masqué seulement (l'image montre le score).
-        if let watch = WatchLinks.live(event?.streams ?? details?.streams, inProgress: event?.state == .inProgress,
+        // « Regarder » (spec fonctionnalités §1) : match en direct non masqué seulement (l'image montre le score). En direct
+        // si le calendrier le dit, ou si les détails montrent une game en cours (le direct peut être tombé du cache, et le
+        // calendrier pas encore relu) ; le masquage s'applique dans tous les cas.
+        if let watch = WatchLinks.live(event?.streams ?? details?.streams,
+                                       inProgress: event?.state == .inProgress || details?.currentGame != nil,
                                        masked: masked) {
             WatchButton(live: watch, onHaptic: { haptics.play($0) })
         }
