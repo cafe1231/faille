@@ -2,7 +2,8 @@ name: iOS
 
 on:
   push:
-    branches: [main]
+    # main, et les branches de travail des lots menés en parallèle (fin/…, fonc/…) : elles ont leur CI iOS avant fusion.
+    branches: [main, 'fin/**', 'fonc/**']
   workflow_dispatch:
 
 permissions:
