@@ -3872,6 +3872,17 @@
           }
         }
       }
+    },
+    "Calendrier complet disponible à la prochaine ouverture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full calendar available the next time you open the app"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

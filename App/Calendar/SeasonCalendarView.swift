@@ -47,9 +47,14 @@ struct SeasonCalendarView: View {
                     .glassCard(radius: Radius.inner, padding: 12)
                 if loading {
                     SeasonSkeletonCard(lines: 2, label: String(localized: "Calendrier en chargement"))
-                } else if store.season.stopReason != nil,
+                } else if let reason = store.season.stopReason,
                           CalendarMonth.pageNeeded(for: shownMonth, events: all, calendar: calendar) != nil {
-                    NoteCard(icon: .off, text: String(localized: "Réseau indisponible, réessaie plus tard"))
+                    // Réseau en panne (`.failures`) ou, une fois la réserve à la demande épuisée, budget de la session
+                    // (`.budget`) : le calendrier complet reviendra à la prochaine ouverture (W8).
+                    NoteCard(icon: .off,
+                             text: reason == .failures
+                                 ? String(localized: "Réseau indisponible, réessaie plus tard")
+                                 : String(localized: "Calendrier complet disponible à la prochaine ouverture"))
                 }
                 let list = CalendarMonth.events(on: day, in: events, calendar: calendar)
                 SectionLabel(text: day.formatted(.dateTime.weekday(.wide).day().month(.wide)))
