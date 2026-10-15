@@ -69,7 +69,7 @@ struct WeekStripSection: View {
         }
         .buttonStyle(.pressable)
         .accessibilityLabel(Text(cell.date.formatted(.dateTime.weekday(.wide).day().month(.wide))))
-        .accessibilityValue(cell.marker == .none ? Text("") : Text("Matchs suivis"))
+        .accessibilityValue(cell.marker.spokenValue)
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 

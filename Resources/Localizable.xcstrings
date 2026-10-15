@@ -3717,6 +3717,17 @@
           }
         }
       }
+    },
+    "Matchs internationaux": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "International matches"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

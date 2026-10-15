@@ -41,7 +41,7 @@ struct MonthGrid: View {
         }
         .buttonStyle(.pressable)
         .accessibilityLabel(Text(day.date.formatted(.dateTime.weekday(.wide).day().month(.wide))))
-        .accessibilityValue(day.marker == .none ? Text("") : Text("Matchs suivis"))
+        .accessibilityValue(day.marker.spokenValue)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
@@ -50,5 +50,17 @@ struct MonthGrid: View {
         let symbols = calendar.veryShortStandaloneWeekdaySymbols
         let first = calendar.firstWeekday - 1
         return Array(symbols[first...] + symbols[..<first])
+    }
+}
+
+extension DayMarker {
+    /// Lu par VoiceOver sur un jour (W6) : « Matchs suivis » pour la pastille pleine, « Matchs internationaux » pour
+    /// l'anneau, rien sans marqueur.
+    var spokenValue: Text {
+        switch self {
+        case .none: Text("")
+        case .followed: Text("Matchs suivis")
+        case .international: Text("Matchs internationaux")
+        }
     }
 }
