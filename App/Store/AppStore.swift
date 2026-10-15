@@ -410,6 +410,15 @@ final class AppStore {
         await MatchRemindersFlow.toggle(to: true, center: reminderCenter)
     }
 
+    /// Relit l'autorisation d'iOS à l'ouverture de l'onglet Équipes : autorisée entre-temps (Réglages d'iOS), la note
+    /// « Notifications refusées par iOS » disparaît.
+    func refreshLeagueNotificationsNote() async {
+        guard leagueNotificationsDenied else { return }
+        if await reminderCenter.authorization() == .authorized {
+            leagueNotificationsDenied = false
+        }
+    }
+
     /// Notifications de début des matchs d'une ligue suivie (spec saison §3.5, désactivées par défaut). L'activer allume
     /// aussi le réglage global (`matchRemindersEnabled`, sans lequel rien ne part) et demande l'autorisation d'iOS par le
     /// même chemin que les Réglages ; refusée, l'interrupteur de la ligue (et le réglage global, s'il vient d'être allumé
@@ -426,7 +435,10 @@ final class AppStore {
         }
         runWithScene {
             let outcome = await self.requestReminderAuthorization()
-            guard outcome.enabled != true, !Task.isCancelled else { return }
+            guard outcome.enabled != true else { return }
+            // Refusée : on revient en arrière même si la scène a été annulée pendant la demande d'iOS (sinon
+            // l'interrupteur resterait allumé sans autorisation). Sans réponse nette, une scène annulée ne fait rien.
+            guard outcome.denied || !Task.isCancelled else { return }
             self.syncFollowsBeforeChange()
             self.follows.setNotifyStarts(false, leagueId: leagueId)
             self.saveFollows()

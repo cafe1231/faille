@@ -49,6 +49,7 @@ struct TeamsView: View {
         }
         .scrollDismissesKeyboard(.immediately)
         .haptics(haptics)
+        .task { await store.refreshLeagueNotificationsNote() }
         .abyssBackground()
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showSettings) {
