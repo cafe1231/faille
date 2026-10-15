@@ -78,6 +78,28 @@ extension ApercuTests {
     }
 }
 
+/// Largeur réservée au chrono de la Dynamic Island déployée (B-W1).
+struct IslandTimerTests {
+    private let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+    @Test func shortWidthBeforeFiftyMinutes() {
+        let since = now.addingTimeInterval(-18 * 60 - 42)
+        #expect(IslandTimer.width(status: .clock(.running(since: since)), now: now) == IslandTimer.short)
+    }
+
+    @Test func longWidthFromFiftyMinutes() {
+        let since = now.addingTimeInterval(-3_000)
+        #expect(IslandTimer.width(status: .clock(.running(since: since)), now: now) == IslandTimer.long)
+        let hour = now.addingTimeInterval(-3_725)
+        #expect(IslandTimer.width(status: .clock(.running(since: hour)), now: now) == IslandTimer.long)
+    }
+
+    @Test func otherStatusesKeepTheLongWidth() {
+        #expect(IslandTimer.width(status: .live, now: now) == IslandTimer.long)
+        #expect(IslandTimer.width(status: .clock(.stopped("24:30")), now: now) == IslandTimer.long)
+    }
+}
+
 /// Les exemples des planches couvrent chaque état de la spec §6.3.
 struct LiveActivitySampleTests {
     @Test func samplesCoverEveryState() {

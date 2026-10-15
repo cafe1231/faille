@@ -147,7 +147,7 @@ struct HomeScreenBoard: View {
 enum WidgetRender {
     /// Fuseau des planches : les dates et heures des widgets s'écrivent à Paris, quel que soit le fuseau du Mac de la CI.
     /// Sur l'iPhone, l'environnement garde le fuseau de l'appareil.
-    static let timeZone = TimeZone(identifier: "Europe/Paris")!
+    static let timeZone = Snapshot.timeZone
 
     /// La vue dans un cadre de la taille d'un widget, en thème sombre, à l'heure de Paris.
     private static func framed(_ view: some View, size: CGSize) -> some View {

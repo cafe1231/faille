@@ -16,6 +16,10 @@ struct IslandCompactView: View {
             if side == 1, let wins {
                 Text("\(wins)")
             }
+            // Match masqué : pas de score, mais l'icône « en direct » côté caméra, au lieu d'une capsule vide.
+            if side == 1, wins == nil, display.isMasked {
+                IconView(icon: .live, size: 12)
+            }
             if let team {
                 MonogramBadge(code: team.code, tint: team.colorHex.map(Palette.team), size: 20)
             }
@@ -63,7 +67,7 @@ struct IslandTeamView: View {
     var body: some View {
         if let side {
             VStack(spacing: 3) {
-                MonogramBadge(code: side.code, tint: side.colorHex.map(Palette.team), size: 30)
+                MonogramBadge(code: side.code, tint: side.colorHex.map(Palette.team), size: 30, decorative: true)
                 Text(side.code)
                     .font(Sora.font(11, .semibold))
                     .lineLimit(1)
@@ -90,9 +94,10 @@ struct IslandCenterView: View {
                     .font(Sora.font(15, .medium))
                     .foregroundStyle(Palette.secondary)
             }
-            // Chrono de 10 pt : une réserve de 40 pt écrit « 1:02:05 » et laisse peu de vide entre « Game 2 · » et l'heure.
+            // Chrono de 10 pt : la réserve suit la durée de la game (28 pt avant une heure, 40 pt pour « 1:02:05 »), pour
+            // ne pas laisser de vide entre « Game 2 · » et l'heure.
             LiveActivityStatusView(status: display.status, prefix: display.gameNumber.map { "Game \($0) · " },
-                                   timerWidth: 40)
+                                   timerWidth: IslandTimer.width(status: display.status))
                 .font(Sora.font(10, .semibold))
         }
     }
@@ -132,5 +137,22 @@ struct IslandBottomView: View {
     private func color(of row: LiveActivityDisplay.Row) -> Color {
         guard let leader = row.leader, display.teams.indices.contains(leader) else { return Color.white }
         return display.teams[leader].colorHex.map(Palette.team) ?? Color.white
+    }
+}
+
+/// Largeur réservée au chrono natif de la Dynamic Island déployée (police de 10 pt).
+enum IslandTimer {
+    /// Largeur de « 42:05 ».
+    static let short: CGFloat = 28
+    /// Largeur de « 1:02:05 ».
+    static let long: CGFloat = 40
+    /// Marge avant l'heure de jeu : le chrono tourne sans mise à jour, la largeur lue au dernier rendu doit encore
+    /// suffire quelques minutes plus tard.
+    static let margin: TimeInterval = 10 * 60
+
+    /// `short` tant que la game a moins de 50 minutes, `long` sinon (ou pour tout état sans chrono qui tourne).
+    static func width(status: LiveActivityDisplay.Status, now: Date = Date()) -> CGFloat {
+        guard case let .clock(.running(since)) = status else { return long }
+        return now.timeIntervalSince(since) < 3600 - margin ? short : long
     }
 }
