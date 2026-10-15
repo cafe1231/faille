@@ -92,4 +92,15 @@ import LoLKit
         #expect(line.status == .live(gameNumber: 2))
         #expect(line.score == [1, 0])
     }
+
+    /// Spec périmètre §6.1 test 17 : fenêtre et périmètres construits depuis l'extérieur du module.
+    @Test func perimeterTypes() throws {
+        let window = try #require(SeasonWindow(today: "2026-10-15"))
+        #expect(window.currentSeason == 2026 && window.startDay == "2025-01-01")
+        let worlds = TournamentRef(id: "w", slug: "worlds_2026", startDate: "2026-10-15", endDate: "2026-11-15", leagueId: "l")
+        #expect(window.placement(of: worlds) == .current)
+        let scope = SeasonScope(tournamentIds: ["w"], label: "worlds_2026", season: 2026, isLive: true)
+        #expect(scope.season == 2026 && scope.isLive)
+        #expect(SeasonScope(tournamentIds: [], label: "2026").season == nil)
+    }
 }
