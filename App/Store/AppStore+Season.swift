@@ -88,19 +88,38 @@ extension AppStore {
         Presenter.maskedLatestTeamIds(cards, follows: follows, revealed: settings.revealedMatchIds)
     }
 
-    /// Match à venir non révélé d'une équipe dont le dernier match est masqué (I-1) : jamais de ligne, de pastille ni de
-    /// jour de calendrier qui le trahisse.
+    /// Suite d'un tableau international dont un match d'une équipe en anti-spoiler est masqué (I-1 généralisé,
+    /// `BracketMasking`) : les matchs qui trahiraient la progression (élimination) tant que ce match n'est pas révélé.
+    var bracketHiddenIds: Set<String> {
+        BracketMasking.hiddenIds(schedule: schedule, maskedTeamIds: maskedLatestTeamIds, follows: follows,
+                                 revealed: settings.revealedMatchIds)
+    }
+
+    /// Match à venir (ou en cours) non révélé qu'il faut cacher (I-1) : celui d'une équipe dont le dernier match est
+    /// masqué, ou la suite d'un tableau international dont un match est masqué. Jamais de ligne, de pastille ni de jour
+    /// de calendrier qui le trahisse.
     func isUpcomingMasked(_ event: MatchEvent) -> Bool {
-        guard event.state == .unstarted else { return false }
-        return MatchLine.isHiddenUpcoming(event, maskedTeamIds: maskedLatestTeamIds, revealed: settings.revealedMatchIds)
+        guard event.state != .completed else { return false }
+        if event.state == .unstarted,
+           MatchLine.isHiddenUpcoming(event, maskedTeamIds: maskedLatestTeamIds, revealed: settings.revealedMatchIds) {
+            return true
+        }
+        guard League.internationalSlugs.contains(event.league.slug) else { return false }
+        return bracketHiddenIds.contains(event.id)
     }
 
     /// `events` sans les matchs à venir masqués : à passer à `HomeModel.compute` et à `CalendarMonth.days` (pastilles).
+    /// Y compris la suite d'un tableau international dont un match est masqué, quel que soit son état (un résultat
+    /// postérieur à un match masqué trahirait tout autant l'élimination).
     func withoutMaskedUpcoming(_ events: [MatchEvent]) -> [MatchEvent] {
         let masked = maskedLatestTeamIds
         guard !masked.isEmpty else { return events }
         let revealed = settings.revealedMatchIds
-        return events.filter { !MatchLine.isHiddenUpcoming($0, maskedTeamIds: masked, revealed: revealed) }
+        let bracket = BracketMasking.hiddenIds(schedule: schedule, maskedTeamIds: masked, follows: follows,
+                                               revealed: revealed)
+        return events.filter {
+            !MatchLine.isHiddenUpcoming($0, maskedTeamIds: masked, revealed: revealed) && !bracket.contains($0.id)
+        }
     }
 
     // MARK: Premier lancement

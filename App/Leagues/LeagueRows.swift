@@ -19,7 +19,8 @@ struct LeagueRowContent: Equatable, Sendable, Identifiable {
 
 enum LeagueRows {
     static func rows(follows: FollowList, schedule: [MatchEvent], revealed: Set<String>,
-                     maskedLatestTeamIds: Set<String>, currentTournamentIds: [String: String], now: Date) -> [LeagueRowContent] {
+                     maskedLatestTeamIds: Set<String>, currentTournamentIds: [String: String], now: Date,
+                     bracketHiddenIds: Set<String> = []) -> [LeagueRowContent] {
         follows.leagues.map { league in
             let upcoming = schedule
                 .filter { $0.league.slug == league.slug && $0.state == .unstarted && $0.startTime >= now }
@@ -29,7 +30,7 @@ enum LeagueRows {
                 let rulesC = !revealed.contains(upcoming.id) && follows.followed(in: upcoming.match.teams).contains {
                     $0.spoilerFree && maskedLatestTeamIds.contains($0.id)
                 }
-                next = rulesC ? .hidden : .match(upcoming)
+                next = (rulesC || bracketHiddenIds.contains(upcoming.id)) ? .hidden : .match(upcoming)
             } else {
                 next = .none
             }

@@ -64,8 +64,11 @@ public enum MatchReminders {
                                            subtitle: subtitle(event)))
         }
         let notifiedSlugs = Set(follows.leagues.filter(\.notifyStarts).map(\.slug))
+        // Progression de tableau (I-1 généralisé) : pas de notification pour la suite d'un match masqué.
+        let bracketHidden = BracketMasking.hiddenIds(schedule: schedule, maskedTeamIds: maskedLatest, follows: follows,
+                                                     revealed: revealed)
         for event in schedule where notifiedSlugs.contains(event.league.slug) && event.state == .unstarted
-            && !planned.contains(event.id) && !follows.involves(event.match.teams)
+            && !bracketHidden.contains(event.id) && !planned.contains(event.id) && !follows.involves(event.match.teams)
             && !event.match.teams.contains(where: \.isPlaceholder) {
             let fireDate = event.startTime.addingTimeInterval(-lead)
             guard fireDate > now else { continue }

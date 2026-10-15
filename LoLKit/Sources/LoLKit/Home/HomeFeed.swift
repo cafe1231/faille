@@ -105,6 +105,13 @@ public enum HomeFeed {
     public static func build(_ input: Input) -> Sections {
         let masked = SeasonMasking.maskedMatchIds(input.seasonMatches, follows: input.follows, revealed: input.revealed)
         let followed = followedMatchIds(input.schedule, follows: input.follows)
+        // Progression de tableau (I-1 généralisé) : la suite d'un match masqué ne figure pas dans les résultats récents.
+        let cards = TeamCards.build(follows: input.follows, schedule: input.schedule, live: input.live,
+                                    revealed: input.revealed)
+        let bracketHidden = BracketMasking.hiddenIds(
+            schedule: input.schedule,
+            maskedTeamIds: Presenter.maskedLatestTeamIds(cards, follows: input.follows, revealed: input.revealed),
+            follows: input.follows, revealed: input.revealed)
         return Sections(
             mustWatch: MustWatch.rank(schedule: input.schedule, follows: input.follows, revealed: input.revealed,
                                       revealedStandings: input.revealedStandings, standings: input.standings,
@@ -113,7 +120,8 @@ public enum HomeFeed {
             live: live(input.live ?? input.schedule.filter { $0.state == .inProgress }, follows: input.follows),
             week: WeekStrip.days(today: input.now, events: input.schedule, calendar: input.calendar, followed: followed),
             todayCount: CalendarMonth.events(on: input.now, in: input.schedule, calendar: input.calendar).count,
-            recentResults: recentResults(schedule: input.schedule, follows: input.follows, now: input.now),
+            recentResults: recentResults(schedule: input.schedule, follows: input.follows, now: input.now,
+                                         hiddenIds: bracketHidden),
             activity: activity(matches: input.seasonMatches, games: input.games, schedule: input.schedule,
                                follows: input.follows, revealed: input.revealed, masked: masked, now: input.now))
     }
@@ -136,9 +144,11 @@ public enum HomeFeed {
 
     /// Résultats des 72 dernières heures, suivis d'abord, puis du plus récent ; 8 au plus. Le score reste à
     /// `Presenter.scoreLine` (masqué → « Terminé · toucher pour révéler »).
-    public static func recentResults(schedule: [MatchEvent], follows: FollowList, now: Date) -> [MatchEvent] {
+    /// - Parameter hiddenIds: matchs que `BracketMasking` cache (suite d'un tableau dont un match est masqué) : absents.
+    public static func recentResults(schedule: [MatchEvent], follows: FollowList, now: Date,
+                                     hiddenIds: Set<String> = []) -> [MatchEvent] {
         let recent = schedule.filter {
-            $0.state == .completed && $0.startTime <= now && now.timeIntervalSince($0.startTime) <= recentResultsWindow
+            !hiddenIds.contains($0.id) && $0.state == .completed && $0.startTime <= now && now.timeIntervalSince($0.startTime) <= recentResultsWindow
         }
         return Array(recent.sorted { a, b in
             let (x, y) = (isFollowed(a, follows), isFollowed(b, follows))

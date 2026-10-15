@@ -163,4 +163,36 @@ struct HomeStoreTests {
         #expect(!content.sections.mustWatch.contains { $0.id == "m-t1-hle-soon" })
         #expect(!store.mustWatchPicks(limit: 5, now: now, calendar: paris()).contains { $0.id == "m-t1-hle-soon" })
     }
+
+    /// I-1 généralisé (W1) : le match de T1 (T1–FLY, en anti-spoiler) est masqué ; la suite du tableau du Mondial entre
+    /// d'autres équipes (GEN–FUR) n'apparaît ni dans le bandeau, ni dans le direct, ni dans les résultats récents, ni dans
+    /// les ligues, ni dans les notifications ; révéler le match de T1 la rend.
+    @Test func theRestOfABracketIsHiddenUntilTheMaskedMatchIsRevealed() {
+        var data = PreviewData.withSeason
+        data.schedule.append(event("m-semi-done", "2026-10-15T22:00:00Z", state: .completed, "blg", "gen"))
+        let store = AppStore(preview: data)
+        let later = SampleData.date("2026-10-16T00:30:00Z")
+        #expect(store.bracketHiddenIds.contains("m-gen-fur"))
+        #expect(store.bracketHiddenIds.contains("m-semi-done"))
+        // Bandeau, calendrier, direct : l'événement à venir est une ligne fixe, absent des listes filtrées.
+        let upcoming = store.schedule.first { $0.id == "m-gen-fur" }!
+        #expect(store.isUpcomingMasked(upcoming))
+        #expect(!store.withoutMaskedUpcoming(store.schedule).contains { $0.id == "m-gen-fur" || $0.id == "m-semi-done" })
+        let content = HomeModel.compute(store.homeInputs(now: later, calendar: paris()))
+        #expect(content.strip.flatMap(\.matchIds).contains("m-gen-fur") == false)
+        #expect(!content.sections.recentResults.contains { $0.id == "m-semi-done" })
+        // Ligues (Mondial suivi) : « Prochain · masqué ».
+        let worlds = SampleData.leagues[0]
+        let follows = FollowList(teams: store.follows.teams,
+                                 leagues: [FollowedLeague(id: worlds.id, slug: worlds.slug, name: worlds.name)])
+        let rows = LeagueRows.rows(follows: follows, schedule: store.schedule, revealed: [],
+                                   maskedLatestTeamIds: store.maskedLatestTeamIds, currentTournamentIds: [:],
+                                   now: now, bracketHiddenIds: store.bracketHiddenIds)
+        #expect(rows.first?.next == .hidden)
+        // Révéler le match de T1 rend la suite.
+        store.reveal(matchId: SampleData.t1MatchId)
+        #expect(store.bracketHiddenIds.isEmpty)
+        #expect(store.withoutMaskedUpcoming(store.schedule).contains { $0.id == "m-gen-fur" })
+        store.endScene()
+    }
 }
