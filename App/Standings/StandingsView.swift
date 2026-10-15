@@ -58,7 +58,7 @@ struct StandingsView: View {
                 IconView(icon: .eyeOff, size: 22)
                 Text("Classement masqué").sora(.headline)
                 Text("toucher pour révéler").sora(.secondaryMedium).foregroundStyle(Palette.accent)
-                Text("Révéler le classement ne révèle aucun match.").sora(.secondary)
+                Text("Révéler le classement ne révèle aucun match : tes matchs restent masqués ailleurs.").sora(.secondary)
                     .foregroundStyle(Palette.secondary)
             }
             .foregroundStyle(Palette.text)

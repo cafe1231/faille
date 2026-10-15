@@ -72,6 +72,7 @@ private struct FlowRow: View {
 /// Tableau à élimination ou liste de matchs : tours nommés (quarts, demies, finale) ou matchs dans l'ordre de l'API,
 /// chaque match avec ses deux équipes et son score (le tableau entier est déjà masqué ou révélé par `StandingsView`).
 struct BracketCard: View {
+    @Environment(AppStore.self) private var store
     /// (nom du tour, ou nil pour une simple liste ; matchs).
     let rounds: [(name: String?, matches: [BracketMatch])]
 
@@ -84,7 +85,9 @@ struct BracketCard: View {
                             .foregroundStyle(Palette.secondary)
                     }
                     ForEach(round.matches, id: \.id) { match in
-                        BracketMatchRow(match: match)
+                        BracketMatchRow(match: match,
+                                        showsScore: BracketMatchRow.showsScore(match, follows: store.follows,
+                                                                               revealed: store.settings.revealedMatchIds))
                     }
                 }
             }
@@ -94,15 +97,23 @@ struct BracketCard: View {
     }
 }
 
-private struct BracketMatchRow: View {
+struct BracketMatchRow: View {
     let match: BracketMatch
+    let showsScore: Bool
+
+    /// Tableau révélé ≠ match révélé : le score (longueur de la série) d'un match encore masqué ailleurs reste caché,
+    /// la ligne dit « vs ».
+    static func showsScore(_ match: BracketMatch, follows: FollowList, revealed: Set<String>) -> Bool {
+        match.state == .completed && match.teams.count == 2
+            && !SpoilerPolicy.isMasked(match.teams, matchId: match.id, follows: follows, revealed: revealed)
+    }
 
     var body: some View {
         let teams = match.teams
         HStack {
             Text(teams.first.map(StandingsTexts.teamLabel) ?? "—").sora(.bodyMedium)
             Spacer()
-            if match.state == .completed, teams.count == 2 {
+            if showsScore {
                 Text(Format.score(teams.map(\.gameWins))).sora(.stat).monospacedDigit()
             } else {
                 Text("vs").sora(.secondary).foregroundStyle(Palette.secondary)

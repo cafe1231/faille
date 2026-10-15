@@ -2933,17 +2933,6 @@
         }
       }
     },
-    "Révéler le classement ne révèle aucun match.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revealing the standings does not reveal any match."
-          }
-        }
-      }
-    },
     "Saison": {
       "extractionState": "manual",
       "localizations": {
@@ -3714,6 +3703,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "“KC vs C9 in %@” before the next match of each followed team and before each match of followed leagues with notifications on. Never for a match that anti-spoiler hides, never a score."
+          }
+        }
+      }
+    },
+    "Révéler le classement ne révèle aucun match : tes matchs restent masqués ailleurs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revealing the standings reveals no match: your matches stay hidden elsewhere."
           }
         }
       }

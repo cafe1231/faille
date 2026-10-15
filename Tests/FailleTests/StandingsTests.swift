@@ -16,6 +16,20 @@ struct StandingsTests {
         #expect(StandingsTexts.teamLabel(tbd) == "À déterminer")
         #expect(StandingsTexts.teamLabel(kc) == "KC")
     }
+
+    /// W5 : un tableau révélé n'affiche pas le score d'un match encore masqué ailleurs (« vs »), seulement ceux qui ne
+    /// le sont pas ou qui sont révélés.
+    @Test func aRevealedBracketHidesTheScoreOfAMaskedMatch() {
+        func team(_ id: String, _ wins: Int) -> MatchTeam {
+            MatchTeam(id: id, name: id, code: id.uppercased(), image: nil, result: .init(outcome: nil, gameWins: wins))
+        }
+        let follows = FollowList(teams: [FollowedTeam(id: "t1", code: "T1", name: "T1", spoilerFree: true)])
+        let masked = BracketMatch(id: "m1", state: .completed, teams: [team("t1", 3), team("blg", 1)])
+        let open = BracketMatch(id: "m2", state: .completed, teams: [team("kc", 3), team("blg", 1)])
+        #expect(!BracketMatchRow.showsScore(masked, follows: follows, revealed: []))
+        #expect(BracketMatchRow.showsScore(masked, follows: follows, revealed: ["m1"]))
+        #expect(BracketMatchRow.showsScore(open, follows: follows, revealed: []))
+    }
 }
 
 /// Masquage d'un classement et révélation (qui ne révèle aucun match), sur la saison d'exemple.
