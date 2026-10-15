@@ -226,7 +226,7 @@ struct LiveActivityMessageView: View {
     var body: some View {
         HStack(spacing: 5) {
             if let icon = message.icon {
-                IconView(icon: Self.icon(for: status), size: 12)
+                IconView(icon: icon, size: 12)
             }
             Text(message.text)
             if let accent = message.accent {
