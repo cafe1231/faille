@@ -63,7 +63,7 @@ final class MatchDetailModel {
     /// n'est pas interrogée.
     func loadSelectedGame(store: AppStore) async {
         guard let details = store.details[matchId], let game = selectedGame(in: details),
-              !store.isMasked(details.match.teams, matchId: matchId) else { return }
+              !store.isDetailMasked(details.match.teams, matchId: matchId) else { return }
         let statsDisabled = details.statsDisabled || store.event(id: matchId)?.statsDisabled == true
         switch game.state {
         case .inProgress:

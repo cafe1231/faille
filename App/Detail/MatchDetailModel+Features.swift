@@ -7,9 +7,9 @@ extension MatchDetailModel {
     /// Game dont l'écran montre les fonctionnalités (draft et builds, fil, courbe, sorts d'invocateur) : la game affichée,
     /// en cours ou jouée, d'un match NON masqué dont Riot fournit les stats. nil sinon : aucune requête, aucun affichage
     /// (spec fonctionnalités, « Anti-spoiler d'abord » ; spec §8).
-    func featureGame(store: AppStore) -> GameRef? {
+    func featureGame(store: AppStore, bracketHidden: Bool? = nil) -> GameRef? {
         guard let details = store.details[matchId], let game = selectedGame(in: details),
-              !store.isMasked(details.match.teams, matchId: matchId),
+              !store.isDetailMasked(details.match.teams, matchId: matchId, bracketHidden: bracketHidden),
               !details.statsDisabled, store.event(id: matchId)?.statsDisabled != true,
               !store.statsUnavailable.contains(game.id),
               game.state == .inProgress || game.state == .completed else { return nil }
@@ -75,7 +75,7 @@ extension MatchDetailModel {
     /// d'invocateur (Leaguepedia). nil si le match est masqué, n'est pas terminé (une game est en cours, ou reste à jouer
     /// alors que le calendrier ne le dit pas terminé), n'a aucune game jouée, ou n'a pas de stats : aucune requête alors.
     private func spellGames(store: AppStore) -> [GameRef]? {
-        guard let details = store.details[matchId], !store.isMasked(details.match.teams, matchId: matchId),
+        guard let details = store.details[matchId], !store.isDetailMasked(details.match.teams, matchId: matchId),
               !details.statsDisabled, store.event(id: matchId)?.statsDisabled != true else { return nil }
         let games = details.match.games
         let finished = !games.contains { $0.state == .inProgress }

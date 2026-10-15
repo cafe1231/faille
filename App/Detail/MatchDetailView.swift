@@ -30,6 +30,7 @@ struct MatchDetailView: View {
     private struct LoadKey: Equatable, Sendable {
         let game: Int?
         let revealed: Bool
+        let bracketHidden: Bool
     }
 
     /// Ce qui relance le fil et la courbe de la game affichée : une autre game, la révélation (la game passe de nil à la
@@ -68,7 +69,8 @@ struct MatchDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .haptics(haptics)
         .task { await model.run(store: store) }
-        .task(id: LoadKey(game: model.selectedGameNumber, revealed: store.settings.revealedMatchIds.contains(model.matchId))) {
+        .task(id: LoadKey(game: model.selectedGameNumber, revealed: store.settings.revealedMatchIds.contains(model.matchId),
+                          bracketHidden: bracketHidden)) {
             await model.loadSelectedGame(store: store)
         }
         .task(id: timelineKey) { await model.loadTimeline(store: store) }
@@ -90,25 +92,29 @@ struct MatchDetailView: View {
         }
     }
 
+    /// Match caché par la suite du tableau : décidé une fois par rendu de l'écran (les clés des tâches et le contenu
+    /// partagent cette valeur), non révélé.
+    private var bracketHidden: Bool { store.isBracketHidden(matchId: model.matchId) }
+
     private var timelineKey: TimelineKey {
-        let game = model.featureGame(store: store)
+        let game = model.featureGame(store: store, bracketHidden: bracketHidden)
         return TimelineKey(gameId: game?.id, inProgress: game?.state == .inProgress)
     }
 
     private var featureKey: FeatureKey {
-        let game = model.featureGame(store: store)
+        let game = model.featureGame(store: store, bracketHidden: bracketHidden)
         return FeatureKey(gameId: game?.id, inProgress: game?.state == .inProgress,
                           detailsFinal: game.map { model.detailsAreFinal($0, store: store) } ?? false)
     }
 
     private var versionKey: VersionKey {
-        let game = model.featureGame(store: store)
+        let game = model.featureGame(store: store, bracketHidden: bracketHidden)
         return VersionKey(gameId: game?.id, patch: game.flatMap { store.patches[$0.id] })
     }
 
     /// Dernière frame de la game des fonctionnalités ; nil pour un match masqué ou sans stats.
     private var featureSnapshot: GameSnapshot? {
-        model.featureGame(store: store).flatMap { store.snapshots[$0.id] }
+        model.featureGame(store: store, bracketHidden: bracketHidden).flatMap { store.snapshots[$0.id] }
     }
 
     @ViewBuilder private var content: some View {
@@ -117,7 +123,7 @@ struct MatchDetailView: View {
         let teams = details?.match.teams ?? event?.match.teams ?? []
         let order = store.follows.displayOrder(teams)
         let ordered = order.map { teams[$0] }
-        let masked = store.isMasked(teams, matchId: model.matchId)
+        let masked = store.isDetailMasked(teams, matchId: model.matchId, bracketHidden: bracketHidden)
         let state = store.detailState(matchId: model.matchId)
         let tint = ordered.compactMap { store.tint(for: $0) }.first
         header(event: event, details: details, teams: ordered, order: order, state: state, masked: masked, tint: tint)
@@ -159,7 +165,7 @@ struct MatchDetailView: View {
                     selectedGameId: details.flatMap { model.selectedGame(in: $0) }
                         .flatMap { $0.state == .completed ? $0.id : nil },
                     masked: masked)
-        if showsPinButton(event: event) {
+        if !masked, showsPinButton(event: event) {
             LiveActivityPinButton(matchId: model.matchId, onHaptic: { haptics.play($0) })
         }
     }

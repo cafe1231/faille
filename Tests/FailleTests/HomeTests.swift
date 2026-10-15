@@ -195,4 +195,32 @@ struct HomeStoreTests {
         #expect(store.withoutMaskedUpcoming(store.schedule).contains { $0.id == "m-gen-fur" })
         store.endScene()
     }
+
+    /// Détail : un match que cache la suite du tableau est masqué comme un match en anti-spoiler (même décision, donc
+    /// aucune clé de fonctionnalité ni requête) ; révéler le match de T1 le rend, et révéler le match lui-même aussi.
+    @Test func aBracketHiddenMatchIsMaskedInTheDetailUntilRevealed() {
+        let store = AppStore(preview: PreviewData.withSeason)
+        let hidden = store.schedule.first { $0.id == "m-gen-fur" }!
+        let teams = hidden.match.teams
+        #expect(!store.isMasked(teams, matchId: hidden.id))
+        #expect(store.isBracketHidden(matchId: hidden.id))
+        #expect(store.isDetailMasked(teams, matchId: hidden.id))
+        #expect(store.isDetailMasked(teams, matchId: hidden.id, bracketHidden: true))
+        let model = MatchDetailModel(matchId: hidden.id)
+        #expect(model.featureGame(store: store) == nil)
+        // Un match du tableau non caché n'est pas touché.
+        let other = store.schedule.first { $0.id == "m-gen-hle" }!
+        #expect(!store.isDetailMasked(other.match.teams, matchId: other.id))
+        // « Toucher pour révéler » : CE match.
+        store.reveal(matchId: hidden.id)
+        #expect(!store.isBracketHidden(matchId: hidden.id))
+        #expect(!store.isDetailMasked(teams, matchId: hidden.id))
+        store.endScene()
+        // Révéler le match masqué de T1 restaure aussi la suite.
+        let again = AppStore(preview: PreviewData.withSeason)
+        #expect(again.isDetailMasked(teams, matchId: hidden.id))
+        again.reveal(matchId: SampleData.t1MatchId)
+        #expect(!again.isDetailMasked(teams, matchId: hidden.id))
+        again.endScene()
+    }
 }

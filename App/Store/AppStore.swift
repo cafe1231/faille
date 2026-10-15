@@ -245,6 +245,20 @@ final class AppStore {
         SpoilerPolicy.isMasked(teams, matchId: matchId, follows: follows, revealed: settings.revealedMatchIds)
     }
 
+    /// Écran Détail : masqué comme un match en anti-spoiler quand il est aussi caché par la progression du tableau
+    /// (`BracketMasking`, suite d'un match masqué non révélé d'une équipe suivie). Même chemin « masqué » : rien n'est
+    /// chargé ni affiché, « toucher pour révéler » révèle CE match.
+    /// - Parameter bracketHidden: décision déjà prise (`isBracketHidden`), pour ne la calculer qu'une fois par rendu.
+    func isDetailMasked(_ teams: [MatchTeam], matchId: String, bracketHidden: Bool? = nil) -> Bool {
+        isMasked(teams, matchId: matchId) || (bracketHidden ?? isBracketHidden(matchId: matchId))
+    }
+
+    /// Ce match est-il caché par la suite d'un tableau dont un match est masqué ? (non révélé ; ligues internationales)
+    func isBracketHidden(matchId: String) -> Bool {
+        guard !settings.revealedMatchIds.contains(matchId) else { return false }
+        return bracketHiddenIds(over: []).contains(matchId)
+    }
+
     func scoreLine(_ event: MatchEvent) -> ScoreLine {
         Presenter.scoreLine(for: event, follows: follows, revealed: settings.revealedMatchIds)
     }
