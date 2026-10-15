@@ -22,11 +22,18 @@ extension Presenter {
     /// `cards` n'y figure pas.
     public static func maskedLatestTeamIds(_ cards: [TeamCard], follows: FollowList, revealed: Set<String>) -> Set<String> {
         Set(cards.compactMap { card in
-            guard let latest = card.live ?? card.last,
-                  SpoilerPolicy.isMasked(latest.match.teams, matchId: latest.id, follows: follows, revealed: revealed)
-            else { return nil }
+            guard latestIsMasked(card, follows: follows, revealed: revealed) else { return nil }
             return card.team.id
         })
+    }
+
+    /// Le dernier match de la carte (`live`, sinon `last`) est masque et non revele : par l'anti-spoiler de l'equipe, ou
+    /// par la progression du tableau (`liveBracketMasked` / `lastBracketMasked`).
+    static func latestIsMasked(_ card: TeamCard, follows: FollowList, revealed: Set<String>) -> Bool {
+        guard let latest = card.live ?? card.last else { return false }
+        if SpoilerPolicy.isMasked(latest.match.teams, matchId: latest.id, follows: follows, revealed: revealed) { return true }
+        let bracket = card.live != nil ? card.liveBracketMasked : card.lastBracketMasked
+        return bracket && !revealed.contains(latest.id)
     }
 
     /// Ligne « Prochain » d'une carte. `.hidden` dans deux cas, sinon `.match` / `.none` selon `card.next` :
@@ -37,8 +44,7 @@ extension Presenter {
     /// - Parameter maskedLatestTeamIds: `Presenter.maskedLatestTeamIds` de toutes les cartes affichées ensemble.
     public static func nextLine(for card: TeamCard, follows: FollowList, revealed: Set<String>,
                                 maskedLatestTeamIds: Set<String>) -> NextLine {
-        if let latest = card.live ?? card.last,
-           SpoilerPolicy.isMasked(latest.match.teams, matchId: latest.id, follows: follows, revealed: revealed) {
+        if latestIsMasked(card, follows: follows, revealed: revealed) {
             return .hidden
         }
         guard let next = card.next else { return .none }

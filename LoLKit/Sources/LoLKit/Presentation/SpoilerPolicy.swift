@@ -39,9 +39,14 @@ public struct ScoreLine: Sendable, Equatable {
 }
 
 public enum Presenter {
-    public static func scoreLine(for event: MatchEvent, follows: FollowList, revealed: Set<String>) -> ScoreLine {
+    /// - Parameter bracketMasked: le match suit un match masque du meme tableau international (`BracketMasking`,
+    ///   `TeamCard.liveBracketMasked` / `lastBracketMasked`) : il est masque comme un match d'equipe en anti-spoiler,
+    ///   jusqu'a ce qu'il soit revele.
+    public static func scoreLine(for event: MatchEvent, follows: FollowList, revealed: Set<String>,
+                                 bracketMasked: Bool = false) -> ScoreLine {
         let teams = event.match.teams
         let masked = SpoilerPolicy.isMasked(teams, matchId: event.id, follows: follows, revealed: revealed)
+            || (bracketMasked && !revealed.contains(event.id))
         let status: ScoreLine.Status
         let started: Bool
         switch event.state {

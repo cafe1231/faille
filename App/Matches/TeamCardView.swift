@@ -38,7 +38,12 @@ struct TeamCardView: View {
         // Jamais `card.next` directement : la ligne « Prochain » passe par LoLKit (anti-spoiler, spec §8).
         let nextLine = store.nextLine(for: card)
         // Un match que `getLive` donne pour terminé est « Terminé », jamais « En direct » (spec §8).
-        let liveState = card.live.map { store.liveState(for: $0).displayed(for: $0) }
+        let liveState = card.live.map { event -> LiveMatchState in
+            let state = store.liveState(for: event).displayed(for: event)
+            // Apres un match masque du meme tableau : « En direct » sans score (BracketMasking), jusqu'a revelation.
+            let hidden = card.liveBracketMasked && !store.settings.revealedMatchIds.contains(event.id)
+            return hidden ? state.masked() : state
+        }
         VStack(alignment: .leading, spacing: 10) {
             // Toucher l'équipe → sa page (spec saison §2.1).
             TeamLink(teamId: card.team.id) {
@@ -184,7 +189,8 @@ struct TeamCardView: View {
 
     /// « Dernier · GEN 3 – 0 HLE » ; masqué : « Dernier · T1 vs GEN · Terminé · sam. 11 oct. · 09:00 » (aucun résultat, spec §8).
     private func lastRow(_ event: MatchEvent) -> some View {
-        let line = store.scoreLine(event)
+        let line = Presenter.scoreLine(for: event, follows: store.follows, revealed: store.settings.revealedMatchIds,
+                                       bracketMasked: card.lastBracketMasked)
         let order = store.follows.displayOrder(event.match.teams, preferring: card.team)
         let text = Format.lastRow(line, order: order, date: Format.matchDate(event.startTime))
         let route = MatchRoute(teamId: card.team.id, row: .last, matchId: event.id)

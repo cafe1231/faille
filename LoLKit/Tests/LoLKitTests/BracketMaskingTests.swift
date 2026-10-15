@@ -142,4 +142,74 @@ import Testing
                                               revealed: ["quart"])
         #expect(revealed.map(\.id) == ["demi-live"])
     }
+
+    // MARK: Direct et dernier match d'une équipe sans anti-spoiler, après le quart masqué
+
+    private func followsWithG2() -> FollowList {
+        FollowList(teams: [FollowedTeam(id: Self.t1Id, code: "T1", name: "T1", spoilerFree: true),
+                           FollowedTeam(id: "g2", code: "G2", name: "G2")])
+    }
+
+    private func quarter() -> MatchEvent {
+        makeEvent(id: "quart", state: .completed, start: "2026-10-10T10:00:00Z",
+                  teams: [makeTeam("T1", id: Self.t1Id, wins: 3), makeTeam("BLG", id: "blg", wins: 1)])
+    }
+
+    private func semi(_ state: EventState) -> MatchEvent {
+        makeEvent(id: "demi", state: state, start: "2026-10-12T10:00:00Z",
+                  teams: [makeTeam("G2", id: "g2", wins: 2), makeTeam("BLG", id: "blg", wins: 1)])
+    }
+
+    @Test func aLiveSemifinalAfterTheMaskedQuarterShowsNoScore() {
+        let live = semi(.inProgress)
+        let cards = TeamCards.build(follows: followsWithG2(), schedule: [quarter(), live], live: [live], revealed: [])
+        let g2 = cards.first { $0.team.id == "g2" }!
+        #expect(g2.liveBracketMasked)
+        let line = Presenter.scoreLine(for: g2.live!, follows: followsWithG2(), revealed: [],
+                                       bracketMasked: g2.liveBracketMasked)
+        #expect(line.score == nil && line.isMasked)
+        let cardsRevealed = TeamCards.build(follows: followsWithG2(), schedule: [quarter(), live], live: [live],
+                                            revealed: ["quart"])
+        #expect(cardsRevealed.first { $0.team.id == "g2" }!.liveBracketMasked == false)
+    }
+
+    @Test func aCompletedSemifinalAfterTheMaskedQuarterIsMaskedAndHidesTheNextLine() {
+        let done = semi(.completed)
+        let cards = TeamCards.build(follows: followsWithG2(), schedule: [quarter(), done], live: [], revealed: [])
+        let g2 = cards.first { $0.team.id == "g2" }!
+        #expect(g2.lastBracketMasked)
+        let line = Presenter.scoreLine(for: g2.last!, follows: followsWithG2(), revealed: [],
+                                       bracketMasked: g2.lastBracketMasked)
+        #expect(line.score == nil)
+        #expect(Format.lastRow(line, order: [0, 1], date: "x").contains("Terminé"))
+        let maskedLatest = Presenter.maskedLatestTeamIds(cards, follows: followsWithG2(), revealed: [])
+        #expect(Presenter.nextLine(for: g2, follows: followsWithG2(), revealed: [], maskedLatestTeamIds: maskedLatest)
+            == .hidden)
+        // Révéler la demi-finale elle-même la montre.
+        let own = TeamCards.build(follows: followsWithG2(), schedule: [quarter(), done], live: [], revealed: ["demi"])
+        #expect(own.first { $0.team.id == "g2" }!.lastBracketMasked == false)
+    }
+
+    @Test func domesticLeagueSemifinalIsNotMasked() {
+        let domestic = [quarter(), semi(.completed)].map { event in
+            MatchEvent(startTime: event.startTime, state: event.state, type: event.type, blockName: event.blockName,
+                       league: LeagueRef(id: "lec", slug: "lec", name: "LEC", image: nil),
+                       match: event.match, streams: event.streams)
+        }
+        let cards = TeamCards.build(follows: followsWithG2(), schedule: domestic, live: [], revealed: [])
+        #expect(cards.allSatisfy { !$0.liveBracketMasked && !$0.lastBracketMasked })
+    }
+
+    @Test func widgetLiveLineAfterTheMaskedQuarterHasNoScore() throws {
+        let live = semi(.inProgress)
+        let at = date("2026-10-12T10:30:00Z")
+        let input = WidgetInput(
+            follows: followsWithG2(), settings: AppSettings(revealedMatchIds: []),
+            schedule: Cached(value: SchedulePage(leagueIds: [], events: [quarter(), live]), fetchedAt: at),
+            live: Cached(value: [live], fetchedAt: at))
+        let line = try #require(WidgetTimeline.content(at: at, input: input).lines.first)
+        #expect(line.matchId == "demi")
+        #expect(line.status == .live(score: nil, gameNumber: nil))
+        #expect(line.isMasked)
+    }
 }

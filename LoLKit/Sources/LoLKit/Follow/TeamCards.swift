@@ -10,10 +10,17 @@ public struct TeamCard: Sendable, Equatable, Identifiable {
     /// `next` suit un match masqué d'une équipe en anti-spoiler dans la même compétition internationale
     /// (`BracketMasking`) : `Presenter.nextLine` ne l'annonce pas (« Prochain · masqué »).
     public let nextBracketMasked: Bool
+    /// `live` suit un match masque d'une equipe en anti-spoiler dans la meme competition internationale : il s'affiche
+    /// comme un match masque (« En direct » sans score, `Presenter.scoreLine(bracketMasked:)`) jusqu'a revelation.
+    public let liveBracketMasked: Bool
+    /// Idem pour `last` : « Dernier · ... · Termine » sans resultat.
+    public let lastBracketMasked: Bool
 
     public init(team: FollowedTeam, live: MatchEvent?, next: MatchEvent?, last: MatchEvent?,
-                nextBracketMasked: Bool = false) {
+                nextBracketMasked: Bool = false, liveBracketMasked: Bool = false, lastBracketMasked: Bool = false) {
         self.nextBracketMasked = nextBracketMasked
+        self.liveBracketMasked = liveBracketMasked
+        self.lastBracketMasked = lastBracketMasked
         self.team = team
         self.live = live
         self.next = next
@@ -50,15 +57,21 @@ public enum TeamCards {
                 .max { $0.startTime < $1.startTime }
             return TeamCard(team: team, live: liveMatch, next: next, last: last)
         }
-        let maskedLatest = Presenter.maskedLatestTeamIds(cards, follows: follows, revealed: revealed)
+        let baseMaskedLatest = Presenter.maskedLatestTeamIds(cards, follows: follows, revealed: revealed)
         // Progression de tableau (I-1 généralisé) : le prochain match d'une carte qui suit un match masqué d'une équipe
         // en anti-spoiler dans la même compétition internationale n'est pas annoncé.
-        let bracketHidden = BracketMasking.hiddenIds(schedule: schedule + (live ?? []), maskedTeamIds: maskedLatest,
+        let bracketHidden = BracketMasking.hiddenIds(schedule: schedule + (live ?? []), maskedTeamIds: baseMaskedLatest,
                                                      follows: follows, revealed: revealed)
+        // Un match en direct ou termine de la carte place apres ce match masque ne montre pas non plus son score.
         let shownCards = bracketHidden.isEmpty ? cards : cards.map { card in
-            guard let next = card.next, bracketHidden.contains(next.id) else { return card }
-            return TeamCard(team: card.team, live: card.live, next: next, last: card.last, nextBracketMasked: true)
+            let nextHidden = card.next.map { bracketHidden.contains($0.id) } ?? false
+            let liveHidden = card.live.map { bracketHidden.contains($0.id) } ?? false
+            let lastHidden = card.last.map { bracketHidden.contains($0.id) } ?? false
+            guard nextHidden || liveHidden || lastHidden else { return card }
+            return TeamCard(team: card.team, live: card.live, next: card.next, last: card.last,
+                            nextBracketMasked: nextHidden, liveBracketMasked: liveHidden, lastBracketMasked: lastHidden)
         }
+        let maskedLatest = Presenter.maskedLatestTeamIds(shownCards, follows: follows, revealed: revealed)
         return shownCards.enumerated().map { offset, card -> (offset: Int, element: TeamCard, nextStart: Date?) in
             var nextStart: Date?
             if case let .match(event) = Presenter.nextLine(for: card, follows: follows, revealed: revealed,

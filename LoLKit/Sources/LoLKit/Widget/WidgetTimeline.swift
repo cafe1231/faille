@@ -190,7 +190,10 @@ public enum WidgetTimeline {
     /// que le direct et l'à-venir.
     static func makeLine(for event: MatchEvent, card: TeamCard, follows: FollowList,
                          revealed: Set<String>) -> WidgetLine? {
-        let scoreLine = Presenter.scoreLine(for: event, follows: follows, revealed: revealed)
+        let bracketMasked = (card.live?.id == event.id && card.liveBracketMasked)
+            || (card.last?.id == event.id && card.lastBracketMasked)
+            || (card.next?.id == event.id && card.nextBracketMasked)
+        let scoreLine = Presenter.scoreLine(for: event, follows: follows, revealed: revealed, bracketMasked: bracketMasked)
         let order = follows.displayOrder(event.match.teams, preferring: card.team)
         let teams = reorder(event.match.teams, order) ?? event.match.teams
         let status: WidgetLine.Status
