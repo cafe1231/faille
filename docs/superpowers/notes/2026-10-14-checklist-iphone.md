@@ -16,8 +16,8 @@
 
 ## A. L'appli (étape 2)
 
-1. Ouverture : fond abysse sombre, police Sora (titres épais, chiffres ronds), barre d'onglets flottante en verre « Matchs » / « Équipes », aucune emoji.
-2. Premier lancement (si l'appli est vierge) : onglet Matchs = « Bienvenue dans Faille », le bouton mène à Équipes.
+1. Ouverture : fond abysse sombre, police Sora (titres épais, chiffres ronds), barre d'onglets flottante en verre « Accueil » / « Matchs » / « Équipes » (3 onglets), aucune emoji.
+2. Premier lancement (si l'appli est vierge) : l'onboarding s'ouvre en plein écran (3 pages) ; « C'est parti » ou « Passer » mène à l'Accueil, qui ne revient pas au lancement suivant.
 3. Équipes : pilules de ligues (Mondial en tête) ; « Mondial » liste les équipes des Worlds ; « La Ligue Française » liste les équipes LFL.
 4. Recherche « kc » : Karmine Corp en premier ; l'étoile la met dans « Mes équipes » ; en quelques secondes, logo et couleur (badge, point) remplacent le bleu clair par défaut.
 5. Suivre 2-3 équipes (dont une des Worlds) : une carte teintée par équipe, avec Prochain (date et heure locales) et Dernier.
@@ -126,6 +126,25 @@ Quand la Live Activity n'a pas été mise à jour depuis 3 min (téléphone verr
 
 19. **Page équipe** : toucher une équipe depuis une carte de Matchs, le Détail (logo ou code), une ligne de « Mes équipes » ou du catalogue ouvre sa page ; l'œil et l'étoile restent des boutons ; le score du Détail ne s'ouvre pas.
 20. **Duel** : Détail d'un match joué et révélé : section « Duel » sous les stats (composition de la game, ligne « Cette game ») ; match masqué : stats de saison seulement, ni composition ni « Cette game ».
-21. **Ligues** : Équipes > Toutes les ligues : « Suivre la ligue », « Suivre ses N équipes » et l'interrupteur de notifications de début (désactivé par défaut) ; une ligue suivie apparaît dans la section « Ligues » de Matchs (prochain match anti-spoiler, classement).
+21. **Ligues** : Équipes > Toutes les ligues : « Suivre la ligue », « Suivre ses N équipes » et l'interrupteur de notifications de début (désactivé par défaut) ; une ligue suivie apparaît dans la section « Ligues » de Matchs (prochain match anti-spoiler, classement). Activer l'interrupteur de notifications allume aussi « Début de match » dans les Réglages et demande l'autorisation d'iOS si elle n'a jamais été demandée (refusée : l'interrupteur revient à faux, avec la note « Notifications refusées par iOS »).
 22. **À ne pas rater** : en tête de Matchs, 5 choix au plus ; aucun match masqué ne trahit son score ni son issue.
-23. **Premier lancement** : installation neuve (rien de suivi) : l'onboarding s'ouvre en plein écran ; suivre une équipe ne le ferme pas ; « Terminer » le ferme et il ne revient pas au lancement suivant.
+23. **Premier lancement** : installation neuve (rien de suivi) : l'onboarding s'ouvre en plein écran ; suivre une équipe ne le ferme pas ; « C'est parti » (ou « Passer ») le ferme sur l'Accueil et il ne revient pas au lancement suivant. Pendant l'onboarding, suivre une équipe ne démarre aucune Live Activity ; elles démarrent à « C'est parti » / « Passer ».
+
+24. **Accueil** : carte « Suis tes équipes » sans suivi (le Mondial en attendant) ; avec des équipes : « À ne pas rater », « En direct maintenant », bandeau de la semaine, « Résultats récents », « Joueurs en forme » et activité ; au bout de 1–2 min (pas 30) « Les stats arrivent : N games lues » avance.
+25. **Calendrier** : depuis l'Accueil ou Matchs, mois par mois, pastille pleine (équipe ou ligue suivie) / anneau (international) ; un mois pas encore lu se charge ; en mode avion « Réseau indisponible, réessaie plus tard » ; un match masqué n'y trahit rien.
+26. **Classements** : un tournoi (tableau ou tables) ; « Classement masqué · toucher pour révéler » pour une équipe en anti-spoiler, qui ne révèle aucun match ; un tableau révélé montre « vs » (pas le score) pour un match encore masqué.
+27. **Page joueur** : depuis une page d'équipe ou un duel : stats de la saison, « N matchs masqués », forme masquée si besoin, retour par glissement.
+28. **Lien profond depuis un duel libre** : ouvrir un duel libre (deux joueurs choisis), puis toucher une notification de début de match → onglet Matchs, Détail du bon match ; même chose depuis une page d'équipe ouverte.
+29. **Anglais** : iPhone en anglais : Accueil, page d'équipe, Réglages ; noter les restes en français (attendus : textes produits par LoLKit, notifications).
+
+### Vérifications sur appareil de la relecture finale
+
+1. **Premier lancement** (désinstaller puis installer) : l'onboarding s'ouvre ; la grille « Équipes du Mondial » se remplit (sinon noter le délai) ; exemple AUR/ZYX animé, figé sous « Réduire les animations » ; « Passer » et « C'est parti » mènent à l'Accueil ; il ne revient pas au lancement suivant.
+2. **Accueil sans suivi** : carte « Suis tes équipes » + Mondial ; au bout de 1–2 min (pas 30), « Joueurs en forme » et « Les stats arrivent : N games lues » avancent.
+3. **Anti-spoiler** avec une équipe en œil barré dont le dernier match est masqué : bandeau, calendrier (pastilles + liste du jour), « À ne pas rater », Ligues, page d'équipe (« N matchs masqués », forme masquée, « Classement masqué · toucher pour révéler »), page joueur, Duel du Détail (pas de ligne « Cette game ») ; et vérifier qu'aucun match d'un autre duo du même tableau ne trahit la suite (demi-finale entre d'autres équipes : « Match à venir · masqué »).
+4. **Lien profond** : notification de début touchée depuis l'Accueil avec une page d'équipe ouverte, puis depuis un duel libre ouvert → onglet Matchs, Détail du bon match.
+5. **Ligues** : suivre le Mondial + « Prévenir au début de ses matchs » sans avoir activé les notifications dans les Réglages → iOS demande l'autorisation, « Début de match » s'allume dans les Réglages.
+6. **Navigation 3 onglets** : pousser équipe → joueur → équipe dans chaque onglet, changer d'onglet et revenir (piles conservées), retour par glissement.
+7. **Grand texte** (Réglages iOS, taille AX2) : Accueil, page d'équipe, classement — rien de coupé illisiblement.
+8. **Anglais** : appareil en anglais — Accueil, page d'équipe, Réglages ; noter les restes en français (attendus : textes LoLKit, notifications).
+9. **Fluidité** : défiler l'Accueil et le calendrier pendant la collecte (premières minutes) — pas d'à-coup ; chaleur après 10 min.
