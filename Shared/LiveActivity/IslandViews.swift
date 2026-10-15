@@ -94,7 +94,7 @@ struct IslandCenterView: View {
                     .font(Sora.font(15, .medium))
                     .foregroundStyle(Palette.secondary)
             }
-            // Chrono de 10 pt : la réserve suit la durée de la game (28 pt avant une heure, 40 pt pour « 1:02:05 »), pour
+            // Chrono de 10 pt : la réserve suit la durée de la game (36 pt avant une heure, 40 pt pour « 1:02:05 »), pour
             // ne pas laisser de vide entre « Game 2 · » et l'heure.
             LiveActivityStatusView(status: display.status, prefix: display.gameNumber.map { "Game \($0) · " },
                                    timerWidth: IslandTimer.width(status: display.status))
@@ -142,8 +142,8 @@ struct IslandBottomView: View {
 
 /// Largeur réservée au chrono natif de la Dynamic Island déployée (police de 10 pt).
 enum IslandTimer {
-    /// Largeur de « 42:05 ».
-    static let short: CGFloat = 28
+    /// Largeur de « 42:05 » (28 pt le coupait en « 18:… » sur la planche : Sora est large).
+    static let short: CGFloat = 36
     /// Largeur de « 1:02:05 ».
     static let long: CGFloat = 40
     /// Marge avant l'heure de jeu : le chrono tourne sans mise à jour, la largeur lue au dernier rendu doit encore
