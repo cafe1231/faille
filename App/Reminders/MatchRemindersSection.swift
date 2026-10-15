@@ -104,7 +104,7 @@ struct MatchRemindersSection: View {
 
     private var explanation: String {
         enabled
-            ? String(localized: "« KC vs C9 dans \(Self.leadLabel(lead)) » avant le prochain match de chaque équipe suivie. Jamais pour un match que l'anti-spoiler cache, jamais de score.")
+            ? String(localized: "« KC vs C9 dans \(Self.leadLabel(lead)) » avant le prochain match de chaque équipe suivie et avant chaque match des ligues suivies avec les notifications. Jamais pour un match que l'anti-spoiler cache, jamais de score.")
             : String(localized: "Désactivées : aucune notification. Les activer demande l'autorisation d'iOS.")
     }
 

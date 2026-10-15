@@ -12,6 +12,8 @@ struct LeagueFollowRow: View {
     let onToggleFollow: () -> Void
     let onFollowAll: () -> Void
     let onToggleNotifications: (Bool) -> Void
+    /// iOS a refusé les notifications : même note que les Réglages.
+    var notificationsDenied = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -39,6 +41,11 @@ struct LeagueFollowRow: View {
                     Text("Prévenir au début de ses matchs").sora(.secondary)
                 }
                 .tint(Palette.accent)
+                if notificationsDenied, !notifies {
+                    Text("Notifications refusées par iOS : Réglages › Faille › Notifications.")
+                        .sora(.secondaryMedium)
+                        .foregroundStyle(Palette.accent)
+                }
             }
         }
         .buttonStyle(.pressable)

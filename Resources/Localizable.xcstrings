@@ -3553,17 +3553,6 @@
         }
       }
     },
-    "« KC vs C9 dans %@ » avant le prochain match de chaque équipe suivie. Jamais pour un match que l'anti-spoiler cache, jamais de score.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "“KC vs C9 in %@” before the next match of each followed team. Never for a match that anti-spoiler hides, never a score."
-          }
-        }
-      }
-    },
     "· %@": {
       "extractionState": "manual",
       "localizations": {
@@ -3714,6 +3703,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Worlds teams"
+          }
+        }
+      }
+    },
+    "« KC vs C9 dans %@ » avant le prochain match de chaque équipe suivie et avant chaque match des ligues suivies avec les notifications. Jamais pour un match que l'anti-spoiler cache, jamais de score.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“KC vs C9 in %@” before the next match of each followed team and before each match of followed leagues with notifications on. Never for a match that anti-spoiler hides, never a score."
           }
         }
       }

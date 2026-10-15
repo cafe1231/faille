@@ -32,6 +32,9 @@ final class AppStore {
     private(set) var statsUnavailable: Set<String> = []
     /// Le dernier appel à l'API a échoué : bandeau « lolesports ne répond pas ».
     private(set) var isFailing = false
+    /// iOS a refusé les notifications demandées par l'interrupteur d'une ligue (`setLeagueNotifications`) : la note des
+    /// Réglages (« Notifications refusées par iOS… ») s'affiche sous l'interrupteur.
+    private(set) var leagueNotificationsDenied = false
     /// Heure de DÉBUT de la dernière tentative réussie de chaque donnée (pas l'heure de la réponse : la cadence du
     /// direct, 60 s, se compte de début de requête à début de requête).
     private(set) var lastSuccess: [DataKind: Date] = [:]
@@ -396,11 +399,38 @@ final class AppStore {
         }
     }
 
-    /// Notifications de début des matchs d'une ligue suivie (spec saison §3.5, désactivées par défaut).
+    /// Demande l'autorisation d'iOS pour les notifications de début de match : un seul chemin pour les Réglages
+    /// (`MatchRemindersSection`) et pour les ligues. La première fois seulement iOS la demande ; refusée, `enabled` est
+    /// faux et `denied` vrai.
+    func requestReminderAuthorization() async -> MatchRemindersFlow.Outcome {
+        await MatchRemindersFlow.toggle(to: true, center: reminderCenter)
+    }
+
+    /// Notifications de début des matchs d'une ligue suivie (spec saison §3.5, désactivées par défaut). L'activer allume
+    /// aussi le réglage global (`matchRemindersEnabled`, sans lequel rien ne part) et demande l'autorisation d'iOS par le
+    /// même chemin que les Réglages ; refusée, l'interrupteur de la ligue (et le réglage global, s'il vient d'être allumé
+    /// ici) revient à faux et `leagueNotificationsDenied` porte la note.
     func setLeagueNotifications(_ on: Bool, leagueId: String) {
         syncFollowsBeforeChange()
         follows.setNotifyStarts(on, leagueId: leagueId)
         saveFollows()
+        guard on else { return }
+        leagueNotificationsDenied = false
+        let enabledBefore = settings.matchRemindersEnabled
+        if !enabledBefore {
+            setMatchReminders(enabled: true)
+        }
+        runWithScene {
+            let outcome = await self.requestReminderAuthorization()
+            guard outcome.enabled != true, !Task.isCancelled else { return }
+            self.syncFollowsBeforeChange()
+            self.follows.setNotifyStarts(false, leagueId: leagueId)
+            self.saveFollows()
+            if !enabledBefore, !self.follows.leagues.contains(where: \.notifyStarts) {
+                self.setMatchReminders(enabled: false)
+            }
+            self.leagueNotificationsDenied = true
+        }
     }
 
     /// « Classement masqué · toucher pour révéler » (spec saison §3.5) : mémorisé par tournoi ; ne révèle aucun match.

@@ -405,3 +405,52 @@ struct MatchRemindersFlowTests {
         #expect(reconcile(false, true, .notDetermined) == Outcome(enabled: nil, denied: true))
     }
 }
+
+/// Notifications de ligue (W2, I-2) : l'interrupteur d'une ligue allume le réglage global et demande l'autorisation d'iOS.
+@MainActor
+@Suite(.serialized)
+struct LeagueNotificationsTests {
+    private static func store(center: FakeReminderCenter) -> AppStore {
+        let files = TemporaryFiles.store()
+        let worlds = SampleData.worlds
+        files.save(FollowList(teams: [], leagues: [FollowedLeague(id: worlds.id!, slug: worlds.slug, name: worlds.name)]),
+                   to: .follows)
+        files.save(AppSettings(onboardingDone: true), to: .settings)
+        let teams = [MatchTeam(id: "kc", name: "Karmine Corp", code: "KC", image: nil, result: nil),
+                     MatchTeam(id: "g2", name: "G2 Esports", code: "G2", image: nil, result: nil)]
+        let event = MatchEvent(startTime: Date().addingTimeInterval(3 * 3600), state: .unstarted, type: "match",
+                               blockName: "Play-in", league: worlds,
+                               match: MatchInfo(id: "m1", teams: teams, strategy: Strategy(type: "bestOf", count: 5),
+                                                games: nil),
+                               streams: nil)
+        files.save(Cached(value: SchedulePage(leagueIds: [], events: [event]), fetchedAt: Date()), to: .schedule)
+        return AppStore(transport: ScriptedTransport(mode: .failing), files: files, reminderCenter: center)
+    }
+
+    private static func settle(_ store: AppStore) async {
+        for _ in 0..<100 where !store.follows.leagues.allSatisfy({ !$0.notifyStarts }) || !store.leagueNotificationsDenied {
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+    }
+
+    @Test func enablingLeagueNotificationsPlansItsMatches() {
+        let store = Self.store(center: FakeReminderCenter(status: .authorized))
+        #expect(store.plannedReminders().isEmpty)   // aucun réglage global
+        store.setLeagueNotifications(true, leagueId: SampleData.worlds.id!)
+        #expect(store.settings.matchRemindersEnabled)
+        #expect(store.plannedReminders().map(\.matchId) == ["m1"])
+        store.endScene()
+    }
+
+    @Test func aRefusalByIOSRevertsTheSwitch() async {
+        let center = FakeReminderCenter(status: .notDetermined, grants: false)
+        let store = Self.store(center: center)
+        store.setLeagueNotifications(true, leagueId: SampleData.worlds.id!)
+        await Self.settle(store)
+        #expect(await center.authorizationRequests == 1)
+        #expect(store.follows.leagues.first?.notifyStarts == false)
+        #expect(!store.settings.matchRemindersEnabled)
+        #expect(store.leagueNotificationsDenied)
+        store.endScene()
+    }
+}

@@ -143,7 +143,8 @@ struct TeamsView: View {
                             allTeamsFollowed: leagueTeams.allSatisfy { store.follows.contains(id: $0.id) },
                             onToggleFollow: { toggleLeague(selected) },
                             onFollowAll: { followAll(selected) },
-                            onToggleNotifications: { store.setLeagueNotifications($0, leagueId: selected.id) })
+                            onToggleNotifications: { store.setLeagueNotifications($0, leagueId: selected.id) },
+                            notificationsDenied: store.leagueNotificationsDenied)
             teamList(leagueTeams)
         } else if store.isFailing {
             NoteCard(icon: .refresh, text: String(localized: "Ligues indisponibles pour l'instant."))
