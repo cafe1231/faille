@@ -1,9 +1,12 @@
 import SwiftUI
 
-/// Rayons de la DA : 28 pt pour les cartes, 22 pt pour les éléments internes (spec §9).
+/// Rayons de la DA : 28 pt pour les cartes, 22 pt pour les éléments internes et les champs de saisie (spec §9).
+/// Les capsules (pilules, pastilles) n'ont pas de rayon : `Capsule()`.
 enum Radius {
     static let card: CGFloat = 28
     static let inner: CGFloat = 22
+    /// Champ de saisie (recherche) : le rayon des éléments internes, au lieu des 15 pt libres d'avant (audit B-E3).
+    static let field: CGFloat = inner
 }
 
 /// Carte en verre « matière » (comme Échap) : `.ultraThinMaterial` + dégradé Vitrail à 160° (couleur d'équipe → blanc 3 %)

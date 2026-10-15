@@ -40,10 +40,18 @@ extension ScreenHeader where Trailing == EmptyView {
     }
 }
 
-/// Étiquette de section : 11 pt, capitales espacées, secondaire ; point lumineux optionnel à droite.
-struct SectionLabel: View {
+/// Étiquette de section : 11 pt, capitales espacées, secondaire ; à droite, un lien optionnel (`trailing`, par exemple
+/// « Comment c'est calculé ») puis le point lumineux optionnel, toujours au bord droit (audit B-M1).
+struct SectionLabel<Trailing: View>: View {
     let text: String
     var dot: Color? = nil
+    let trailing: Trailing
+
+    init(text: String, dot: Color? = nil, @ViewBuilder trailing: () -> Trailing) {
+        self.text = text
+        self.dot = dot
+        self.trailing = trailing()
+    }
 
     var body: some View {
         HStack {
@@ -54,10 +62,17 @@ struct SectionLabel: View {
                 .foregroundStyle(Palette.secondary)
                 .lineLimit(1)
             Spacer(minLength: 8)
+            trailing
             if let dot {
                 GlowDot(color: dot)
             }
         }
+    }
+}
+
+extension SectionLabel where Trailing == EmptyView {
+    init(text: String, dot: Color? = nil) {
+        self.init(text: text, dot: dot) { EmptyView() }
     }
 }
 
@@ -86,39 +101,78 @@ struct Chip<Content: View>: View {
         .foregroundStyle(muted ? Palette.secondary : Palette.text)
         .padding(.horizontal, 9)
         .padding(.vertical, 4)
-        .background(Color.white.opacity(muted ? 0.07 : 0.10), in: Capsule())
+        .background(Palette.fill(muted ? .muted : .chip), in: Capsule())
+    }
+}
+
+/// Espace de noms de la capsule de sélection d'un groupe de pilules (`PillGroup`) ; nil hors groupe.
+private struct PillSelectionKey: EnvironmentKey {
+    static let defaultValue: Namespace.ID? = nil
+}
+
+extension EnvironmentValues {
+    var pillSelection: Namespace.ID? {
+        get { self[PillSelectionKey.self] }
+        set { self[PillSelectionKey.self] = newValue }
+    }
+}
+
+/// Groupe de pilules : toutes les `PillButton` de son contenu partagent une capsule de sélection qui glisse de l'une à
+/// l'autre (spec finitions §9, audit C7) ; la capsule change de place sans glisser sous « Réduire les animations ».
+/// À poser autour de chaque rangée ou colonne de pilules qui n'a pas déjà son propre `Namespace`.
+struct PillGroup<Content: View>: View {
+    @Namespace var namespace
+    @ReduceMotion var reduceMotion
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        content
+            .environment(\.pillSelection, Motion.runs(.pillSlide, reduceMotion: reduceMotion) ? namespace : nil)
     }
 }
 
 /// Pilule sélectionnable (ligues, games) : blanche quand elle est choisie, verre sinon (onglets d'Échap).
+/// Texte Sora qui suit la taille du texte, sur une seule ligne (la pilule s'élargit plutôt que de passer à la ligne) ;
+/// capsule de 29 pt environ dans une zone tactile de 44 pt.
 /// `selection` : espace de noms de la capsule blanche, qui glisse alors d'une pilule à l'autre (spec finitions §9) ;
-/// nil : la capsule change de place sans glisser (ligues, « Réduire les animations »).
+/// à défaut, celui du `PillGroup` englobant ; aucun : la capsule se fond sans glisser (ligues, « Réduire les animations »).
 struct PillButton<Content: View>: View {
+    /// Hauteur de la zone tactile (finitions §2).
+    static var touchHeight: CGFloat { 44 }
+
     let selected: Bool
     var selection: Namespace.ID? = nil
     let action: () -> Void
     @ViewBuilder var label: Content
+    @Environment(\.pillSelection) var groupSelection
+    @ReduceMotion var reduceMotion
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 4) {
                 label
             }
-            .font(selected ? Typo.secondaryMedium : Typo.secondary)
+            .sora(selected ? .secondaryMedium : .secondary)
+            .lineLimit(1)
+            .fixedSize()
             .foregroundStyle(selected ? Palette.abyss : Palette.secondary)
             .padding(.horizontal, 13)
             .padding(.vertical, 7)
             .background {
                 if selected {
                     Capsule()
-                        .fill(Color.white.opacity(0.92))
-                        .slidingSelection(selection)
+                        .fill(Palette.fill(.selected))
+                        .slidingSelection(selection ?? groupSelection)
                 } else {
                     Capsule()
-                        .fill(Color.white.opacity(0.05))
+                        .fill(Palette.fill(.subtle))
                 }
             }
             .overlay(Capsule().strokeBorder(selected ? Color.clear : Palette.glassBorder, lineWidth: 1))
+            .frame(minHeight: Self.touchHeight)
+            .contentShape(Rectangle())
+            // La capsule glisse (ou se fond) d'elle-même, même quand l'action ne pose pas d'animation.
+            .animation(Motion.animation(.snappy, reduceMotion: reduceMotion), value: selected)
         }
         .buttonStyle(.pressable)
     }

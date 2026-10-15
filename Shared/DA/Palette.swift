@@ -12,11 +12,43 @@ enum Palette {
     static let blueWash = Color(red: 60 / 255, green: 140 / 255, blue: 1, opacity: 0.18)
     static let tealWash = Color(red: 0, green: 220 / 255, blue: 200 / 255, opacity: 0.14)
     /// Verre neutre (équipes non suivies, listes).
-    static let glassFill = Color.white.opacity(0.05)
+    static let glassFill = fill(.subtle)
     static let glassBorder = Color.white.opacity(0.22)
     /// Arête lumineuse en haut des cartes.
     static let glassEdge = Color.white.opacity(0.5)
-    static let chipFill = Color.white.opacity(0.10)
+    static let chipFill = fill(.chip)
+
+    /// Les blancs à opacité de la DA, nommés : plus de 0,04 / 0,06 / 0,07 / 0,08 / 0,09… dispersés dans les vues.
+    enum Fill: CaseIterable, Sendable {
+        /// Pilule non choisie, champ de recherche, tuile au repos, verre neutre.
+        case subtle
+        /// Pastille « masqué », capsule secondaire.
+        case muted
+        /// Pastille, tuile choisie, étiquette.
+        case chip
+        /// Gabarit d'un squelette.
+        case placeholder
+        /// Piste d'une jauge (barre de gold, barre de répartition).
+        case track
+        /// Élément choisi : pilule, jour, case sélectionnés (texte `Palette.abyss` dessus).
+        case selected
+
+        var opacity: Double {
+            switch self {
+            case .subtle: 0.05
+            case .muted: 0.07
+            case .chip: 0.10
+            case .placeholder: 0.09
+            case .track: 0.14
+            case .selected: 0.92
+            }
+        }
+    }
+
+    /// Blanc à l'opacité du rôle `fill`.
+    static func fill(_ fill: Fill) -> Color {
+        Color.white.opacity(fill.opacity)
+    }
 
     /// Couleur d'une équipe suivie (`FollowedTeam.colorHex`) ; l'accent si le hex est illisible.
     static func team(_ hex: String) -> Color {
