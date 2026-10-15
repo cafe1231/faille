@@ -573,7 +573,7 @@
         }
       }
     },
-    "+2,1 k": {
+    "+2,1k": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -3946,6 +3946,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Full calendar available the next time you open the app"
+          }
+        }
+      }
+    },
+    "Les équipes arrivent dès que la connexion revient.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teams will appear as soon as the connection is back."
           }
         }
       }

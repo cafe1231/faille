@@ -2,7 +2,7 @@ import LoLKit
 import SwiftUI
 
 /// Premier lancement (spec saison §3.7) : 3 écrans, « Passer » partout, points de pagination, glissement d'une page à
-/// l'autre (`Motion.snappy` ; fondu sous « Réduire les animations »). Vue à fermetures : elle ne connaît pas `AppStore`
+/// l'autre (`TabView` paginé ; changement sans mouvement sous « Réduire les animations »). Vue à fermetures : elle ne connaît pas `AppStore`
 /// (I2 la branche en `fullScreenCover`). « C'est parti » ou « Passer » → `onDone` (Accueil).
 struct OnboardingView: View {
     let teams: [Team]
@@ -61,37 +61,43 @@ struct OnboardingView: View {
                 .buttonStyle(.pressable)
             }
             .padding(.horizontal, 16)
-            ScrollView {
-                Group {
-                    switch page {
-                    case 0:
-                        OnboardingWelcomePage()
-                    case 1:
-                        OnboardingPickPage(teams: teams, leagues: leagues, followedTeamIds: followedTeamIds,
-                                           followedLeagueIds: followedLeagueIds, search: search,
-                                           onToggleTeam: toggle, onToggleLeague: toggle)
-                    default:
-                        OnboardingSpoilerPage(chosen: followedTeams, spoilerFreeIds: spoilerFreeIds, onSetSpoilerFree: { id, on in
-                            haptics.play(.spoilerToggle)
-                            onSetSpoilerFree(id, on)
-                        })
-                    }
+            // Pages en `TabView(.page)` : le glissement et « Retour » entrent toujours du bon côté (audit C5), et le
+            // défilement horizontal des pilules de ligues n'est plus en conflit avec un geste maison (audit C6).
+            TabView(selection: $page) {
+                pageScroll { OnboardingWelcomePage() }.tag(0)
+                pageScroll {
+                    OnboardingPickPage(teams: teams, leagues: leagues, followedTeamIds: followedTeamIds,
+                                       followedLeagueIds: followedLeagueIds, search: search,
+                                       onToggleTeam: toggle, onToggleLeague: toggle)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-                .frame(maxWidth: 640)
-                .frame(maxWidth: .infinity)
-                .transition(reduceMotion ? .opacity : .asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
-                                                                    removal: .opacity))
+                .tag(1)
+                pageScroll {
+                    OnboardingSpoilerPage(chosen: followedTeams, spoilerFreeIds: spoilerFreeIds, onSetSpoilerFree: { id, on in
+                        haptics.play(.spoilerToggle)
+                        onSetSpoilerFree(id, on)
+                    })
+                }
+                .tag(2)
             }
-            .gesture(DragGesture(minimumDistance: 30).onEnded { value in
-                if value.translation.width < -60 { go(page + 1) }
-                if value.translation.width > 60 { go(page - 1) }
-            })
+            .tabViewStyle(.page(indexDisplayMode: .never))
             footer
         }
         .abyssBackground()
         .haptics(haptics)
+    }
+
+    /// Une page : gouttière de 16 pt, centrée verticalement quand elle est courte (audit B-O4), défilante sinon.
+    private func pageScroll<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        let page = content()
+        return GeometryReader { proxy in
+            ScrollView {
+                page
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: 640)
+                    .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .center)
+            }
+        }
     }
 
     private var followedTeamIds: Set<String> {
@@ -120,8 +126,8 @@ struct OnboardingView: View {
             }
             .buttonStyle(.pressable)
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 20)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
     }
 
     private func go(_ target: Int) {

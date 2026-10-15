@@ -33,17 +33,18 @@ struct OnboardingPickPage: View {
         let shown = query.trimmingCharacters(in: .whitespaces).isEmpty ? teams : search(query)
         VStack(alignment: .leading, spacing: 14) {
             Text("Choisis tes équipes ou une ligue").sora(.title).tracking(Typo.titleTracking)
+            // Pilules de ligues : débordent jusqu'au bord de l'écran (audit B-G2) au lieu d'être rognées à la gouttière.
             ScrollView(.horizontal) {
                 HStack(spacing: 6) {
                     ForEach(leagues) { league in
-                        PillButton(selected: followedLeagueIds.contains(league.id), action: { onToggleLeague(league) }) {
-                            if followedLeagueIds.contains(league.id) { IconView(icon: .starFill, size: 11) }
-                            Text(league.name)
-                        }
+                        leaguePill(league, followed: followedLeagueIds.contains(league.id))
                     }
                 }
             }
             .scrollIndicators(.hidden)
+            .scrollClipDisabled()
+            .contentMargins(.horizontal, 16, for: .scrollContent)
+            .padding(.horizontal, -16)
             HStack(spacing: 8) {
                 IconView(icon: .search, size: 16).foregroundStyle(Palette.secondary)
                 TextField("", text: $query, prompt: Text("Rechercher une équipe").foregroundStyle(Palette.secondary))
@@ -53,14 +54,18 @@ struct OnboardingPickPage: View {
             }
             .padding(.horizontal, 14)
             .frame(minHeight: 44)
-            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+            .background(Palette.fill(.subtle), in: RoundedRectangle(cornerRadius: Radius.field, style: .continuous))
             if query.isEmpty {
                 Text("Équipes du Mondial").sora(.label).tracking(Typo.labelTracking).textCase(.uppercase)
                     .foregroundStyle(Palette.secondary)
             }
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
-                ForEach(shown.prefix(Self.gridLimit)) { team in
-                    teamCell(team, followed: followedTeamIds.contains(team.id))
+            if teams.isEmpty && query.isEmpty {
+                loadingGrid
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
+                    ForEach(shown.prefix(Self.gridLimit)) { team in
+                        teamCell(team, followed: followedTeamIds.contains(team.id))
+                    }
                 }
             }
             if shown.count > Self.gridLimit {
@@ -71,18 +76,59 @@ struct OnboardingPickPage: View {
         .foregroundStyle(Palette.text)
     }
 
+    /// Catalogue pas encore lu (premier lancement, réseau lent ou absent) : squelette de la grille et une note, au lieu
+    /// d'un titre sans rien dessous (audit D.1, saison 7).
+    private var loadingGrid: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ShimmerScope {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
+                    ForEach(0..<6, id: \.self) { _ in
+                        SkeletonBlock(height: 104, radius: Radius.inner)
+                    }
+                }
+            }
+            Text("Les équipes arrivent dès que la connexion revient.")
+                .sora(.secondary).foregroundStyle(Palette.secondary)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// Pilule de ligue : « suivie » = verre, bordure et étoile à l'accent ; jamais le blanc, qui veut dire « filtre choisi »
+    /// partout ailleurs (audit B-O2).
+    private func leaguePill(_ league: League, followed: Bool) -> some View {
+        Button { onToggleLeague(league) } label: {
+            HStack(spacing: 4) {
+                if followed { IconView(icon: .starFill, size: 11) }
+                Text(league.name)
+            }
+            .sora(followed ? .secondaryMedium : .secondary)
+            .lineLimit(1)
+            .fixedSize()
+            .foregroundStyle(followed ? Palette.accent : Palette.secondary)
+            .padding(.horizontal, 13)
+            .padding(.vertical, 7)
+            .background(Capsule().fill(Palette.fill(.subtle)))
+            .overlay(Capsule().strokeBorder(followed ? Palette.accent : Palette.glassBorder, lineWidth: 1))
+            .frame(minHeight: PillButton<EmptyView>.touchHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.pressable)
+        .accessibilityValue(followed ? Text("Suivie") : Text("Pas suivie"))
+    }
+
     private func teamCell(_ team: Team, followed: Bool) -> some View {
         Button { onToggleTeam(team) } label: {
             VStack(spacing: 6) {
                 TeamBadge(code: team.code, tint: followed ? Palette.accent : nil, size: 46)
-                Text(team.name).sora(.secondaryMedium).lineLimit(1).minimumScaleFactor(0.8)
+                Text(team.name).sora(.secondaryMedium).lineLimit(2).minimumScaleFactor(0.8)
+                    .multilineTextAlignment(.center).padding(.horizontal, 6)
                 IconView(icon: followed ? .starFill : .star, size: 14)
                     .foregroundStyle(followed ? Palette.accent : Palette.secondary)
             }
             .frame(maxWidth: .infinity, minHeight: 104)
-            .background(Color.white.opacity(followed ? 0.10 : 0.04), in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(followed ? Palette.accent : Palette.glassBorder,
-                                                                     lineWidth: 1))
+            .background(Palette.fill(followed ? .chip : .subtle), in: RoundedRectangle(cornerRadius: Radius.inner, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Radius.inner, style: .continuous)
+                .strokeBorder(followed ? Palette.accent : Palette.glassBorder, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityLabel(Text(team.name))
@@ -110,7 +156,9 @@ struct OnboardingSpoilerPage: View {
                 Text("Tu pourras l'activer plus tard dans l'onglet Équipes.").sora(.secondary)
                     .foregroundStyle(Palette.secondary)
             } else {
-                VStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Masquer les scores").sora(.label).tracking(Typo.labelTracking).textCase(.uppercase)
+                        .foregroundStyle(Palette.secondary)
                     ForEach(chosen) { team in
                         Toggle(isOn: Binding(get: { spoilerFreeIds.contains(team.id) },
                                              set: { onSetSpoilerFree(team.id, $0) })) {
