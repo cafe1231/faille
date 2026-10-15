@@ -78,6 +78,10 @@ final class SeasonStore {
     @ObservationIgnored private var schedulePages: [String: SchedulePageResult] = [:]
     /// Games du disque d'un schéma plus récent : ignorées, jamais réécrites (une version suivante les relira).
     @ObservationIgnored private var newerGameIds: Set<String> = []
+    /// Périmètre des écritures (spec périmètre §3.4) : recalculé à chaque écriture datée et à la lecture du disque.
+    @ObservationIgnored private(set) var window = SeasonWindow(now: Date())
+    /// Tournois écartés par la fenêtre : jamais lus (`loadStandings`), jamais rangés (`record`), jamais montrés.
+    @ObservationIgnored private var outsideTournamentIds: Set<String> = []
     let disk: SeasonDisk?
     let paced: PacedTransport?
     let clock: any CrawlClock
@@ -124,7 +128,11 @@ final class SeasonStore {
             return
         }
         let task = Task {
-            let snapshot = await Task.detached(priority: .utility) { disk.load() }.value
+            let now = await self.clock.now()
+            let window = SeasonWindow(now: now)
+            let snapshot = await Task.detached(priority: .utility) { disk.load(window: window) }.value
+            self.advanceWindow(to: now)
+            self.outsideTournamentIds.formUnion(snapshot.outsideTournamentIds)
             self.publish(snapshot)
         }
         loading = task
@@ -189,15 +197,12 @@ final class SeasonStore {
         return SeasonStats.player(playerId, games: pool, masked: masked, since: nil)
     }
 
-    /// Périmètres d'une équipe (spec saison §3.1) : la saison (`SeasonScope.season`) puis un par tournoi de l'année où
-    /// elle a joué (`SeasonScope.tournament`), du plus récent au plus ancien ; aucun si elle n'a joué aucun match connu.
-    /// Les libellés sont des valeurs (année, slug) : l'écran les formule (`SeasonLabels.scope`).
+    /// Périmètres d'une équipe (spec périmètre §3.5, `SeasonWindow.scopes`) : « Saison N », ses tournois de N, « Saison
+    /// N − 1 », ses tournois de N − 1, du plus récent au plus ancien ; aucun si elle n'a joué aucun match connu. Les
+    /// libellés sont des valeurs (année, slug) : l'écran les formule (`SeasonLabels.scope`).
     func scopes(forTeam teamId: String, now: Date) -> [SeasonScope] {
         let ids = Set(matches(ofTeam: teamId).map(\.tournamentId))
-        let played = CrawlPlanner.seasonTournaments(tournaments.values.flatMap { $0 }, year: SeasonPlanning.year(now))
-            .filter { ids.contains($0.id) }
-        guard !played.isEmpty else { return [] }
-        return [SeasonScope.season(SeasonPlanning.year(now), tournaments: played)] + played.map(SeasonScope.tournament)
+        return SeasonWindow(now: now).scopes(played: allTournaments.filter { ids.contains($0.id) })
     }
 
     /// Tournoi en cours de l'équipe (classement de sa page) : le plus récent de l'année où elle a joué.
@@ -206,6 +211,73 @@ final class SeasonStore {
         return tournaments.values.flatMap { $0 }
             .filter { ids.contains($0.id) && $0.startDate <= SeasonPlanning.day(now) }
             .max { ($0.startDate, $0.id) < ($1.startDate, $1.id) }
+    }
+
+    // MARK: Périmètre
+
+    /// Tournoi écarté par la fenêtre (classement « trop ancien »).
+    func isOutsideWindow(tournamentId: String) -> Bool {
+        outsideTournamentIds.contains(tournamentId)
+    }
+
+    private var allTournaments: [TournamentRef] {
+        tournaments.values.flatMap { $0 }
+    }
+
+    /// Saison d'appartenance d'un tournoi : celle de la fenêtre (`scopeSeason` : un `liveOverride` compte en N), à défaut
+    /// sa propre saison (store d'aperçu figé, dont la fenêtre suit l'horloge réelle).
+    private func membership(of tournament: TournamentRef) -> Int? {
+        window.scopeSeason(of: tournament) ?? SeasonWindow.season(of: tournament)
+    }
+
+    /// Saison d'appartenance d'un tournoi connu.
+    func season(ofTournament id: String) -> Int? {
+        tournament(id: id).flatMap(membership(of:))
+    }
+
+    private func seasonsByTournament() -> [String: Int] {
+        Dictionary(allTournaments.compactMap { tournament in membership(of: tournament).map { (tournament.id, $0) } },
+                   uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Saison de référence (spec périmètre §3.5) : N si ces équipes (toutes si `ids` est vide) ont un match en N, sinon
+    /// N − 1 si elles en ont, sinon N.
+    func referenceSeason(forTeams ids: [String], now: Date) -> Int {
+        let target = SeasonWindow(now: now)
+        let relevant = ids.isEmpty ? matches : matches.filter { match in ids.contains { match.involves($0) } }
+        let seasons = Set(relevant.compactMap { match in tournament(id: match.tournamentId).flatMap(target.scopeSeason(of:)) })
+        return target.referenceSeason(seasonsWithData: seasons)
+    }
+
+    /// Games d'une saison, par tournoi (jamais par la date de la game).
+    func games(inSeason season: Int) -> [GameSummary] {
+        let seasons = seasonsByTournament()
+        return games.values.filter { seasons[$0.tournamentId] == season }
+    }
+
+    /// Matchs d'une saison, par tournoi, du plus récent au plus ancien.
+    func matches(inSeason season: Int) -> [SeasonMatch] {
+        let seasons = seasonsByTournament()
+        return matches.filter { seasons[$0.tournamentId] == season }
+    }
+
+    /// Périmètre « Saison N » de tous les tournois connus de cette saison (page joueur sans pilule, duels).
+    func seasonScope(_ season: Int) -> SeasonScope {
+        SeasonScope(tournamentIds: Set(allTournaments.filter { membership(of: $0) == season }.map(\.id)),
+                    label: String(season), season: season)
+    }
+
+    /// Le jour a changé de fenêtre (1er janvier UTC) : listes refiltrées, matchs rejoints.
+    private func advanceWindow(to date: Date) {
+        let next = SeasonWindow(now: date)
+        guard next != window else { return }
+        window = next
+        for (leagueId, list) in tournaments {
+            let kept = next.tournaments(list)
+            outsideTournamentIds.formUnion(Set(list.map(\.id)).subtracting(kept.map(\.id)))
+            tournaments[leagueId] = kept
+        }
+        rejoin()
     }
 
     // MARK: Page d'équipe ouverte, réveil de la collecte
@@ -292,7 +364,7 @@ final class SeasonStore {
     /// Classement d'un tournoi ouvert à l'écran et pas encore lu par la collecte : une requête, au rythme de la collecte,
     /// par la réserve à la demande (une vingtaine par session, même après l'arrêt `.budget` de la collecte).
     func loadStandings(tournamentId: String) async {
-        guard standings[tournamentId] == nil, let paced else { return }
+        guard standings[tournamentId] == nil, !isOutsideWindow(tournamentId: tournamentId), let paced else { return }
         let loaded = try? await LoLClient(transport: OnDemandTransport(paced: paced))
             .standings(tournamentId: tournamentId)
         await refreshStopReason()
@@ -316,19 +388,29 @@ final class SeasonStore {
         fetchedAt[key] = date
     }
 
+    /// Tournois d'une ligue : seuls ceux de la fenêtre sont gardés (en mémoire et sur disque).
     func record(tournaments value: [TournamentRef], leagueId: String, at date: Date) {
-        tournaments[leagueId] = value
+        advanceWindow(to: date)
+        let kept = window.tournaments(value)
+        outsideTournamentIds.formUnion(Set(value.map(\.id)).subtracting(kept.map(\.id)))
+        tournaments[leagueId] = kept
         fetchedAt[Self.tournamentsKey(leagueId)] = date
-        disk?.save(tournaments: Cached(value: value, fetchedAt: date), leagueId: leagueId)
+        disk?.save(tournaments: Cached(value: kept, fetchedAt: date), leagueId: leagueId)
     }
 
+    /// Résultats d'un tournoi ; ignorés s'il est hors fenêtre.
     func record(completed value: [CompletedMatch], tournamentId: String, at date: Date) {
+        advanceWindow(to: date)
+        guard !isOutsideWindow(tournamentId: tournamentId) else { return }
         completed[tournamentId] = value
         fetchedAt[Self.completedKey(tournamentId)] = date
         disk?.save(completed: Cached(value: value, fetchedAt: date), tournamentId: tournamentId)
     }
 
+    /// Classement d'un tournoi ; ignoré s'il est hors fenêtre.
     func record(standings value: Standings, tournamentId: String, at date: Date) {
+        advanceWindow(to: date)
+        guard !isOutsideWindow(tournamentId: tournamentId) else { return }
         standings[tournamentId] = value
         fetchedAt[Self.standingsKey(tournamentId)] = date
         disk?.save(standings: Cached(value: value, fetchedAt: date), tournamentId: tournamentId)
@@ -342,8 +424,9 @@ final class SeasonStore {
         if let leagues { joinLeagues = leagues }
         var all: [SeasonMatch] = []
         for (tournamentId, events) in completed {
-            let leagueId = tournament(id: tournamentId)?.leagueId
-            let slug = joinLeagues.first { $0.id == leagueId }?.slug ?? ""
+            // Tournoi inconnu ou hors fenêtre : ses matchs n'entrent pas dans `matches`.
+            guard let ref = tournament(id: tournamentId), window.contains(ref) else { continue }
+            let slug = joinLeagues.first { $0.id == ref.leagueId }?.slug ?? ""
             all += SeasonMatch.join(completed: events, standings: standings[tournamentId], tournamentId: tournamentId,
                                     leagueSlug: slug, catalog: joinCatalog)
         }
@@ -356,14 +439,20 @@ final class SeasonStore {
     }
 
     /// Une game lue (palier A, ou B qui réécrit le même fichier) : en mémoire, sur disque ; vainqueurs de sa série
-    /// rejoués si toutes ses games jouées sont là ; games anciennes d'équipes non suivies supprimées au-delà de 2 000.
+    /// rejoués si toutes ses games jouées sont là ; games anciennes d'équipes non suivies supprimées au-delà de 4 000.
+    /// Une game d'un tournoi hors fenêtre n'est pas rangée.
     func record(_ game: GameSummary, followedTeamIds: Set<String>) {
+        guard !isOutsideWindow(tournamentId: game.tournamentId) else { return }
         games[game.gameId] = game
         failures[game.gameId] = nil
         persist(game)
         assignWinners(matchId: game.matchId)
         // Jamais la game qu'on vient d'écrire : sinon elle serait relue en boucle jusqu'au budget (M11).
-        let excess = CrawlPlanner.evictions(Array(games.values), followedTeamIds: followedTeamIds)
+        // Inconnu = gardé (la purge du lancement le tranche par sa date) ; hors fenêtre connu = toujours supprimé.
+        let allowed = Set(games.values.map(\.tournamentId)).subtracting(outsideTournamentIds)
+        let previous = Set(allTournaments.filter { window.placement(of: $0) == .previous }.map(\.id))
+        let excess = CrawlPlanner.evictions(Array(games.values), followedTeamIds: followedTeamIds,
+                                            allowedTournamentIds: allowed, previousSeasonTournamentIds: previous)
             .filter { $0 != game.gameId }
         if !excess.isEmpty {
             for id in excess { games[id] = nil }

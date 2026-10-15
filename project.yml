@@ -114,6 +114,10 @@ targets:
     platform: iOS
     sources:
       - Tests/FailleTests
+      # Fixtures réelles du périmètre (spec périmètre §1), partagées avec LoLKit : copiées telles quelles (dossier).
+      - path: LoLKit/Tests/LoLKitTests/Fixtures/season/perimetre
+        type: folder
+        buildPhase: resources
     dependencies:
       - target: Faille
     settings:

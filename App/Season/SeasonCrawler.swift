@@ -54,7 +54,9 @@ struct SeasonCrawler {
             }
         }
         let today = SeasonPlanning.day(now)
-        for tournament in SeasonPlanning.startedTournaments(store.tournaments, leagueIds: leagueIds, now: now) {
+        let predecessors = SeasonPlanning.predecessorLeagueIds(context)
+        for tournament in SeasonPlanning.startedTournaments(store.tournaments, leagueIds: leagueIds,
+                                                            predecessorLeagueIds: predecessors, now: now) {
             // En cours : relu après 30 min ; terminé et déjà lu : jamais relu (`CrawlPlanner.maxAge` nil).
             let maxAge = CrawlPlanner.maxAge(of: tournament, today: today)
             let completedKey = SeasonStore.completedKey(tournament.id)

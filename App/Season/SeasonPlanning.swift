@@ -12,9 +12,14 @@ struct SeasonContext: Sendable {
     var now: Date
 }
 
-/// Ce que l'appli assemble autour de `CrawlPlanner` (spec saison §1.2, §1.6) : quelles ligues énumérer, quels tournois de
-/// la saison lire (commencés), ce que veut la collecte. Les règles elles-mêmes (saison, tournoi en cours, étape en cours
-/// du Mondial, fraîcheur, budget disque) sont dans LoLKit. Pur.
+extension SeasonContext {
+    /// Périmètre du tour (spec périmètre §3.1), recalculé depuis `now`.
+    var window: SeasonWindow { SeasonWindow(now: now) }
+}
+
+/// Ce que l'appli assemble autour de `CrawlPlanner` (spec saison §1.2, §1.6 ; spec périmètre §3.1) : quelles ligues
+/// énumérer, quels tournois de la fenêtre `SeasonWindow` lire (commencés), ce que veut la collecte. Les règles elles-mêmes
+/// (fenêtre, tournoi en cours, étape en cours, fraîcheur, budget disque) sont dans LoLKit. Pur.
 enum SeasonPlanning {
     private static var utc: Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -55,9 +60,8 @@ enum SeasonPlanning {
         utc.component(.year, from: date)
     }
 
-    /// Ligues à énumérer : celles du calendrier de l'appli (ligues d'attache des équipes suivies, ligues suivies,
-    /// compétitions internationales — `ScheduleQuery`), plus la ligue d'attache de l'équipe dont la page est ouverte.
-    static func leagueIds(_ context: SeasonContext) -> [String] {
+    /// Ligues du calendrier de l'appli (`ScheduleQuery`), ligues suivies, ligue d'attache de l'équipe ouverte.
+    private static func baseLeagueIds(_ context: SeasonContext) -> [String] {
         var ids = ScheduleQuery.leagueIds(follows: context.follows, leagues: context.leagues)
         for id in context.follows.leagues.map(\.id) where !ids.contains(id) {
             ids.append(id)
@@ -70,12 +74,40 @@ enum SeasonPlanning {
         return ids
     }
 
-    /// Tournois de la saison de ces ligues déjà commencés (un tournoi à venir n'a ni résultat ni classement à lire), du
-    /// plus récent au plus ancien (`CrawlPlanner.seasonTournaments`).
-    static func startedTournaments(_ byLeague: [String: [TournamentRef]], leagueIds: [String], now: Date) -> [TournamentRef] {
+    /// Ligues à énumérer : la base, plus les compétitions complètes (`SeasonWindow.completeLeagueSlugs`, ids lus dans
+    /// `getLeagues` par slug, jamais en dur), plus les prédécesseurs des ligues de la base (saison N − 1 seule).
+    static func leagueIds(_ context: SeasonContext) -> [String] {
+        var ids = baseLeagueIds(context)
+        for league in context.leagues where SeasonWindow.completeLeagueSlugs.contains(league.slug) && !ids.contains(league.id) {
+            ids.append(league.id)
+        }
+        let predecessors = predecessorLeagueIds(context)
+        for league in context.leagues where predecessors.contains(league.id) && !ids.contains(league.id) {
+            ids.append(league.id)
+        }
+        return ids
+    }
+
+    /// Ligues lues seulement pour la saison N − 1 d'une ligue renommée (`SeasonWindow.predecessors`) : LTA North et Cross
+    /// pour la LCS, LTA South et Cross pour le CBLOL ; jamais une ligue déjà voulue pour elle-même.
+    static func predecessorLeagueIds(_ context: SeasonContext) -> Set<String> {
+        let base = Set(baseLeagueIds(context))
+        let slugs = context.leagues.filter { base.contains($0.id) }.flatMap { SeasonWindow.predecessors[$0.slug] ?? [] }
+        return Set(context.leagues.filter { slugs.contains($0.slug) && !base.contains($0.id) }.map(\.id))
+    }
+
+    /// Tournois du périmètre de ces ligues déjà commencés (un tournoi à venir n'a ni résultat ni classement à lire), du
+    /// plus récent au plus ancien ; d'une ligue prédécesseur, seulement ceux de la saison N − 1. Aucun tournoi `.outside`.
+    static func startedTournaments(_ byLeague: [String: [TournamentRef]], leagueIds: [String],
+                                   predecessorLeagueIds: Set<String> = [], now: Date) -> [TournamentRef] {
+        let window = SeasonWindow(now: now)
         let today = day(now)
-        return CrawlPlanner.seasonTournaments(leagueIds.flatMap { byLeague[$0] ?? [] }, year: year(now))
-            .filter { !$0.startDate.isEmpty && $0.startDate <= today }
+        let candidates = leagueIds.flatMap { leagueId in
+            (byLeague[leagueId] ?? []).filter {
+                !predecessorLeagueIds.contains(leagueId) || window.placement(of: $0) == .previous
+            }
+        }
+        return window.tournaments(candidates).filter { !$0.startDate.isEmpty && $0.startDate <= today }
     }
 
     /// Tournois « en cours » (un par ligue : `CrawlPlanner.currentTournament`, l'actif sinon le dernier commencé).
@@ -84,20 +116,40 @@ enum SeasonPlanning {
         return Set(leagueIds.compactMap { CrawlPlanner.currentTournament(byLeague[$0] ?? [], today: today)?.id })
     }
 
-    /// Ce que veut la collecte (`CrawlWanted`) : équipe ouverte, équipes suivies, étape en cours du Mondial
-    /// (`CrawlPlanner.currentStageMatchIds`), ligues suivies, tournois en cours.
+    /// Ce que veut la collecte (`CrawlWanted`, spec périmètre §3.2) : équipe ouverte, équipes suivies, étape en cours de
+    /// chaque tournoi complet en cours, ligues suivies, tournois en cours (hors prédécesseurs), tournois du périmètre, de
+    /// la saison N − 1 et des compétitions complètes.
     static func wanted(_ context: SeasonContext, byLeague: [String: [TournamentRef]],
                        standings: [String: Standings]) -> CrawlWanted {
         let ids = leagueIds(context)
-        let worldsIds = context.leagues.filter { $0.slug == "worlds" }.map(\.id)
-        let stage = currentTournamentIds(byLeague, leagueIds: worldsIds, now: context.now)
-            .compactMap { standings[$0] }
+        let window = context.window
+        let today = day(context.now)
+        let predecessors = predecessorLeagueIds(context)
+        let completeLeagueIds = Set(context.leagues.filter { SeasonWindow.completeLeagueSlugs.contains($0.slug) }.map(\.id))
+        var allowed = Set<String>(), previous = Set<String>(), complete = Set<String>()
+        for leagueId in ids {
+            for tournament in window.tournaments(byLeague[leagueId] ?? []) {
+                let placement = window.placement(of: tournament)
+                if predecessors.contains(leagueId) && placement != .previous { continue }
+                allowed.insert(tournament.id)
+                if placement == .previous { previous.insert(tournament.id) }
+                if completeLeagueIds.contains(leagueId) { complete.insert(tournament.id) }
+            }
+        }
+        let liveStage = completeLeagueIds.filter(ids.contains)
+            .flatMap { byLeague[$0] ?? [] }
+            .filter { window.contains($0) && $0.isActive(today: today) }
+            .compactMap { standings[$0.id] }
             .reduce(into: Set<String>()) { $0.formUnion(CrawlPlanner.currentStageMatchIds($1)) }
         return CrawlWanted(openedTeamId: context.openedTeamId,
                            followedTeamIds: context.follows.teams.map(\.id),
-                           worldsStageMatchIds: stage,
+                           liveCompleteStageMatchIds: liveStage,
                            followedLeagueSlugs: context.follows.leagues.map(\.slug),
-                           currentTournamentIds: currentTournamentIds(byLeague, leagueIds: ids, now: context.now))
+                           currentTournamentIds: currentTournamentIds(byLeague, leagueIds: ids.filter { !predecessors.contains($0) },
+                                                                      now: context.now),
+                           allowedTournamentIds: allowed,
+                           previousSeasonTournamentIds: previous,
+                           completeTournamentIds: complete)
     }
 
     /// Heure de la fenêtre « à 15 min » du palier B : début de la game + 900 s, arrondi aux 10 s inférieures (le flux

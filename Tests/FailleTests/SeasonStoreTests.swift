@@ -464,8 +464,8 @@ struct SeasonStoreTests {
             TournamentRef(id: "s1", slug: "lec_split_1_2026", startDate: "2026-01-16", endDate: "2026-03-01", leagueId: "l"),
             TournamentRef(id: "old", slug: "lec_summer_2025", startDate: "2025-08-02", endDate: "2025-09-29", leagueId: "l"),
         ]]
-        // Saison 2026, déjà commencée (le tournoi de décembre n'a rien à lire), du plus récent au plus ancien.
-        #expect(SeasonPlanning.startedTournaments(refs, leagueIds: ["l"], now: today).map(\.id) == ["s3", "s1"])
+        // Saisons 2026 et 2025 déjà commencées (le tournoi de décembre n'a rien à lire), du plus récent au plus ancien.
+        #expect(SeasonPlanning.startedTournaments(refs, leagueIds: ["l"], now: today).map(\.id) == ["s3", "s1", "old"])
         // Entre deux splits : le dernier commencé compte comme « en cours ».
         #expect(SeasonPlanning.currentTournamentIds(refs, leagueIds: ["l"], now: today) == ["s3"])
         // La ligue d'attache d'une équipe ouverte (non suivie) est énumérée.
