@@ -60,4 +60,21 @@ enum GoldChartData {
         let peak = points.map { abs($0.difference) }.max() ?? 0
         return max(1000, (peak + 999) / 1000 * 1000)
     }
+
+    /// Marge de l'axe des temps après le dernier point d'une game en direct (la frame suivante arrive dans 10 s).
+    static let liveTimeMargin: TimeInterval = 60
+
+    /// Domaine de l'axe des temps (audit B-D1) : de 0 au dernier point, une minute de plus en direct ; une minute au
+    /// moins (Swift Charts veut un domaine non vide).
+    static func timeDomain(_ points: [GoldPoint], live: Bool) -> ClosedRange<TimeInterval> {
+        let end = (points.last?.gameTime ?? 0) + (live ? liveTimeMargin : 0)
+        return 0...max(liveTimeMargin, end)
+    }
+
+    /// Libellé d'un repère de l'axe des temps : « 10' », « 20' » ; rien à l'origine (audit B-D2 : « 0' » touchait le
+    /// libellé du bas de l'axe vertical dans l'angle bas gauche).
+    static func timeLabel(_ seconds: TimeInterval) -> String? {
+        let minutes = Int(seconds / 60)
+        return minutes > 0 ? "\(minutes)'" : nil
+    }
 }

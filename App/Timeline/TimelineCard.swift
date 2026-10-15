@@ -19,6 +19,7 @@ struct TimelineCard: View {
     /// Relecture en cours : gabarit tant que rien n'est arrivé.
     var loading = false
     @State private var expanded = false
+    @ReduceMotion var reduceMotion
 
     static let collapsedCount = 10
 
@@ -41,10 +42,14 @@ struct TimelineCard: View {
             }
             ForEach(Array(shown.enumerated()), id: \.offset) { _, event in
                 row(event)
+                    .transition(Motion.listTransition(reduceMotion: reduceMotion))
             }
             if recent.count > Self.collapsedCount {
                 Button {
-                    expanded.toggle()
+                    // Les lignes arrivent ou partent en douceur, la carte s'allonge sans saut (audit C8).
+                    withAnimation(Motion.animation(.list, reduceMotion: reduceMotion)) {
+                        expanded.toggle()
+                    }
                 } label: {
                     Text(expanded ? String(localized: "Réduire le fil") : String(localized: "Tout le fil (\(recent.count))"))
                         .sora(.secondaryMedium)

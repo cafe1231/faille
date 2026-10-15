@@ -53,11 +53,10 @@ struct WatchButton: View {
             .frame(minHeight: 44)
             .contentShape(Rectangle())
         } else {
+            // Un seul texte : les espaces autour du « · » sont ceux de la phrase (audit B-G3).
             HStack(spacing: 6) {
                 IconView(icon: .play, size: 15)
-                Text("Regarder")
-                Text("· \(WatchLinks.label(live.preferred))")
-                    .foregroundStyle(Palette.secondary)
+                Text("Regarder \(Self.detail(WatchLinks.label(live.preferred)))")
                     .lineLimit(1)
             }
             .sora(.bodyMedium)
@@ -66,6 +65,11 @@ struct WatchButton: View {
             .contentShape(Rectangle())
             .glassCard(radius: Radius.inner, padding: 4)
         }
+    }
+
+    /// « · Français · Twitch » en secondaire, à la suite du libellé dans le même texte.
+    static func detail(_ label: String) -> Text {
+        Text(verbatim: "· \(label)").foregroundStyle(Palette.secondary)
     }
 
     private func watch() {
@@ -93,9 +97,7 @@ struct ReplayButton: View {
         } label: {
             HStack(spacing: 6) {
                 IconView(icon: .play, size: 15)
-                Text("Revoir la game \(gameNumber)")
-                Text("· \(WatchLinks.label(link))")
-                    .foregroundStyle(Palette.secondary)
+                Text("Revoir la game \(gameNumber) \(WatchButton.detail(WatchLinks.label(link)))")
                     .lineLimit(1)
             }
             .sora(.bodyMedium)

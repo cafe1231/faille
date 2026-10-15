@@ -53,7 +53,15 @@ struct PlayerSheet: View {
                             AbilityOrderView(abilities: abilities, champion: champion, version: context.version)
                         }
                     }
-                    section(String(localized: "Runes")) { runes(details) }
+                    if item.context.keystone(details) == nil, item.context.secondaryTree(details) == nil {
+                        // Même état vide que le reste de l'appli (audit B-D8).
+                        VStack(alignment: .leading, spacing: 10) {
+                            SectionLabel(text: String(localized: "Runes"))
+                            NoteCard(icon: .off, text: String(localized: "Runes indisponibles"))
+                        }
+                    } else {
+                        section(String(localized: "Runes")) { runes(details) }
+                    }
                     section(String(localized: "Objets")) { items(details) }
                     section(String(localized: "Sorts d'invocateur")) { summonerSpells(line) }
                 }
@@ -128,18 +136,13 @@ struct PlayerSheet: View {
         if let tree = context.secondaryTree(details) {
             nameRow(url: DataDragon.runeIcon(tree.icon), name: tree.name, round: true)
         }
-        if context.keystone(details) == nil, context.secondaryTree(details) == nil {
-            Text("Runes indisponibles")
-                .sora(.secondary)
-                .foregroundStyle(Palette.secondary)
-        }
     }
 
     @ViewBuilder private func items(_ details: ParticipantDetails?) -> some View {
         let context = item.context
         let inventory = PlayerBuilds.inventory(details?.items ?? [], catalog: context.items)
         ForEach(Array(inventory.items.enumerated()), id: \.offset) { _, id in
-            nameRow(url: context.itemURL(id), name: context.items?.item(id)?.name ?? String(localized: "Objet \(id)"), round: false)
+            nameRow(url: context.itemURL(id), name: context.items?.item(id)?.name ?? Self.fallbackItemName(id), round: false)
         }
         if let trinket = inventory.trinket {
             nameRow(url: context.itemURL(trinket), name: context.items?.item(trinket)?.name ?? String(localized: "Balise"), round: true)
@@ -149,6 +152,11 @@ struct PlayerSheet: View {
                 .sora(.secondary)
                 .foregroundStyle(Palette.secondary)
         }
+    }
+
+    /// Nom d'un objet absent du catalogue : « Objet 6692 », l'identifiant brut, sans séparateur de milliers (audit B-D5).
+    static func fallbackItemName(_ id: Int) -> String {
+        String(localized: "Objet \(String(id))")
     }
 
     /// Contexte de la fiche, avec les sorts d'invocateur du store tels qu'ils sont à cet instant : la fiche se met à jour si
@@ -205,7 +213,7 @@ struct ShareBar: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.14))
+                Capsule().fill(Palette.fill(.track))
                 Capsule()
                     .fill(tint)
                     .frame(width: proxy.size.width * min(max(value, 0), 1))
@@ -226,28 +234,44 @@ struct AbilityOrderView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 ForEach(["P", "Q", "W", "E", "R"], id: \.self) { letter in
+                    let icon = url(letter)
                     VStack(spacing: 3) {
-                        DDragonIcon(url: url(letter), size: 30, fallback: letter)
-                        Text(letter)
-                            .sora(.label)
-                            .foregroundStyle(Palette.secondary)
+                        DDragonIcon(url: icon, size: 30, fallback: letter)
+                        // La lettre sous l'icône, seulement quand l'icône est connue : la vignette de repli porte
+                        // déjà la lettre (audit B-D6).
+                        if icon != nil {
+                            Text(letter)
+                                .sora(.label)
+                                .foregroundStyle(Palette.secondary)
+                        }
                     }
                 }
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(24), spacing: 4), count: 9), alignment: .leading,
-                      spacing: 4) {
+            // Six colonnes : trois rangées pleines pour 18 niveaux, chaque case sous son numéro de niveau (audit B-D7).
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: Self.columns),
+                      alignment: .leading, spacing: 8) {
                 ForEach(Array(abilities.enumerated()), id: \.offset) { level, letter in
-                    Text(letter)
-                        .font(Sora.font(11, .bold))
-                        .foregroundStyle(letter == "R" ? Palette.abyss : Palette.text)
-                        .frame(width: 24, height: 24)
-                        .background(letter == "R" ? Palette.accent : Color.white.opacity(0.08),
-                                    in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        .accessibilityLabel("Niveau \(level + 1) : \(letter)")
+                    VStack(spacing: 3) {
+                        Text(verbatim: "\(level + 1)")
+                            .sora(.label)
+                            .monospacedDigit()
+                            .foregroundStyle(Palette.secondary)
+                        Text(letter)
+                            .sora(.chip)
+                            .foregroundStyle(letter == "R" ? Palette.abyss : Palette.text)
+                            .frame(maxWidth: .infinity, minHeight: 26)
+                            .background(letter == "R" ? Palette.accent : Palette.fill(.chip),
+                                        in: Capsule())
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Niveau \(level + 1) : \(letter)")
                 }
             }
         }
     }
+
+    /// Colonnes de la grille des niveaux.
+    static let columns = 6
 
     /// Icône du passif (« P », `passive.image`) ou du sort d'une lettre (`spells[Q…R].image`) ; nil tant que la version ou
     /// les sorts du champion ne sont pas connus (vignette de repli).

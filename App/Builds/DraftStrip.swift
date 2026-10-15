@@ -25,11 +25,12 @@ struct DraftStrip: View {
                         .foregroundStyle(team.tint ?? Palette.secondary)
                         .lineLimit(1)
                         .frame(width: 36, alignment: .leading)
+                    // Les cinq tuiles se répartissent toute la largeur de la carte, sans vide à droite (audit B-D13).
                     ForEach(Array(team.champions.enumerated()), id: \.offset) { _, champion in
                         DDragonIcon(url: version.map { DataDragon.championImage(version: $0, championId: champion) },
                                     size: 40, fallback: DDragonIcon.initials(champion))
+                            .frame(maxWidth: .infinity)
                     }
-                    Spacer(minLength: 0)
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(team.code) : \(team.champions.map(Format.champion).joined(separator: ", "))")
