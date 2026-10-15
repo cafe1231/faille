@@ -42,6 +42,10 @@ extension Presenter {
             return .hidden
         }
         guard let next = card.next else { return .none }
+        // Suite d'un tableau international dont un match d'une équipe en anti-spoiler est masqué (`BracketMasking`).
+        if card.nextBracketMasked, !revealed.contains(next.id) {
+            return .hidden
+        }
         // L'équipe de la carte est couverte par la règle ci-dessus ; les autres équipes suivies du match comptent si elles
         // sont en anti-spoiler et que leur dernier match est masqué.
         if !revealed.contains(next.id),

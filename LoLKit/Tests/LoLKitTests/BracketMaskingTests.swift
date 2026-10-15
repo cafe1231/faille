@@ -65,4 +65,81 @@ import Testing
                                            now: date("2026-10-15T12:00:00Z"), lead: MatchReminders.defaultLead)
         #expect(revealed.map(\.matchId) == ["demi"])
     }
+
+    // MARK: Calendrier, équipes suivies sans anti-spoiler, Live Activities
+
+    private func followsWithBlg() -> FollowList {
+        FollowList(teams: [FollowedTeam(id: Self.t1Id, code: "T1", name: "T1", spoilerFree: true),
+                           FollowedTeam(id: "blg", code: "BLG", name: "BLG")])
+    }
+
+    /// Match d'une page du calendrier, absent du calendrier en cache.
+    private func pageOnlyMatch() -> MatchEvent {
+        makeEvent(id: "page", state: .unstarted, start: "2026-10-25T10:00:00Z",
+                  teams: [makeTeam("GEN", id: "gen"), makeTeam("KC", id: "kc")])
+    }
+
+    @Test func aMatchOnlyInACalendarPageIsHiddenAfterTheMaskedQuarter() {
+        let page = [pageOnlyMatch()]
+        let cached = [schedule()[0]]  // seul le quart masqué est en cache
+        let shown = BracketMasking.visible(page + cached, context: cached, maskedTeamIds: [Self.t1Id],
+                                           follows: follows(), revealed: [])
+        #expect(shown.map(\.id) == ["quart"])
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let days = CalendarMonth.days(events: shown, month: date("2026-10-15T10:00:00Z"), calendar: calendar,
+                                      followed: [], now: date("2026-10-15T10:00:00Z"))
+        #expect(!days.contains { $0.matchIds.contains("page") })
+        #expect(days.contains { $0.matchIds.contains("quart") })
+    }
+
+    @Test func revealingTheQuarterRestoresTheCalendarPageMatch() {
+        let cached = [schedule()[0]]
+        let shown = BracketMasking.visible([pageOnlyMatch()] + cached, context: cached, maskedTeamIds: [Self.t1Id],
+                                           follows: follows(), revealed: ["quart"])
+        #expect(Set(shown.map(\.id)) == ["quart", "page"])
+    }
+
+    @Test func aFollowedTeamWithoutSpoilerFreeHasItsNextLineHidden() {
+        let cards = TeamCards.build(follows: followsWithBlg(), schedule: schedule(), live: nil, revealed: [])
+        let maskedLatest = Presenter.maskedLatestTeamIds(cards, follows: followsWithBlg(), revealed: [])
+        let blg = cards.first { $0.team.id == "blg" }!
+        // BLG a un dernier match ("quart", perdu contre T1, masqué pour T1 seulement) : on isole le prochain match.
+        #expect(blg.nextBracketMasked)
+        #expect(Presenter.nextLine(for: blg, follows: followsWithBlg(), revealed: [], maskedLatestTeamIds: maskedLatest)
+            == .hidden)
+    }
+
+    @Test func revealingTheQuarterRestoresTheNextLine() {
+        let cards = TeamCards.build(follows: followsWithBlg(), schedule: schedule(), live: nil, revealed: ["quart"])
+        let maskedLatest = Presenter.maskedLatestTeamIds(cards, follows: followsWithBlg(), revealed: ["quart"])
+        let blg = cards.first { $0.team.id == "blg" }!
+        #expect(!blg.nextBracketMasked)
+        guard case let .match(next) = Presenter.nextLine(for: blg, follows: followsWithBlg(), revealed: ["quart"],
+                                                         maskedLatestTeamIds: maskedLatest) else {
+            Issue.record("la ligne « Prochain » doit revenir"); return
+        }
+        #expect(next.id == "demi")
+    }
+
+    @Test func aFollowedTeamGetsNoReminderForTheHiddenBracketMatch() {
+        let now = date("2026-10-15T12:00:00Z")
+        let hidden = MatchReminders.plan(schedule: schedule(), follows: followsWithBlg(), revealed: [], now: now,
+                                         lead: MatchReminders.defaultLead)
+        #expect(hidden.isEmpty)
+        let revealed = MatchReminders.plan(schedule: schedule(), follows: followsWithBlg(), revealed: ["quart"],
+                                           now: now, lead: MatchReminders.defaultLead)
+        #expect(revealed.map(\.matchId) == ["demi"])
+    }
+
+    @Test func aLiveMatchOfTheBracketIsDroppedFromTheLiveActivities() {
+        let live = [makeEvent(id: "demi-live", state: .inProgress, start: "2026-10-20T10:00:00Z",
+                              teams: [makeTeam("BLG", id: "blg", wins: 1), makeTeam("GEN", id: "gen", wins: 0)])]
+        let kept = BracketMasking.visible(live, context: schedule(), maskedTeamIds: [Self.t1Id], follows: follows(),
+                                          revealed: [])
+        #expect(kept.isEmpty)
+        let revealed = BracketMasking.visible(live, context: schedule(), maskedTeamIds: [Self.t1Id], follows: follows(),
+                                              revealed: ["quart"])
+        #expect(revealed.map(\.id) == ["demi-live"])
+    }
 }

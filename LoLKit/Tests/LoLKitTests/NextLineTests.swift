@@ -200,8 +200,12 @@ import Testing
         let list = try follows()
         let t1Last = t1("t1-last", .completed, start: "2026-10-10T10:00:00Z", wins: 3)
         let t1Next = t1("t1-next", .unstarted, start: "2026-10-14T10:00:00Z")
-        let genNext = makeEvent(id: "gen-next", state: .unstarted, start: "2026-10-20T10:00:00Z",
-                                teams: [makeTeam("GEN", name: "Gen.G Esports"), makeTeam("X")])
+        // Ligue nationale : la suite d'un tableau international (`BracketMasking`) n'est pas en jeu ici.
+        let base = makeEvent(id: "gen-next", state: .unstarted, start: "2026-10-20T10:00:00Z",
+                             teams: [makeTeam("GEN", name: "Gen.G Esports"), makeTeam("X")])
+        let genNext = MatchEvent(startTime: base.startTime, state: base.state, type: base.type, blockName: base.blockName,
+                                 league: LeagueRef(id: "lck", slug: "lck", name: "LCK", image: nil), match: base.match,
+                                 streams: base.streams)
         let cards = TeamCards.build(follows: list, schedule: [t1Last, t1Next, genNext], live: [], revealed: [])
         // GEN a un prochain match visible : elle passe en premier ; T1 reprend sa place de suivi parmi les cartes
         // sans prochain match, devant KC puisque T1 est suivie avant KC.

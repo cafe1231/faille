@@ -7,8 +7,13 @@ public struct TeamCard: Sendable, Equatable, Identifiable {
     /// Prochain match du calendrier. Ne jamais l'afficher tel quel : passer par `Presenter.nextLine` (anti-spoiler, spec §8).
     public let next: MatchEvent?
     public let last: MatchEvent?
+    /// `next` suit un match masqué d'une équipe en anti-spoiler dans la même compétition internationale
+    /// (`BracketMasking`) : `Presenter.nextLine` ne l'annonce pas (« Prochain · masqué »).
+    public let nextBracketMasked: Bool
 
-    public init(team: FollowedTeam, live: MatchEvent?, next: MatchEvent?, last: MatchEvent?) {
+    public init(team: FollowedTeam, live: MatchEvent?, next: MatchEvent?, last: MatchEvent?,
+                nextBracketMasked: Bool = false) {
+        self.nextBracketMasked = nextBracketMasked
         self.team = team
         self.live = live
         self.next = next
@@ -46,7 +51,15 @@ public enum TeamCards {
             return TeamCard(team: team, live: liveMatch, next: next, last: last)
         }
         let maskedLatest = Presenter.maskedLatestTeamIds(cards, follows: follows, revealed: revealed)
-        return cards.enumerated().map { offset, card -> (offset: Int, element: TeamCard, nextStart: Date?) in
+        // Progression de tableau (I-1 généralisé) : le prochain match d'une carte qui suit un match masqué d'une équipe
+        // en anti-spoiler dans la même compétition internationale n'est pas annoncé.
+        let bracketHidden = BracketMasking.hiddenIds(schedule: schedule + (live ?? []), maskedTeamIds: maskedLatest,
+                                                     follows: follows, revealed: revealed)
+        let shownCards = bracketHidden.isEmpty ? cards : cards.map { card in
+            guard let next = card.next, bracketHidden.contains(next.id) else { return card }
+            return TeamCard(team: card.team, live: card.live, next: next, last: card.last, nextBracketMasked: true)
+        }
+        return shownCards.enumerated().map { offset, card -> (offset: Int, element: TeamCard, nextStart: Date?) in
             var nextStart: Date?
             if case let .match(event) = Presenter.nextLine(for: card, follows: follows, revealed: revealed,
                                                            maskedLatestTeamIds: maskedLatest) {
