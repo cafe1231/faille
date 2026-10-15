@@ -20,6 +20,29 @@ struct SeasonWiringTests {
     }
 }
 
+/// W3 (I-3) : l'onboarding ne démarre rien avant les choix d'anti-spoiler.
+@MainActor
+@Suite(.serialized)
+struct OnboardingFollowTests {
+    @Test func followingDuringOnboardingStartsNothingUntilItIsDone() async {
+        let store = AppStore(transport: StubTransport(), files: TemporaryFiles.store())
+        store.beginOnboarding()
+        store.toggleFollow(SampleData.catalog[0])
+        store.toggleFollowLeague(SampleData.leagues[0])
+        for _ in 0..<10 { try? await Task.sleep(for: .milliseconds(20)) }
+        #expect(store.follows.contains(id: SampleData.catalog[0].id))
+        #expect(!store.season.wakePending)
+        #expect(store.liveActivities.syncPasses == 0)
+        store.completeOnboarding()
+        #expect(store.season.wakePending)
+        for _ in 0..<100 where store.liveActivities.syncPasses == 0 {
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(store.liveActivities.syncPasses > 0)
+        store.endScene()
+    }
+}
+
 extension ApercuTests {
     /// Détail de KC 1 – 3 G2 (game 4, révélé) avec la section « Duel » sous les stats (spec saison §3.3) : composition de
     /// la game, ligne « Cette game ».

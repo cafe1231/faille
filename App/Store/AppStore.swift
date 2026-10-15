@@ -35,6 +35,10 @@ final class AppStore {
     /// iOS a refusé les notifications demandées par l'interrupteur d'une ligue (`setLeagueNotifications`) : la note des
     /// Réglages (« Notifications refusées par iOS… ») s'affiche sous l'interrupteur.
     private(set) var leagueNotificationsDenied = false
+    /// L'onboarding est à l'écran (W3, I-3) : suivre une équipe ne démarre ni Live Activity ni réveil de la collecte
+    /// avant « C'est parti » / « Passer » (`completeOnboarding`), une fois les choix d'anti-spoiler faits. Sinon un match
+    /// en direct d'une équipe tout juste suivie afficherait son score avant la page « anti-spoiler ».
+    private(set) var isOnboarding = false
     /// Heure de DÉBUT de la dernière tentative réussie de chaque donnée (pas l'heure de la réponse : la cadence du
     /// direct, 60 s, se compte de début de requête à début de requête).
     private(set) var lastSuccess: [DataKind: Date] = [:]
@@ -305,11 +309,11 @@ final class AppStore {
             colorsDirty = true
         }
         saveFollows()
-        season.wake()
+        if !isOnboarding { season.wake() }
         // Une équipe d'une autre ligue change les ligues du calendrier : la politique le voit tout de suite.
         runWithScene {
             await self.refreshDue(opening: false)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, !self.isOnboarding else { return }
             await self.syncLiveActivities(canStart: true)
         }
     }
@@ -379,7 +383,7 @@ final class AppStore {
             follows.follow(league: league)
         }
         saveFollows()
-        season.wake()
+        if !isOnboarding { season.wake() }
         runWithScene { await self.refreshDue(opening: false) }
     }
 
@@ -391,10 +395,10 @@ final class AppStore {
         }
         colorsDirty = true
         saveFollows()
-        season.wake()
+        if !isOnboarding { season.wake() }
         runWithScene {
             await self.refreshDue(opening: false)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, !self.isOnboarding else { return }
             await self.syncLiveActivities(canStart: true)
         }
     }
@@ -440,11 +444,26 @@ final class AppStore {
         saveSettings()
     }
 
-    /// Fin du premier lancement (« C'est parti » ou « Passer », spec saison §3.7).
+    /// L'onboarding s'ouvre (premier lancement) : les suivis qui suivent n'ont encore aucun effet de fond (W3).
+    func beginOnboarding() {
+        isOnboarding = true
+    }
+
+    /// Fin du premier lancement (« C'est parti » ou « Passer », spec saison §3.7) : les choix d'anti-spoiler sont faits,
+    /// la collecte repart et les Live Activities des équipes suivies peuvent démarrer.
     func completeOnboarding() {
         syncSettingsBeforeChange()
         settings.onboardingDone = true
         saveSettings()
+        let wasOnboarding = isOnboarding
+        isOnboarding = false
+        guard wasOnboarding else { return }
+        season.wake()
+        runWithScene {
+            await self.refreshDue(opening: false)
+            guard !Task.isCancelled else { return }
+            await self.syncLiveActivities(canStart: true)
+        }
     }
 
     /// Un utilisateur qui suit déjà des équipes au lancement (version précédente) est marqué « fait » sans voir

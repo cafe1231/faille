@@ -46,7 +46,8 @@ extension AppStore {
     /// modification de l'utilisateur (`syncFollowsBeforeChange`).
     func syncLiveActivities(canStart: Bool) async {
         guard !followsUnreadable else { return }
-        await liveActivities.sync(live: live, follows: follows, mode: settings.liveActivityMode, canStart: canStart,
+        await liveActivities.sync(live: live, follows: follows, mode: settings.liveActivityMode,
+                                  canStart: canStart && !isOnboarding,
                                   now: Date()) { matchId in
             self.activityContent(matchId: matchId)
         }

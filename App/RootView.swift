@@ -61,7 +61,10 @@ struct RootView: View {
         // Icônes de champions des écrans de saison (`ChampionIcon`) : le store Data Dragon de l'appli.
         .environment(\.dataDragon, store.dataDragon)
         .onAppear {
-            if Self.presentsOnboarding(store: store, hasRouter: router != nil) { showsOnboarding = true }
+            if Self.presentsOnboarding(store: store, hasRouter: router != nil) {
+                store.beginOnboarding()
+                showsOnboarding = true
+            }
         }
         .fullScreenCover(isPresented: $showsOnboarding) {
             OnboardingHost(onDone: {
