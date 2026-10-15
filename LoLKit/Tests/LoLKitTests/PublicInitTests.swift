@@ -103,4 +103,16 @@ import LoLKit
         #expect(scope.season == 2026 && scope.isLive)
         #expect(SeasonScope(tournamentIds: [], label: "2026").season == nil)
     }
+
+    /// Spec périmètre §6.1 test 17 : `CrawlWanted` étendu, construit depuis l'extérieur du module.
+    @Test func crawlWantedWithPerimeter() {
+        let wanted = CrawlWanted(openedTeamId: nil, followedTeamIds: ["kc"], liveCompleteStageMatchIds: ["m"],
+                                 followedLeagueSlugs: [], currentTournamentIds: ["t26"],
+                                 allowedTournamentIds: ["t26", "t25"], previousSeasonTournamentIds: ["t25"],
+                                 completeTournamentIds: ["t26"])
+        #expect(wanted.allowedTournamentIds == ["t26", "t25"])
+        #expect(wanted.previousSeasonTournamentIds == ["t25"])
+        #expect(wanted.completeTournamentIds == ["t26"])
+        #expect(wanted.liveCompleteStageMatchIds == ["m"])
+    }
 }

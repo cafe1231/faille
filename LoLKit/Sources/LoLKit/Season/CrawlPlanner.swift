@@ -31,24 +31,34 @@ public struct CrawlJob: Sendable, Equatable {
     }
 }
 
-/// Ce que la collecte doit couvrir (§1.6), rempli par l'appli.
+/// Ce que la collecte doit couvrir (spec saison §1.6, spec périmètre §3.2), rempli par l'appli.
 public struct CrawlWanted: Sendable, Equatable {
     /// Équipe dont la page est ouverte (priorité 0 si elle n'est pas suivie : tournoi en cours seulement).
     public let openedTeamId: String?
     public let followedTeamIds: [String]
-    /// Matchs de l'étape en cours du Mondial (`CrawlPlanner.currentStageMatchIds`).
-    public let worldsStageMatchIds: Set<String>
+    /// Étape en cours de chaque tournoi complet en cours (Mondial, Demacia Cup… : `CrawlPlanner.currentStageMatchIds`).
+    public let liveCompleteStageMatchIds: Set<String>
     public let followedLeagueSlugs: [String]
     /// Tournois en cours : celui de chaque ligue concernée et l'international en cours.
     public let currentTournamentIds: Set<String>
+    /// Tournois du périmètre énumérés (`SeasonWindow`) : aucun job pour un match d'un autre tournoi.
+    public let allowedTournamentIds: Set<String>
+    /// Tournois de la saison N − 1.
+    public let previousSeasonTournamentIds: Set<String>
+    /// Tournois des compétitions complètes (`SeasonWindow.completeLeagueSlugs`) dans la fenêtre.
+    public let completeTournamentIds: Set<String>
 
-    public init(openedTeamId: String?, followedTeamIds: [String], worldsStageMatchIds: Set<String>,
-                followedLeagueSlugs: [String], currentTournamentIds: Set<String>) {
+    public init(openedTeamId: String?, followedTeamIds: [String], liveCompleteStageMatchIds: Set<String>,
+                followedLeagueSlugs: [String], currentTournamentIds: Set<String>, allowedTournamentIds: Set<String>,
+                previousSeasonTournamentIds: Set<String> = [], completeTournamentIds: Set<String> = []) {
         self.openedTeamId = openedTeamId
         self.followedTeamIds = followedTeamIds
-        self.worldsStageMatchIds = worldsStageMatchIds
+        self.liveCompleteStageMatchIds = liveCompleteStageMatchIds
         self.followedLeagueSlugs = followedLeagueSlugs
         self.currentTournamentIds = currentTournamentIds
+        self.allowedTournamentIds = allowedTournamentIds
+        self.previousSeasonTournamentIds = previousSeasonTournamentIds
+        self.completeTournamentIds = completeTournamentIds
     }
 }
 
@@ -118,26 +128,31 @@ public struct CrawlFailure: Codable, Sendable, Equatable {
 /// premier plan seulement, avec `CrawlPacer`) ; l'état, c'est le disque (une game est faite si son `GameSummary`
 /// existe) plus `crawl.json` pour les échecs.
 public enum CrawlPlanner {
-    /// Ordre des groupes : 0 page ouverte (équipe non suivie, tournoi en cours) ; 1 équipes suivies, saison entière ;
-    /// 2 étape en cours du Mondial ; 3 ligues suivies, tournoi en cours puis précédents ; 4 palier B des équipes suivies
-    /// (tournois en cours). Dans un groupe : tournoi en cours d'abord, puis le match le plus récent, puis le n° de game.
+    /// Ordre des groupes : 0 page ouverte (équipe non suivie, tournoi en cours) ; 1 équipes suivies, saison N ;
+    /// 2 étape en cours des complets en cours ; 3 ligues suivies, saison N ; 4 palier B des équipes suivies (tournois en
+    /// cours) ; 5 reste des complets en cours ; 6 équipes suivies, saison N − 1 ; 7 complets terminés ; 8 ligues suivies,
+    /// saison N − 1. Jamais de job hors `allowedTournamentIds`. Dans un groupe : tournoi en cours d'abord, puis le match
+    /// le plus récent, puis le n° de game.
     /// **Jamais de job pour un match de `masked`** ; une game en échec n'est reprise que si `allowsRetry(now:)`.
     public static func jobs(wanted: CrawlWanted, matches: [SeasonMatch], have: [String: GameSummary],
                             failures: [String: CrawlFailure], masked: Set<String>, now: Date) -> [CrawlJob] {
         let followed = Set(wanted.followedTeamIds)
         let leagues = Set(wanted.followedLeagueSlugs)
         var best: [String: (job: CrawlJob, current: Bool, start: Date)] = [:]
-        for match in matches where !masked.contains(match.id) && match.startTime <= now {
+        for match in matches where wanted.allowedTournamentIds.contains(match.tournamentId)
+            && !masked.contains(match.id) && match.startTime <= now {
             let current = wanted.currentTournamentIds.contains(match.tournamentId)
+            let previous = wanted.previousSeasonTournamentIds.contains(match.tournamentId)
             let teamIds = Set(match.teams.compactMap(\.id))
             var groups: [Int] = []
             if let opened = wanted.openedTeamId, !followed.contains(opened), teamIds.contains(opened), current {
                 groups.append(0)
             }
             let involvesFollowed = !teamIds.isDisjoint(with: followed)
-            if involvesFollowed { groups.append(1) }
-            if wanted.worldsStageMatchIds.contains(match.id) { groups.append(2) }
-            if leagues.contains(match.leagueSlug) { groups.append(3) }
+            if involvesFollowed { groups.append(previous ? 6 : 1) }
+            if wanted.liveCompleteStageMatchIds.contains(match.id) { groups.append(2) }
+            if leagues.contains(match.leagueSlug) { groups.append(previous ? 8 : 3) }
+            if wanted.completeTournamentIds.contains(match.tournamentId) { groups.append(current ? 5 : 7) }
             for (index, gameId) in match.playedGameIds.enumerated() {
                 if let failure = failures[gameId], !failure.allowsRetry(now: now) { continue }
                 let job: CrawlJob
@@ -184,18 +199,25 @@ public enum CrawlPlanner {
         return Set(stage?.sections.flatMap { $0.matches.map(\.id) } ?? [])
     }
 
-    /// Budget disque (§1.7) : au-delà de `limit` games, ids à supprimer — les plus anciennes (`startedAt`) qui ne
-    /// concernent aucune équipe suivie. Une game d'une équipe suivie n'est jamais supprimée (le cache peut alors
-    /// dépasser la limite).
-    public static let diskLimit = 2_000
+    /// Budget disque (spec périmètre §3.2, remplace §1.7 de la spec saison) : (1) toujours les games hors fenêtre (tournoi
+    /// absent de `allowedTournamentIds`), quelles que soient les équipes ; (2) au-delà de `limit` games dans la fenêtre,
+    /// la saison N − 1 des équipes non suivies, la plus ancienne d'abord ; (3) puis la saison N des équipes non suivies.
+    /// Une game d'équipe suivie dans la fenêtre n'est jamais supprimée (le cache peut alors dépasser la limite).
+    public static let diskLimit = 4_000
 
     public static func evictions(_ games: [GameSummary], followedTeamIds: Set<String>,
+                                 allowedTournamentIds: Set<String>, previousSeasonTournamentIds: Set<String>,
                                  limit: Int = diskLimit) -> [String] {
-        guard games.count > limit else { return [] }
-        let removable = games
-            .filter { !followedTeamIds.contains($0.blue.teamId) && !followedTeamIds.contains($0.red.teamId) }
-            .sorted { ($0.startedAt, $0.gameId) < ($1.startedAt, $1.gameId) }
-        return removable.prefix(games.count - limit).map(\.gameId)
+        let oldestFirst: (GameSummary, GameSummary) -> Bool = { ($0.startedAt, $0.gameId) < ($1.startedAt, $1.gameId) }
+        let outside = games.filter { !allowedTournamentIds.contains($0.tournamentId) }.sorted(by: oldestFirst)
+        let inside = games.filter { allowedTournamentIds.contains($0.tournamentId) }
+        guard inside.count > limit else { return outside.map(\.gameId) }
+        let removable = inside.filter {
+            !followedTeamIds.contains($0.blue.teamId) && !followedTeamIds.contains($0.red.teamId)
+        }
+        let previous = removable.filter { previousSeasonTournamentIds.contains($0.tournamentId) }.sorted(by: oldestFirst)
+        let current = removable.filter { !previousSeasonTournamentIds.contains($0.tournamentId) }.sorted(by: oldestFirst)
+        return outside.map(\.gameId) + (previous + current).prefix(inside.count - limit).map(\.gameId)
     }
 
     /// Fraîcheur de l'énumération (§1.2) : tournois d'une ligue 24 h ; résultats et classements d'un tournoi actif
