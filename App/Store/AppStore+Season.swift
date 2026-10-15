@@ -49,8 +49,14 @@ extension AppStore {
                 await season.crawl { self.seasonContext() }
             }
             guard !Task.isCancelled else { break }
-            await season.waitForWake(maxSeconds: 30 * 60)
+            await season.waitForWake(maxSeconds: Self.seasonWait(leaguesEmpty: leagues.isEmpty, isFailing: isFailing))
         }
+    }
+
+    /// Attente entre deux passes (W4, I-4) : 30 min, sauf tant que les ligues manquent ou que l'API échoue, où la
+    /// boucle regarde à chaque tick (`RefreshPolicy.tick`) : une passe sautée ne doit pas endormir la collecte.
+    nonisolated static func seasonWait(leaguesEmpty: Bool, isFailing: Bool) -> TimeInterval {
+        (leaguesEmpty || isFailing) ? RefreshPolicy.tick : 30 * 60
     }
 
     /// Page d'équipe ouverte / fermée : priorité 0 de la collecte (équipe non suivie, tournoi en cours).

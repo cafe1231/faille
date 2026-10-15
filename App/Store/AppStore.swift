@@ -624,6 +624,8 @@ final class AppStore {
             switch kind {
             case .leagues:
                 let value = try await client.leagues()
+                // Premières ligues du lancement : la collecte les attend (W4, I-4), pas 30 min.
+                if leagues.isEmpty, !value.isEmpty { season.wake() }
                 leagues = value
                 files?.save(Cached(value: value, fetchedAt: started), to: .leagues)
             case .teams:
@@ -650,6 +652,8 @@ final class AppStore {
                 files?.save(Cached(value: events, fetchedAt: started), to: .live)
             }
             lastSuccess[kind] = started
+            // L'API répond de nouveau : la collecte qui attendait repart (W4, I-4).
+            if isFailing { season.wake() }
             isFailing = false
             if kind != .live { recomputeDirectory() }
             return true

@@ -45,6 +45,23 @@ struct StoreRefreshTests {
         #expect(store.isFailing == false)
     }
 
+    /// W4 (I-4) : les ligues qui arrivent (ou l'API qui répond de nouveau) réveillent la collecte, qui n'attend pas
+    /// 30 min ; tant que les ligues manquent, la boucle regarde à chaque tick.
+    @Test func leaguesArrivingWakeTheSeasonCollection() async {
+        let transport = ScriptedTransport(mode: .failing)
+        let store = AppStore(transport: transport, files: TemporaryFiles.store())
+        await store.refreshDue(opening: true)
+        #expect(store.leagues.isEmpty)
+        #expect(!store.season.wakePending)
+        await transport.setMode(.ok)
+        await store.refreshNow()
+        #expect(!store.leagues.isEmpty)
+        #expect(store.season.wakePending)
+        #expect(AppStore.seasonWait(leaguesEmpty: true, isFailing: false) == RefreshPolicy.tick)
+        #expect(AppStore.seasonWait(leaguesEmpty: false, isFailing: true) == RefreshPolicy.tick)
+        #expect(AppStore.seasonWait(leaguesEmpty: false, isFailing: false) == 30 * 60)
+    }
+
     /// Annuler la boucle (scène qui quitte le premier plan) annule la requête en vol, sans bandeau ni nouvelle requête.
     @Test func cancellingThePollLoopEndsCleanly() async {
         let transport = ScriptedTransport(delay: .seconds(30))
