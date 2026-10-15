@@ -285,6 +285,24 @@
               }
             }
           }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld défaite d'affilée"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld défaites d'affilée"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -292,6 +310,24 @@
       "extractionState": "manual",
       "localizations": {
         "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld game"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld games"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
           "variations": {
             "plural": {
               "one": {
@@ -376,6 +412,24 @@
               }
             }
           }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld match masqué"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld matchs masqués"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -428,6 +482,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld wins in a row"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld victoire d'affilée"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld victoires d'affilée"
                 }
               }
             }
@@ -913,6 +985,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Computed over %lld games"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Calculé sur %lld game"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Calculé sur %lld games"
                 }
               }
             }
@@ -3096,6 +3186,24 @@
               }
             }
           }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Stats masquées · %lld match masqué"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Stats masquées · %lld matchs masqués"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -3494,6 +3602,24 @@
               }
             }
           }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "sur %lld game"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "sur %lld games"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -3513,6 +3639,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "over %lld enriched games"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "sur %lld game enrichie"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "sur %lld games enrichies"
                 }
               }
             }
