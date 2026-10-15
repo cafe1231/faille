@@ -59,6 +59,6 @@ struct LeaguesSection: View {
         })
         return LeagueRows.rows(follows: store.follows, schedule: store.schedule, revealed: store.settings.revealedMatchIds,
                                maskedLatestTeamIds: store.maskedLatestTeamIds, currentTournamentIds: current, now: now,
-                               bracketHiddenIds: store.bracketHiddenIds)
+                               bracketHiddenIds: store.bracketHiddenIds(over: []))
     }
 }
