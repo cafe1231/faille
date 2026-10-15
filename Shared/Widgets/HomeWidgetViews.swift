@@ -105,10 +105,18 @@ struct MediumWidgetView: View {
             .foregroundStyle(Palette.secondary)
             if rows.isEmpty {
                 Spacer(minLength: 0)
-                Text(WidgetText.emptyMessage(content))
-                    .font(Sora.font(13, .medium))
-                    .foregroundStyle(Palette.secondary)
-                    .frame(maxWidth: .infinity)
+                VStack(spacing: 3) {
+                    Text(WidgetText.emptyMessage(content))
+                        .font(Sora.font(13, .medium))
+                    // Comme les autres familles : sans équipe suivie, le widget dit où en ajouter.
+                    if content.teams.isEmpty && !content.appGroupMissing {
+                        Text(WidgetText.addTeamsAdvice)
+                            .font(Sora.font(11, .regular))
+                    }
+                }
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Palette.secondary)
+                .frame(maxWidth: .infinity)
                 Spacer(minLength: 0)
             } else {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in

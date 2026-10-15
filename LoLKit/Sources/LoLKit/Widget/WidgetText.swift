@@ -29,9 +29,11 @@ public enum WidgetText {
         case countdown(text: String, code: String, progress: Double)
         /// Une équipe suivie joue (masquée ou non : seul « en direct » est dit).
         case live(code: String)
-        /// Rien à annoncer. Volontairement neutre (jauge vide et trophée), y compris quand une équipe suivie a son prochain
-        /// match masqué (`WidgetTeam.Next.hidden`) : 50 pt ne portent pas « Prochain · masqué », et rien ne doit y
-        /// distinguer une équipe masquée d'une équipe sans match (spec §8).
+        /// Une équipe suivie a son prochain match masqué (`WidgetTeam.Next.hidden`) : son code et un œil barré, comme le
+        /// direct masqué, jamais le match, un score ni une date (spec §8, audit B-W5). Les moyen, rectangulaire et petit
+        /// widgets disent déjà « Prochain · masqué » : le rond n'apprend rien de plus.
+        case masked(code: String)
+        /// Rien à annoncer (jauge vide et trophée), y compris sans groupe d'apps.
         case empty
     }
 
@@ -93,6 +95,9 @@ public enum WidgetText {
     /// Ce que dit une équipe en anti-spoiler dont le prochain match est masqué (`WidgetTeam.Next.hidden`).
     static let hiddenNext = "Prochain · masqué"
 
+    /// Sans équipe suivie, tous les widgets disent où en ajouter (une seule source pour les trois familles).
+    public static let addTeamsAdvice = "Ajoute-en dans l'appli"
+
     /// Le moyen widget montre au plus ce nombre de lignes.
     public static let mediumRowLimit = 4
 
@@ -135,7 +140,7 @@ public enum WidgetText {
                                    isLive: false, isMasked: false)
             }
             if content.teams.isEmpty {
-                return Rectangular(label: "Faille", title: "Aucune équipe suivie", detail: "Ajoute-en dans l'appli",
+                return Rectangular(label: "Faille", title: "Aucune équipe suivie", detail: addTeamsAdvice,
                                    isLive: false, isMasked: false)
             }
             if hasHiddenTeam(content) {
@@ -157,7 +162,10 @@ public enum WidgetText {
 
     /// Widget rond : compte à rebours vers le prochain match et code de l'équipe suivie, ou « en direct ».
     public static func circular(_ content: WidgetContent) -> Circular {
-        guard let line = content.headline, let code = line.codes.first else { return .empty }
+        guard let line = content.headline, let code = line.codes.first else {
+            if let hidden = content.teams.first(where: { $0.next == .hidden }) { return .masked(code: hidden.team.code) }
+            return .empty
+        }
         switch line.status {
         case .live:
             return .live(code: code)
@@ -216,7 +224,7 @@ public enum WidgetText {
                              note: appGroupMissingAdvice, isLive: false, isMasked: false)
             }
             return Small(label: "Faille", title: "Aucune équipe suivie", day: nil, time: nil,
-                         note: "Ajoute-en dans l'appli", isLive: false, isMasked: false)
+                         note: addTeamsAdvice, isLive: false, isMasked: false)
         }
         switch team.next {
         case let .live(line):

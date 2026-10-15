@@ -21,6 +21,9 @@ enum Snapshot {
         .deletingLastPathComponent() // racine du dépôt
         .appendingPathComponent("build/apercus", isDirectory: true)
 
+    /// Fuseau des planches de l'appli : Paris, comme `WidgetRender.timeZone`.
+    static let timeZone = TimeZone(identifier: "Europe/Paris")!
+
     /// Attend (5 s au plus) que l'appli hôte ait sa scène et sa première fenêtre : les tests démarrent parfois
     /// avant que l'interface ne soit à l'écran, et une capture de scène absente serait une image vide.
     private static func hostScene() async throws -> UIWindowScene {
@@ -46,9 +49,18 @@ enum Snapshot {
         window.overrideUserInterfaceStyle = .dark
         // Rendu figé (finitions) : « Réduire les animations » forcé, l'écran est capturé dans son état final — ni
         // cascade en cours, ni halo à mi-respiration, ni reflet de squelette.
-        window.rootViewController = UIHostingController(rootView: AnyView(view.environment(\.reduceMotionOverride, true)))
+        // Heure de Paris (comme les planches des widgets) : le Mac de la CI est en UTC, les heures des planches ne
+        // seraient sinon pas vérifiables. L'environnement SwiftUI et le fuseau par défaut du processus (pour le code qui
+        // lit `TimeZone.current`) sont fixés le temps de la capture, puis rétablis.
+        let previousZone = NSTimeZone.default
+        NSTimeZone.default = timeZone
+        window.rootViewController = UIHostingController(rootView: AnyView(
+            view.environment(\.reduceMotionOverride, true).environment(\.timeZone, timeZone)))
         window.makeKeyAndVisible()
-        defer { window.isHidden = true }
+        defer {
+            window.isHidden = true
+            NSTimeZone.default = previousZone
+        }
         // Laisse SwiftUI faire sa mise en page, lancer ses `.task` et poser le verre.
         try await Task.sleep(for: .seconds(1))
         guard window.windowScene != nil, !window.bounds.isEmpty else {

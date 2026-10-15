@@ -28,6 +28,8 @@ struct MonogramBadge: View {
     let code: String
     var tint: Color? = nil
     var size: CGFloat = 26
+    /// Vrai quand le code est déjà écrit à côté du badge : VoiceOver ne le lit pas deux fois.
+    var decorative = false
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: size * 0.33, style: .continuous)
@@ -40,6 +42,7 @@ struct MonogramBadge: View {
             .frame(width: size, height: size)
             .background(shape.fill(Palette.chipFill))
             .overlay(shape.strokeBorder(tint ?? Palette.glassBorder, lineWidth: 1))
+            .accessibilityHidden(decorative)
     }
 }
 

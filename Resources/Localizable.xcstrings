@@ -716,6 +716,17 @@
         }
       }
     },
+    "Ajoute-en dans l'appli": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add some in the app"
+          }
+        }
+      }
+    },
     "Ancien": {
       "extractionState": "manual",
       "localizations": {

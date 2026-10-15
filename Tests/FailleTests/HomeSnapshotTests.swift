@@ -25,10 +25,10 @@ extension ApercuTests {
         return data
     }
 
-    private func home(_ data: PreviewData) -> some View {
+    private func home(_ data: PreviewData, now: String = "2026-10-15T15:05:00Z") -> some View {
         NavigationStack { HomeView(openTeams: {}) }
             .environment(AppStore(preview: homeData(data)))
-            .environment(\.seasonNow, SampleData.date("2026-10-15T15:05:00Z"))
+            .environment(\.seasonNow, SampleData.date(now))
     }
 
     /// Accueil avec suivis (spec saison §2.2) : à ne pas rater, direct (T1 – FLY masqué : « En direct » seul), calendrier,
@@ -46,10 +46,30 @@ extension ApercuTests {
         expectNotBlank(url)
     }
 
-    /// Collecte en cours : « Les stats arrivent : … games lues sur … ».
+    /// Collecte en cours : « Les stats arrivent : … games lues sur … ». La liste « Semaine » doit être vide pour que la
+    /// ligne s'affiche (sinon la planche est celle de 25-bas) : « maintenant » est donc 13 jours après la dernière game
+    /// lue du Mondial (11 octobre), hors de la semaine glissante.
     @Test func homeWhileCollecting() async throws {
-        let url = try await Snapshot.write(home(.withSeasonCollecting).defaultScrollAnchor(.bottom),
-                                           named: "25c-accueil-collecte")
+        let url = try await Snapshot.write(
+            home(.withSeasonCollecting, now: "2026-10-24T15:05:00Z").defaultScrollAnchor(.bottom),
+            named: "25c-accueil-collecte")
         expectNotBlank(url)
+    }
+
+    /// Accueil en anglais (saison 15 : jamais regardé). Les `Text` suivent la langue de l'environnement ; les chaînes
+    /// construites par `String(localized:)` suivent celle du processus (français sur la CI).
+    @Test func homeInEnglish() async throws {
+        let url = try await Snapshot.write(home(.withSeason).environment(\.locale, Locale(identifier: "en")),
+                                           named: "35-accueil-anglais")
+        expectNotBlank(url)
+    }
+
+    /// Accueil au plafond du texte (`accessibility5`), en plus de `accessibility2` (34) : en bas de page aussi.
+    @Test func homeWithLargestText() async throws {
+        let view = home(.withSeason).environment(\.dynamicTypeSize, .accessibility5)
+        let top = try await Snapshot.write(view, named: "36-accueil-ax5")
+        expectNotBlank(top)
+        let bottom = try await Snapshot.write(view.defaultScrollAnchor(.bottom), named: "36-accueil-ax5-bas")
+        expectNotBlank(bottom)
     }
 }

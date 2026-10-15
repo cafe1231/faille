@@ -74,7 +74,7 @@ struct LiveActivityStatusView: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            IconView(icon: icon, size: 12)
+            IconView(icon: Self.icon(for: status), size: 12)
             switch status {
             case let .clock(.running(since)):
                 if let prefix {
@@ -115,8 +115,10 @@ struct LiveActivityStatusView: View {
     }
 
     /// La nature d'une info se lit à son icône (spec §9).
-    private var icon: Icon {
+    static func icon(for status: LiveActivityDisplay.Status) -> Icon {
         switch status {
+        // Chrono figé en cours de game : la partie est en pause, pas « en direct ».
+        case .clock(.stopped): return .pause
         case .clock, .live: return .live
         case .betweenGames: return .pause
         case .victory: return .trophy
@@ -135,7 +137,7 @@ struct LiveActivityScoreRow: View {
         HStack(spacing: 6) {
             HStack(spacing: 7) {
                 if let left = display.teams.first {
-                    MonogramBadge(code: left.code, tint: left.colorHex.map(Palette.team), size: 24)
+                    MonogramBadge(code: left.code, tint: left.colorHex.map(Palette.team), size: 24, decorative: true)
                     Text(left.code)
                         .font(Sora.font(15, .semibold))
                         .lineLimit(1)
@@ -159,7 +161,8 @@ struct LiveActivityScoreRow: View {
                     Text(display.teams[1].code)
                         .font(Sora.font(15, .semibold))
                         .lineLimit(1)
-                    MonogramBadge(code: display.teams[1].code, tint: display.teams[1].colorHex.map(Palette.team), size: 24)
+                    MonogramBadge(code: display.teams[1].code, tint: display.teams[1].colorHex.map(Palette.team), size: 24,
+                                  decorative: true)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)

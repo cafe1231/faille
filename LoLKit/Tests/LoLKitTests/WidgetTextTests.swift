@@ -210,6 +210,24 @@ import Testing
         #expect(WidgetText.emptyMessage(onlyKC) == "Aucun match prévu")
     }
 
+    /// B-W5 : le rond d'une équipe dont le prochain match est masqué écrit son code (comme le direct masqué) avec un
+    /// œil barré, sans match, score ni date ; sans équipe masquée il reste neutre.
+    @Test func circularWidgetOfAHiddenNextShowsTheTeamCode() {
+        let t1 = FollowedTeam(id: "t1", code: "T1", name: "T1", spoilerFree: true)
+        let both = WidgetContent(date: now, teams: [WidgetTeam(team: kc, next: .noMatch),
+                                                    WidgetTeam(team: t1, next: .hidden)], lines: [])
+        #expect(WidgetText.circular(both) == .masked(code: "T1"))
+        let onlyKC = WidgetContent(date: now, teams: [WidgetTeam(team: kc, next: .noMatch)], lines: [])
+        #expect(WidgetText.circular(onlyKC) == .empty)
+    }
+
+    /// Conseil unique des widgets sans équipe suivie (petit, rectangulaire, moyen).
+    @Test func noFollowedTeamAdviceHasASingleSource() {
+        #expect(WidgetText.addTeamsAdvice == "Ajoute-en dans l'appli")
+        #expect(WidgetText.small(nil, timeZone: paris).note == WidgetText.addTeamsAdvice)
+        #expect(WidgetText.rectangular(content([], teams: []), timeZone: paris).detail == WidgetText.addTeamsAdvice)
+    }
+
     /// W6 : les aides écrivent elles-mêmes sans score ni game une ligne masquée, même si on leur en donne un
     /// (défense en profondeur : `WidgetTimeline` ne construit jamais une telle ligne).
     @Test func maskedLinesNeverWriteTheirScoreEvenWhenTheyCarryOne() {
