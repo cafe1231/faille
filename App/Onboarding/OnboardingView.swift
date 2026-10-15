@@ -88,9 +88,10 @@ struct OnboardingView: View {
 
     /// Une page : gouttière de 16 pt, centrée verticalement quand elle est courte (audit B-O4), défilante sinon.
     private func pageScroll<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        GeometryReader { proxy in
+        let page = content()
+        return GeometryReader { proxy in
             ScrollView {
-                content()
+                page
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .frame(maxWidth: 640)
