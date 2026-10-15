@@ -136,6 +136,25 @@ import Testing
         #expect(HomeFeed.followedMatchIds([other, lck, kc], follows: follows) == ["kc", "lck"])
     }
 
+    /// Le sous-titre « N matchs aujourd'hui » compte la liste du jour : calendrier fusionné au direct (le direct fait foi
+    /// pour un match qu'il connaît, et apporte ceux que le calendrier n'a pas encore).
+    @Test func todayCountMergesTheLiveList() {
+        let now = date("2026-10-15T12:00:00Z")
+        let scheduled = makeEvent(id: "a", state: .unstarted, start: "2026-10-15T15:00:00Z",
+                                  teams: [makeTeam("A"), makeTeam("B")])
+        let known = makeEvent(id: "b", state: .inProgress, start: "2026-10-15T11:00:00Z",
+                              teams: [makeTeam("C"), makeTeam("D")])
+        let liveOnly = makeEvent(id: "c", state: .inProgress, start: "2026-10-15T10:00:00Z",
+                                 teams: [makeTeam("E"), makeTeam("F")])
+        func input(live: [MatchEvent]?) -> HomeFeed.Input {
+            HomeFeed.Input(now: now, calendar: paris, schedule: [scheduled, known], live: live, follows: FollowList(),
+                           revealed: [], revealedStandings: [], seasonMatches: [], games: [:], standings: [:], catalog: [])
+        }
+        #expect(HomeFeed.build(input(live: [known, liveOnly])).todayCount == 3)
+        #expect(HomeFeed.build(input(live: nil)).todayCount == 2)
+        #expect(HomeFeed.build(input(live: [])).todayCount == 2)
+    }
+
     /// Résultats des 72 dernières heures, suivis d'abord, 8 au plus.
     @Test func recentResults() {
         let now = date("2026-10-15T20:00:00Z")

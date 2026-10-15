@@ -2,7 +2,7 @@ import Foundation
 import LoLKit
 
 /// Chiffres des écrans de saison (spec saison §1.5, « Affichage ») : KDA et CS/min à 1 décimale, gold/min entier, parts
-/// en % entier, durée « 35:10 », bilans « 9-0 ». Séparateur décimal de la langue de l'appareil (« 3,4 » en français).
+/// en % entier, durée « 35:10 », bilans « 9–0 ». Séparateur décimal de la langue de l'appareil (« 3,4 » en français).
 /// Une valeur absente s'écrit « — » (jamais de chiffre inventé).
 enum SeasonFormat {
     static let missing = "—"
@@ -30,16 +30,16 @@ enum SeasonFormat {
             : String(format: "%d:%02d", minutes, rest)
     }
 
-    /// Bilan « 9-0 ».
+    /// Bilan V–D « 9–0 » (tiret demi-cadratin, comme les scores).
     static func record(_ wins: Int, _ losses: Int) -> String {
-        "\(wins)-\(losses)"
+        "\(wins)–\(losses)"
     }
 
     /// Écart signé « +228 » / « −1 450 » (signe moins typographique) ; nil → « — ».
     static func signed(_ value: Double?, locale: Locale = .current) -> String {
         guard let value else { return missing }
         let magnitude = integer(abs(value), locale: locale)
-        return value < 0 ? "\u{2212}\(magnitude)" : "+\(magnitude)"
+        return value < 0 ? "\(Format.minus)\(magnitude)" : "+\(magnitude)"
     }
 
     /// K/D/A « 4/6/4 ».

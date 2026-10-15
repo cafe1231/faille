@@ -24,12 +24,16 @@ import Testing
     }
 
     @Test func namesInFrench() {
-        #expect(Format.dragons(["infernal", "ocean"]) == "infernal, océan")
-        #expect(Format.dragons(["elder", "mystery"]) == "ancestral, mystery")
+        #expect(Format.dragons(["infernal", "ocean"]) == "infernal · océan")
+        #expect(Format.dragons(["elder", "mystery"]) == "ancestral · mystery")
         #expect(Format.dragons([]) == "")
-        #expect(Format.role("jungle") == "JGL")
-        #expect(Format.role("bottom") == "BOT")
-        #expect(Format.role("coach") == "COA")
+        #expect(Format.dragons(["hextech", "hextech", "infernal", "hextech"]) == "hextech ×3 · infernal")
+        #expect(Format.dragons(["cloud", "cloud"]) == "nuage ×2")
+        #expect(Format.role("jungle") == "Jungle")
+        #expect(Format.role("bottom") == "ADC")
+        #expect(Format.role("support") == "Supp.")
+        #expect(Format.role("top") == "Top")
+        #expect(Format.role("coach") == "Coa")
         #expect(Format.champion("XinZhao") == "Xin Zhao")
         #expect(Format.champion("KSante") == "K'Sante")
         #expect(Format.champion("Rell") == "Rell")

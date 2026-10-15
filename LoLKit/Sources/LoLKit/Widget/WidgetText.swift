@@ -126,7 +126,7 @@ public enum WidgetText {
 
     /// Widget rectangulaire : « Prochain · GEN vs FUR · jeu. 15 oct. · 11:00 » ; en direct : « En direct ·
     /// KC 1 – 0 C9 · Mondial · Game 2 » ; masqué : « En direct · T1 vs FLY · Mondial ». Sans match à montrer : « Faille ·
-    /// Aucune équipe suivie » ; « Prochain · Masqué · Anti-spoiler » quand une équipe suivie a son prochain match masqué
+    /// Aucune équipe suivie » ; « Prochain · Masqué · Ouvre Faille pour révéler » quand une équipe suivie a son prochain match masqué
     /// (jamais « Aucun match prévu » : on y lirait une équipe éliminée, spec §8) ; sinon « Prochain · Aucun match prévu ».
     public static func rectangular(_ content: WidgetContent, timeZone: TimeZone = .current) -> Rectangular {
         guard let line = content.headline else {
@@ -139,7 +139,7 @@ public enum WidgetText {
                                    isLive: false, isMasked: false)
             }
             if hasHiddenTeam(content) {
-                return Rectangular(label: "Prochain", title: "Masqué", detail: "Anti-spoiler",
+                return Rectangular(label: "Prochain", title: "Masqué", detail: "Ouvre Faille pour révéler",
                                    isLive: false, isMasked: true)
             }
             return Rectangular(label: "Prochain", title: "Aucun match prévu", detail: "Ouvre Faille pour actualiser",

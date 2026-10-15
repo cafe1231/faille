@@ -119,11 +119,20 @@ public enum HomeFeed {
                                       calendar: input.calendar, limit: mustWatchCount),
             live: live(input.live ?? input.schedule.filter { $0.state == .inProgress }, follows: input.follows),
             week: WeekStrip.days(today: input.now, events: input.schedule, calendar: input.calendar, followed: followed),
-            todayCount: CalendarMonth.events(on: input.now, in: input.schedule, calendar: input.calendar).count,
+            todayCount: CalendarMonth.events(on: input.now, in: dayList(schedule: input.schedule, live: input.live),
+                                             calendar: input.calendar).count,
             recentResults: recentResults(schedule: input.schedule, follows: input.follows, now: input.now,
                                          hiddenIds: bracketHidden),
             activity: activity(matches: input.seasonMatches, games: input.games, schedule: input.schedule,
                                follows: input.follows, revealed: input.revealed, masked: masked, now: input.now))
+    }
+
+    /// Liste du jour de l'Accueil : le direct (`getLive`) fait foi pour un match qu'il connaît, le calendrier pour le reste
+    /// (même règle que l'écran, pour que « N matchs aujourd'hui » compte ce que la liste affiche).
+    public static func dayList(schedule: [MatchEvent], live: [MatchEvent]?) -> [MatchEvent] {
+        guard let live else { return schedule }
+        let liveIds = Set(live.map(\.id))
+        return live + schedule.filter { !liveIds.contains($0.id) }
     }
 
     /// Matchs d'une équipe ou d'une ligue suivie (pastilles pleines du calendrier).

@@ -204,7 +204,7 @@ import Testing
         #expect(WidgetText.emptyMessage(both) == "Prochain · masqué")
         #expect(WidgetText.inline(both, timeZone: paris) == "Prochain · masqué")
         #expect(WidgetText.rectangular(both, timeZone: paris)
-                == WidgetText.Rectangular(label: "Prochain", title: "Masqué", detail: "Anti-spoiler",
+                == WidgetText.Rectangular(label: "Prochain", title: "Masqué", detail: "Ouvre Faille pour révéler",
                                           isLive: false, isMasked: true))
         let onlyKC = WidgetContent(date: now, teams: [WidgetTeam(team: kc, next: .noMatch)], lines: [])
         #expect(WidgetText.emptyMessage(onlyKC) == "Aucun match prévu")
