@@ -29,7 +29,7 @@ struct HomeModelTests {
         // KC – C9 et T1 – FLY (suivis) d'abord, puis BRO – LGD (ni suivi ni international).
         #expect(content.live.map(\.id) == [SampleData.kcMatchId, SampleData.t1MatchId, SampleData.noStatsMatchId])
         #expect(content.live.map(\.masked) == [false, true, false])
-        #expect(content.sections.todayCount == 2)
+        #expect(content.sections.todayCount == 3)
         #expect(content.masked == ["m-t1-blg", "m-t1-hle", "m-gen-t1"])
         #expect(content.strip.count == 43)
         #expect(content.eventsByDay[paris().startOfDay(for: now)]?.count == 3)
