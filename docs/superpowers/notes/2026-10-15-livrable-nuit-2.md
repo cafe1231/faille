@@ -20,13 +20,13 @@ Faille devient le **compagnon de saison** : on l'ouvre sur un accueil qui dit qu
 | **Spec Phase 2** (serveur, push, ligues de pronos entre amis) et **note de conformité Riot / App Store** | fait (documents) |
 | **Pronostics, indicateur de domination, moments forts, MVP, carte de partage, mode rattrapage, extras iOS** | **pas fait** : l'ordre de coupe du fichier de la nuit les mettait après tout le reste ; ils sont dans `docs/superpowers/notes/2026-10-14-idees.md` et la spec |
 
-Anti-spoiler : appliqué sur tous les nouveaux chemins (accueil, calendrier, pages équipe et joueur, duels, classements, ligues, notifications). La relecture finale a trouvé deux fuites (la progression d'un tableau trahissait une élimination ; suivre une équipe pendant l'onboarding pouvait démarrer une Live Activity avant la page anti-spoiler) : **corrigées**.
+Anti-spoiler : appliqué sur tous les nouveaux chemins (accueil, calendrier, pages équipe et joueur, duels, classements, ligues, notifications). La relecture finale a trouvé deux fuites (la progression d'un tableau trahissait une élimination ; suivre une équipe pendant l'onboarding pouvait démarrer une Live Activity avant la page anti-spoiler) : **corrigées**, puis trois tours de relecture ciblée ont fermé les derniers chemins (calendrier, page équipe, notifications, « Prochain », widgets, Live Activities, écran Détail).
 
-CI verte : iOS [38663963372](https://github.com/cafe1231/faille/actions/runs/38663963372), Strings [38663963339](https://github.com/cafe1231/faille/actions/runs/38663963339), LoLKit [38662897499](https://github.com/cafe1231/faille/actions/runs/38662897499) (413 tests).
+CI verte sur `main` : iOS [38668680945](https://github.com/cafe1231/faille/actions/runs/38668680945), Strings [38668680949](https://github.com/cafe1231/faille/actions/runs/38668680949), LoLKit [38667646362](https://github.com/cafe1231/faille/actions/runs/38667646362) (423 tests).
 
 ## 2. L'IPA
 
-`C:\Users\Dan\Downloads\faille\Faille.ipa` (CI verte sur `main`).
+`C:\Users\Dan\Downloads\faille\Faille.ipa` (CI verte sur `main`, run 38668680945).
 1. iPhone branché en USB, déverrouillé, iTunes et AltServer lancés.
 2. **Maj + clic** sur l'icône AltServer → **Sideload .ipa…** → ton iPhone → `Faille.ipa` → ton Apple ID.
 3. Si l'icône reste vide, redémarre l'iPhone ; ne désinstalle pas l'appli (tu perdrais tes réglages).
