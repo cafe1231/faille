@@ -7,10 +7,20 @@ enum WidgetSamples {
     /// (quatre lignes pour le moyen widget).
     static let now = SampleData.date("2026-10-15T17:05:00Z")
 
+    /// Les matchs à venir de l'exemple sont ceux d'une ligue nationale : la suite d'un tableau international dont le match
+    /// de T1 est masqué serait cachée (`BracketMasking`) et l'exemple ne montrerait plus de prochain match.
+    private static var sampleSchedule: [MatchEvent] {
+        let national = LeagueRef(id: "98767975604431412", slug: "lck", name: "LCK", image: nil)
+        return (SampleData.schedule + [SampleData.kcNext]).map { event in
+            guard event.state == .unstarted, ["m-gen-fur", "m-kc-blg"].contains(event.id) else { return event }
+            return MatchEvent(startTime: event.startTime, state: event.state, type: event.type,
+                              blockName: event.blockName, league: national, match: event.match, streams: event.streams)
+        }
+    }
+
     static var input: WidgetInput {
         WidgetInput(follows: SampleData.follows, settings: AppSettings(),
-                    schedule: Cached(value: SchedulePage(leagueIds: [], events: SampleData.schedule + [SampleData.kcNext]),
-                                     fetchedAt: now),
+                    schedule: Cached(value: SchedulePage(leagueIds: [], events: sampleSchedule), fetchedAt: now),
                     live: Cached(value: SampleData.live, fetchedAt: now))
     }
 
