@@ -210,8 +210,10 @@ private func close(_ a: Double?, _ b: Double, _ tolerance: Double = 1e-6) -> Boo
             TournamentRef(id: "s1", slug: "lec_split_1_2026", startDate: "2026-01-16", endDate: "2026-03-01", leagueId: "l"),
             TournamentRef(id: "su", slug: "lec_summer_2025", startDate: "2025-08-02", endDate: "2025-09-29", leagueId: "l"),
         ]
-        #expect(SeasonScope.season(2026, tournaments: tournaments) == SeasonScope(tournamentIds: ["s3", "s1"], label: "2026"))
-        #expect(SeasonScope.tournament(tournaments[0]) == SeasonScope(tournamentIds: ["s3"], label: "lec_split_3_2026"))
+        #expect(SeasonScope.season(2026, tournaments: tournaments)
+                == SeasonScope(tournamentIds: ["s3", "s1"], label: "2026", season: 2026))
+        #expect(SeasonScope.tournament(tournaments[0])
+                == SeasonScope(tournamentIds: ["s3"], label: "lec_split_3_2026", season: 2026))
     }
 
     /// Masquage de la saison : `SpoilerPolicy` sur les équipes (avec id) de chaque match, révélations comprises.
@@ -225,5 +227,41 @@ private func close(_ a: Double?, _ b: Double, _ tolerance: Double = 1e-6) -> Boo
         // Une équipe suivie en anti-spoiler qui n'est pas dans ces matchs ne masque rien.
         let other = FollowList(teams: [FollowedTeam(id: "t1", code: "T1", name: "T1", spoilerFree: true)])
         #expect(SeasonMasking.maskedMatchIds(matches, follows: other, revealed: []).isEmpty)
+    }
+
+    /// Spec périmètre §6.1 test 13 : bilans par saison (séries puis games) sur les vraies séries 2025-2026.
+    @Test func kcAndG2RecordsPerSeason() throws {
+        let matches = try PerimetreFixture.kcG2Matches()
+        let tournaments = Array(try PerimetreFixture.tournamentsBySlug().values)
+        let now = date("2026-10-15T12:00:00Z")
+        func record(_ team: String, _ year: Int) -> [Int] {
+            let season = SeasonStats.team(team, matches: matches, games: [:],
+                                          scope: .season(year, tournaments: tournaments), masked: [], now: now)
+            return [season.seriesWins, season.seriesLosses, season.gameWins, season.gameLosses]
+        }
+        #expect(record("KC", 2026) == [33, 13, 72, 41])
+        #expect(record("KC", 2025) == [26, 14, 64, 44])
+        #expect(record("G2", 2026) == [33, 15, 79, 41])
+        #expect(record("G2", 2025) == [28, 14, 62, 41])
+    }
+
+    /// Spec périmètre §6.1 test 14 : face-à-face KC-G2 — 2-6 en 2026, 3-2 en 2025, 5-8 sur la fenêtre (13 matchs, le
+    /// plus récent le 06/09/2026).
+    @Test func kcG2HeadToHeadOverTheWindow() throws {
+        let matches = try PerimetreFixture.kcG2Matches()
+        let tournaments = Array(try PerimetreFixture.tournamentsBySlug().values)
+        let window = try #require(SeasonWindow(today: "2026-10-15"))
+        func h2h(_ ids: Set<String>) -> HeadToHead {
+            SeasonStats.headToHead("KC", "G2", matches: matches.filter { ids.contains($0.tournamentId) }, masked: [])
+        }
+        let current = h2h(SeasonScope.season(2026, tournaments: tournaments).tournamentIds)
+        #expect((current.winsA, current.winsB) == (2, 6))
+        let previous = h2h(SeasonScope.season(2025, tournaments: tournaments).tournamentIds)
+        #expect((previous.winsA, previous.winsB) == (3, 2))
+        let all = h2h(Set(window.tournaments(tournaments).map(\.id)))
+        #expect((all.winsA, all.winsB) == (5, 8))
+        #expect(all.matchIds.count == 13)
+        #expect(all.matchIds.first == "115548681803406303")
+        #expect(matches.first { $0.id == all.matchIds.first }?.startTime == date("2026-09-06T15:00:00Z"))
     }
 }
