@@ -46,10 +46,13 @@ extension AppStore {
     /// modification de l'utilisateur (`syncFollowsBeforeChange`).
     func syncLiveActivities(canStart: Bool) async {
         guard !followsUnreadable else { return }
-        await liveActivities.sync(live: live, follows: follows, mode: settings.liveActivityMode,
-                                  canStart: canStart && !isOnboarding,
+        // Anti-spoiler (I-1 généralisé) : un match que `BracketMasking` cache (suite d'un match masqué du même tableau)
+        // n'a pas de Live Activity démarrée ni mise à jour : elle trahirait la progression. Révélé, il revient.
+        let hidden = bracketHiddenIds(over: [])
+        await liveActivities.sync(live: live.map { $0.filter { !hidden.contains($0.id) } }, follows: follows,
+                                  mode: settings.liveActivityMode, canStart: canStart && !isOnboarding,
                                   now: Date()) { matchId in
-            self.activityContent(matchId: matchId)
+            hidden.contains(matchId) ? nil : self.activityContent(matchId: matchId)
         }
     }
 
