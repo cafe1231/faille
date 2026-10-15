@@ -69,9 +69,9 @@ struct SettingsView: View {
     private var explanation: String {
         switch store.settings.liveActivityMode {
         case .automatic:
-            return "Automatique : chaque match en direct d'une équipe suivie s'affiche tout seul sur l'écran verrouillé (3 au plus)."
+            return String(localized: "Automatique : chaque match en direct d'une équipe suivie s'affiche tout seul sur l'écran verrouillé (3 au plus).")
         case .manual:
-            return "Manuelle : rien ne s'affiche tout seul, on épingle un match depuis son écran Détail."
+            return String(localized: "Manuelle : rien ne s'affiche tout seul, on épingle un match depuis son écran Détail.")
         }
     }
 }
@@ -85,8 +85,8 @@ struct AboutView: View {
             VStack(alignment: .leading, spacing: 14) {
                 block("Faille", "Version \(Self.version)")
                 block("Données", "Matchs, équipes et stats viennent de l'API de lolesports.com (non officielle) et du flux livestats de Riot, avec une à deux minutes de retard sur le direct (le flux de Riot suit la diffusion). Usage strictement personnel.")
-                block("Stockage", AppGroup.identifier.map { "Groupe d'apps : \($0)" }
-                      ?? "Aucun groupe d'apps : les données restent dans l'appli seule.")
+                block("Stockage", AppGroup.identifier.map { String(localized: "Groupe d'apps : \($0)") }
+                      ?? String(localized: "Aucun groupe d'apps : les données restent dans l'appli seule."))
                 diagnostic
                 Text("Police Sora, sous licence SIL Open Font License.")
                     .sora(.secondary)

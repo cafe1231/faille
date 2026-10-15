@@ -52,7 +52,7 @@ struct GoldChartCard: View {
     /// « KC +2,1k » ; « Égalité » à zéro.
     private func leaderText(_ difference: Int) -> String? {
         guard teams.count == 2 else { return nil }
-        if difference == 0 { return "Égalité" }
+        if difference == 0 { return String(localized: "Égalité") }
         return "\(teams[difference > 0 ? 0 : 1].code) +\(Format.gold(abs(difference)))"
     }
 

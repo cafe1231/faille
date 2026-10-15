@@ -9,18 +9,20 @@ enum TimelineText {
     static func text(_ event: TimelineEvent) -> String {
         switch event.kind {
         case .kills:
-            let label = event.count == 1 ? "kill" : "kills"
-            guard !event.players.isEmpty else { return "+\(event.count) \(label)" }
-            let count = event.count == 1 ? "Kill" : "\(event.count) kills"
+            guard !event.players.isEmpty else {
+                return event.count == 1 ? String(localized: "+\(event.count) kill")
+                                        : String(localized: "+\(event.count) kills")
+            }
+            let count = event.count == 1 ? String(localized: "Kill") : String(localized: "\(event.count) kills")
             return "\(count) · \(event.players.joined(separator: ", "))"
         case let .dragon(type):
-            return "Drake \(Format.dragons([type]))"
+            return String(localized: "Drake \(Format.dragons([type]))")
         case .baron:
-            return event.count == 1 ? "Baron" : "\(event.count) barons"
+            return event.count == 1 ? String(localized: "Baron") : String(localized: "\(event.count) barons")
         case .tower:
-            return event.count == 1 ? "Tour" : "\(event.count) tours"
+            return event.count == 1 ? String(localized: "Tour") : String(localized: "\(event.count) tours")
         case .inhibitor:
-            return event.count == 1 ? "Inhibiteur" : "\(event.count) inhibiteurs"
+            return event.count == 1 ? String(localized: "Inhibiteur") : String(localized: "\(event.count) inhibiteurs")
         }
     }
 

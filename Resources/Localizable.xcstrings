@@ -243,6 +243,17 @@
         }
       }
     },
+    "%lld barons": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld barons"
+          }
+        }
+      }
+    },
     "%lld drakes %@": {
       "extractionState": "manual",
       "localizations": {
@@ -296,6 +307,28 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld inhibiteurs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld inhibitors"
+          }
+        }
+      }
+    },
+    "%lld kills": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld kills"
           }
         }
       }
@@ -368,6 +401,17 @@
         }
       }
     },
+    "%lld tours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld towers"
+          }
+        }
+      }
+    },
     "%lld victoires d'affilée": {
       "extractionState": "manual",
       "localizations": {
@@ -431,6 +475,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld'"
+          }
+        }
+      }
+    },
+    "+%lld kill": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld kill"
+          }
+        }
+      }
+    },
+    "+%lld kills": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld kills"
           }
         }
       }
@@ -600,6 +666,17 @@
         }
       }
     },
+    "Aucun groupe d'apps : les données restent dans l'appli seule.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No app group: data stays inside the app only."
+          }
+        }
+      }
+    },
     "Aucun match ce jour-là": {
       "extractionState": "manual",
       "localizations": {
@@ -655,6 +732,17 @@
         }
       }
     },
+    "Automatique : chaque match en direct d'une équipe suivie s'affiche tout seul sur l'écran verrouillé (3 au plus).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic: every live match of a followed team shows up on the lock screen by itself (3 at most)."
+          }
+        }
+      }
+    },
     "Balise": {
       "extractionState": "manual",
       "localizations": {
@@ -673,6 +761,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wards placed / destroyed"
+          }
+        }
+      }
+    },
+    "Baron": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baron"
           }
         }
       }
@@ -1261,6 +1360,17 @@
         }
       }
     },
+    "Drake %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ drake"
+          }
+        }
+      }
+    },
     "Drakes": {
       "extractionState": "manual",
       "localizations": {
@@ -1701,6 +1811,17 @@
         }
       }
     },
+    "Groupe d'apps : %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App group: %@"
+          }
+        }
+      }
+    },
     "Hextech": {
       "extractionState": "manual",
       "localizations": {
@@ -1719,6 +1840,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Infernal"
+          }
+        }
+      }
+    },
+    "Inhibiteur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inhibitor"
           }
         }
       }
@@ -1818,6 +1950,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "KDA"
+          }
+        }
+      }
+    },
+    "Kill": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kill"
           }
         }
       }
@@ -2005,6 +2148,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manual"
+          }
+        }
+      }
+    },
+    "Manuelle : rien ne s'affiche tout seul, on épingle un match depuis son écran Détail.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual: nothing shows up by itself, you pin a match from its Detail screen."
           }
         }
       }
@@ -2713,6 +2867,17 @@
         }
       }
     },
+    "Réduire le fil": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse the feed"
+          }
+        }
+      }
+    },
     "Réglages": {
       "extractionState": "manual",
       "localizations": {
@@ -3144,6 +3309,17 @@
         }
       }
     },
+    "Tour": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tower"
+          }
+        }
+      }
+    },
     "Tours": {
       "extractionState": "manual",
       "localizations": {
@@ -3162,6 +3338,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Full calendar"
+          }
+        }
+      }
+    },
+    "Tout le fil (%lld)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full feed (%lld)"
           }
         }
       }
@@ -3461,6 +3648,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gold lead at 15 min"
+          }
+        }
+      }
+    },
+    "Égalité": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tied"
           }
         }
       }

@@ -51,6 +51,27 @@ struct AccessibilityTests {
         #expect(english("Kills %lld à %lld, écart de gold %@, drakes %lld à %lld, tours %lld à %lld")
             == "Kills %lld to %lld, gold lead %@, drakes %lld to %lld, towers %lld to %lld")
     }
+
+    /// Texte lu des stats d'un match (valeurs réelles : kills, écart de gold, drakes, tours).
+    @Test func miniStatsAreSpoken() {
+        let blue = TeamStats(kills: 7, gold: 32_400, towers: 3, inhibitors: 0, barons: 0, dragons: ["infernal", "ocean"])
+        let red = TeamStats(kills: 4, gold: 30_300, towers: 1, inhibitors: 0, barons: 0, dragons: ["cloud"])
+        let diff = Format.goldDiff(2_100)
+        #expect(MiniStats.spoken(stats: [blue, red])
+            == "Kills 7 à 4, écart de gold \(diff), drakes 2 à 1, tours 3 à 1")
+        #expect(MiniStats.spoken(stats: [blue]) == "")
+    }
+
+    /// Les textes du fil, du détail et des réglages passent par le catalogue (clés exactes, anglais non vide).
+    @Test func timelineAndSettingsKeysAreTranslated() {
+        for key in ["Réduire le fil", "Tout le fil (%lld)", "Égalité", "Kill", "%lld kills", "+%lld kill", "+%lld kills",
+                    "Drake %@", "Baron", "%lld barons", "Tour", "%lld tours", "Inhibiteur", "%lld inhibiteurs",
+                    "Aucun groupe d'apps : les données restent dans l'appli seule.", "Groupe d'apps : %@"] {
+            #expect(english(key)?.isEmpty == false, "\(key)")
+        }
+        #expect(english("Égalité") == "Tied")
+        #expect(english("Inhibiteur") == "Inhibitor")
+    }
 }
 
 extension ApercuTests {

@@ -46,7 +46,7 @@ struct TimelineCard: View {
                 Button {
                     expanded.toggle()
                 } label: {
-                    Text(expanded ? "Réduire le fil" : "Tout le fil (\(recent.count))")
+                    Text(expanded ? String(localized: "Réduire le fil") : String(localized: "Tout le fil (\(recent.count))"))
                         .sora(.secondaryMedium)
                         .foregroundStyle(Palette.accent)
                         .frame(maxWidth: .infinity, minHeight: 44)

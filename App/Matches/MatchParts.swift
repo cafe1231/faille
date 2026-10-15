@@ -147,7 +147,7 @@ struct MiniStats: View {
                 HStack(spacing: 4) {
                     IconView(icon: .gold, size: 13)
                     Text(Format.goldDiff(diff))
-                        .font(Sora.font(12, .bold))
+                        .sora(.secondaryMedium)
                         .foregroundStyle(diff > 0 ? tint : Palette.secondary)
                         .numericChange(diff)
                 }
