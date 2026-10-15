@@ -3,7 +3,7 @@ import Foundation
 /// Formats d'affichage en français, identiques sur toutes les plateformes.
 public enum Format {
     /// Signe moins typographique (U+2212), le même partout : « −800 », « −3k », « −750 ».
-    static let minus = "\u{2212}"
+    public static let minus = "\u{2212}"
 
     /// 37442 → « 37,4k » ; 67995 → « 68k » ; 850 → « 850 » ; −3000 → « −3k » (signe U+2212).
     public static func gold(_ value: Int) -> String {

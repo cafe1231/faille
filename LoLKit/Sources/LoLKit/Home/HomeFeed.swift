@@ -129,7 +129,7 @@ public enum HomeFeed {
 
     /// Liste du jour de l'Accueil : le direct (`getLive`) fait foi pour un match qu'il connaît, le calendrier pour le reste
     /// (même règle que l'écran, pour que « N matchs aujourd'hui » compte ce que la liste affiche).
-    static func dayList(schedule: [MatchEvent], live: [MatchEvent]?) -> [MatchEvent] {
+    public static func dayList(schedule: [MatchEvent], live: [MatchEvent]?) -> [MatchEvent] {
         guard let live else { return schedule }
         let liveIds = Set(live.map(\.id))
         return live + schedule.filter { !liveIds.contains($0.id) }

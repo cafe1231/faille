@@ -41,7 +41,7 @@ extension Format {
         "hextech": "hextech", "chemtech": "chemtech", "elder": "ancestral",
     ]
 
-    /// Types de drakes en français, regroupés dans l'ordre d'apparition : « infernal · océan », « 3 hextech · infernal »
+    /// Types de drakes en français, regroupés dans l'ordre d'apparition : « infernal · océan », « hextech ×3 · infernal »
     /// (une seule ligne, quelle que soit la game). Type inconnu : tel quel, en minuscules.
     public static func dragons(_ types: [String]) -> String {
         var order: [String] = []
@@ -53,7 +53,7 @@ extension Format {
         }
         return order.map { name in
             let count = counts[name] ?? 1
-            return count > 1 ? "\(count) \(name)" : name
+            return count > 1 ? "\(name) ×\(count)" : name
         }.joined(separator: " · ")
     }
 

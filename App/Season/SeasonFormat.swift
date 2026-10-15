@@ -39,7 +39,7 @@ enum SeasonFormat {
     static func signed(_ value: Double?, locale: Locale = .current) -> String {
         guard let value else { return missing }
         let magnitude = integer(abs(value), locale: locale)
-        return value < 0 ? "\u{2212}\(magnitude)" : "+\(magnitude)"
+        return value < 0 ? "\(Format.minus)\(magnitude)" : "+\(magnitude)"
     }
 
     /// K/D/A « 4/6/4 ».
