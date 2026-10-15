@@ -51,7 +51,7 @@ struct OnboardingExampleCard: View {
                     Text("Game \(game) · \(clock / 60):\(String(format: "%02d", clock % 60))").monospacedDigit()
                 }
                 Label { Text("\(kills)").monospacedDigit() } icon: { IconView(icon: .swords, size: 13) }
-                Label { Text("+2,1 k").monospacedDigit() } icon: { IconView(icon: .gold, size: 13) }
+                Label { Text("+2,1k").monospacedDigit() } icon: { IconView(icon: .gold, size: 13) }
                 Label { Text("3").monospacedDigit() } icon: { IconView(icon: .tower, size: 13) }
             }
             .sora(.secondaryMedium)
