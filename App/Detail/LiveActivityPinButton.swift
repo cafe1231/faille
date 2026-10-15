@@ -30,9 +30,9 @@ struct LiveActivityPinButton: View {
             } label: {
                 HStack(spacing: 6) {
                     IconView(icon: .pin, size: 15)
-                    Text(shown ? "Retirer de l'écran verrouillé" : "Épingler sur l'écran verrouillé")
+                    Text(shown ? String(localized: "Retirer de l'écran verrouillé") : String(localized: "Épingler sur l'écran verrouillé"))
                 }
-                .font(Typo.bodyMedium)
+                .sora(.bodyMedium)
                 .foregroundStyle(controller.isEnabled ? Palette.text : Palette.secondary)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())
@@ -42,7 +42,7 @@ struct LiveActivityPinButton: View {
             .buttonStyle(.pressable)
             if let note = note(enabled: controller.isEnabled) {
                 Text(note)
-                    .font(Typo.secondary)
+                    .sora(.secondary)
                     .foregroundStyle(Palette.secondary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
@@ -52,10 +52,10 @@ struct LiveActivityPinButton: View {
 
     private func note(enabled: Bool) -> String? {
         if !enabled || refused == .disabled {
-            return "Live Activities désactivées : Réglages › Faille › Activités en direct."
+            return String(localized: "Live Activities désactivées : Réglages › Faille › Activités en direct.")
         }
         if refused == .full {
-            return "Déjà 3 Live Activities sur l'écran verrouillé : retires-en une d'abord."
+            return String(localized: "Déjà 3 Live Activities sur l'écran verrouillé : retires-en une d'abord.")
         }
         return nil
     }

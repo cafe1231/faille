@@ -26,7 +26,7 @@ struct TimelineCard: View {
         let recent = Array(events.reversed())
         let shown = expanded ? recent : Array(recent.prefix(Self.collapsedCount))
         VStack(alignment: .leading, spacing: 10) {
-            StatLabel(icon: .swords, text: "Fil de la game")
+            StatLabel(icon: .swords, text: String(localized: "Fil de la game"))
                 .frame(maxWidth: .infinity, alignment: .leading)
             if recent.isEmpty {
                 if loading {
@@ -35,7 +35,7 @@ struct TimelineCard: View {
                     }
                 } else {
                     Text("Rien de marquant pour l'instant")
-                        .font(Typo.secondary)
+                        .sora(.secondary)
                         .foregroundStyle(Palette.secondary)
                 }
             }
@@ -46,8 +46,8 @@ struct TimelineCard: View {
                 Button {
                     expanded.toggle()
                 } label: {
-                    Text(expanded ? "Réduire le fil" : "Tout le fil (\(recent.count))")
-                        .font(Typo.secondaryMedium)
+                    Text(expanded ? String(localized: "Réduire le fil") : String(localized: "Tout le fil (\(recent.count))"))
+                        .sora(.secondaryMedium)
                         .foregroundStyle(Palette.accent)
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .contentShape(Rectangle())
@@ -64,7 +64,7 @@ struct TimelineCard: View {
         let tint = team?.tint ?? Palette.secondary
         return HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(Format.clock(event.gameTime))
-                .font(Typo.secondaryMedium)
+                .sora(.secondaryMedium)
                 .foregroundStyle(Palette.secondary)
                 .monospacedDigit()
                 .frame(width: 44, alignment: .leading)
@@ -72,10 +72,10 @@ struct TimelineCard: View {
                 .foregroundStyle(tint)
                 .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 2 }
             Text(team?.code ?? "")
-                .font(Typo.secondaryMedium)
+                .sora(.secondaryMedium)
                 .foregroundStyle(tint)
             Text(TimelineText.text(event))
-                .font(Typo.secondary)
+                .sora(.secondary)
                 .lineLimit(2)
             Spacer(minLength: 0)
         }

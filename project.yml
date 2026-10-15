@@ -1,6 +1,8 @@
 name: Faille
 options:
   bundleIdPrefix: com.cafe1231
+  # Langue source du catalogue de chaînes (spec saison §3.8) : français ; anglais traduit.
+  developmentLanguage: fr
   deploymentTarget:
     iOS: "26.0"
   createIntermediateGroups: true
@@ -39,6 +41,8 @@ targets:
       properties:
         CFBundleDisplayName: Faille
         CFBundleShortVersionString: "0.1.0"
+        CFBundleDevelopmentRegion: fr
+        CFBundleLocalizations: [fr, en]
         UILaunchScreen:
           UIColorName: LaunchBackground
         UIUserInterfaceStyle: Dark
@@ -90,6 +94,8 @@ targets:
       properties:
         CFBundleDisplayName: Faille
         CFBundleShortVersionString: "0.1.0"
+        CFBundleDevelopmentRegion: fr
+        CFBundleLocalizations: [fr, en]
         UIAppFonts:
           - Sora-Variable.ttf
         NSExtension:

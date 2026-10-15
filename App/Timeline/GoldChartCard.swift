@@ -20,11 +20,11 @@ struct GoldChartCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                StatLabel(icon: .gold, text: "Écart de gold")
+                StatLabel(icon: .gold, text: String(localized: "Écart de gold"))
                 Spacer(minLength: 8)
                 if let last = points.last, let leader = leaderText(last.difference) {
                     Text(leader)
-                        .font(Typo.secondaryMedium)
+                        .sora(.secondaryMedium)
                         .foregroundStyle(last.difference >= 0 ? tint(0) : tint(1))
                         .monospacedDigit()
                         .numericChange(last.difference)
@@ -37,7 +37,7 @@ struct GoldChartCard: View {
                 SkeletonBlock(height: Self.height, radius: 12)
             } else {
                 Text("La courbe se dessine après quelques minutes de jeu")
-                    .font(Typo.secondary)
+                    .sora(.secondary)
                     .foregroundStyle(Palette.secondary)
             }
         }
@@ -52,7 +52,7 @@ struct GoldChartCard: View {
     /// « KC +2,1k » ; « Égalité » à zéro.
     private func leaderText(_ difference: Int) -> String? {
         guard teams.count == 2 else { return nil }
-        if difference == 0 { return "Égalité" }
+        if difference == 0 { return String(localized: "Égalité") }
         return "\(teams[difference > 0 ? 0 : 1].code) +\(Format.gold(abs(difference)))"
     }
 
@@ -93,7 +93,7 @@ struct GoldChartCard: View {
                 AxisValueLabel {
                     if let seconds = value.as(Double.self) {
                         Text("\(Int(seconds / 60))'")
-                            .font(Typo.label)
+                            .sora(.label)
                             .foregroundStyle(Palette.secondary)
                     }
                 }
@@ -105,7 +105,7 @@ struct GoldChartCard: View {
                 AxisValueLabel {
                     if let gold = value.as(Int.self) {
                         Text(Format.goldDiff(gold))
-                            .font(Typo.label)
+                            .sora(.label)
                             .foregroundStyle(Palette.secondary)
                     }
                 }

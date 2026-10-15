@@ -22,7 +22,7 @@ struct MatchesView: View {
         let cardsShown = cascaded || !Motion.runs(.cascade, reduceMotion: reduceMotion)
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                ScreenHeader("Mes équipes", subtitle: cards.isEmpty ? Format.followCount(0) : store.cardsSubtitle(cards))
+                ScreenHeader(String(localized: "Mes équipes"), subtitle: cards.isEmpty ? Format.followCount(0) : store.cardsSubtitle(cards))
                 if let banner = store.bannerText {
                     ErrorBanner(text: banner)
                         .transition(Motion.bannerTransition(reduceMotion: reduceMotion))
@@ -74,16 +74,16 @@ struct WelcomeCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Bienvenue dans Faille")
-                .font(Typo.headline)
+                .sora(.headline)
             Text("Suis tes équipes pour voir ici leurs matchs en direct, le prochain et le dernier résultat.")
-                .font(Typo.secondary)
+                .sora(.secondary)
                 .foregroundStyle(Palette.secondary)
             Button(action: action) {
                 HStack(spacing: 6) {
                     IconView(icon: .star, size: 15)
                     Text("Choisir mes équipes")
                 }
-                .font(Typo.bodyMedium)
+                .sora(.bodyMedium)
                 .foregroundStyle(Palette.abyss)
                 .padding(.horizontal, 18)
                 .padding(.vertical, 11)

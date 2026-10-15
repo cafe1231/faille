@@ -69,14 +69,14 @@ struct MatchRemindersSection: View {
 
     /// « 15 min »
     static func leadLabel(_ lead: TimeInterval) -> String {
-        "\(Int((lead / 60).rounded())) min"
+        String(localized: "\(Int((lead / 60).rounded())) min")
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Toggle(isOn: Binding(get: { enabled }, set: { on in Task { await toggle(on) } })) {
                 Text("Début de match")
-                    .font(Typo.body)
+                    .sora(.body)
                     .foregroundStyle(Palette.text)
             }
             .tint(Palette.accent)
@@ -89,11 +89,11 @@ struct MatchRemindersSection: View {
                 .pickerStyle(.segmented)
             }
             Text(explanation)
-                .font(Typo.secondary)
+                .sora(.secondary)
                 .foregroundStyle(Palette.secondary)
             if denied {
                 Text("Notifications refusées par iOS : Réglages › Faille › Notifications.")
-                    .font(Typo.secondaryMedium)
+                    .sora(.secondaryMedium)
                     .foregroundStyle(Palette.accent)
             }
         }
@@ -104,8 +104,8 @@ struct MatchRemindersSection: View {
 
     private var explanation: String {
         enabled
-            ? "« KC vs C9 dans \(Self.leadLabel(lead)) » avant le prochain match de chaque équipe suivie. Jamais pour un match que l'anti-spoiler cache, jamais de score."
-            : "Désactivées : aucune notification. Les activer demande l'autorisation d'iOS."
+            ? String(localized: "« KC vs C9 dans \(Self.leadLabel(lead)) » avant le prochain match de chaque équipe suivie. Jamais pour un match que l'anti-spoiler cache, jamais de score.")
+            : String(localized: "Désactivées : aucune notification. Les activer demande l'autorisation d'iOS.")
     }
 
     /// Relit l'autorisation d'iOS (`MatchRemindersFlow.reconcile`) quand la scène est au premier plan.

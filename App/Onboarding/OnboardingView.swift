@@ -44,7 +44,7 @@ struct OnboardingView: View {
                     Button { go(page - 1) } label: {
                         HStack(spacing: 6) {
                             IconView(icon: .back, size: 16)
-                            Text("Retour").font(Typo.bodyMedium)
+                            Text("Retour").sora(.bodyMedium)
                         }
                         .foregroundStyle(Palette.secondary)
                         .frame(minHeight: 44)
@@ -55,7 +55,7 @@ struct OnboardingView: View {
                 }
                 Spacer()
                 Button(action: onDone) {
-                    Text("Passer").font(Typo.bodyMedium).foregroundStyle(Palette.secondary)
+                    Text("Passer").sora(.bodyMedium).foregroundStyle(Palette.secondary)
                         .frame(minWidth: 44, minHeight: 44)
                 }
                 .buttonStyle(.pressable)
@@ -113,7 +113,7 @@ struct OnboardingView: View {
                 Group {
                     if page == 2 { Text("C'est parti") } else { Text("Continuer") }
                 }
-                .font(Typo.bodyMedium)
+                .sora(.bodyMedium)
                 .foregroundStyle(Palette.abyss)
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .background(Palette.accent, in: Capsule())

@@ -17,13 +17,13 @@ struct ScreenHeader<Trailing: View>: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(Typo.title)
+                    .sora(.title)
                     .tracking(Typo.titleTracking)
                     .foregroundStyle(Palette.text)
                 // « N en direct · N à venir », « N équipes suivies » : les chiffres défilent (spec finitions §4) ; les
                 // comptes viennent de LoLKit (une carte à « Prochain » masqué ne compte pas).
                 Text(subtitle)
-                    .font(Typo.secondary)
+                    .sora(.secondary)
                     .foregroundStyle(Palette.secondary)
                     .numericChange(subtitle)
             }
@@ -48,7 +48,7 @@ struct SectionLabel: View {
     var body: some View {
         HStack {
             Text(text)
-                .font(Typo.label)
+                .sora(.label)
                 .tracking(Typo.labelTracking)
                 .textCase(.uppercase)
                 .foregroundStyle(Palette.secondary)
@@ -82,7 +82,7 @@ struct Chip<Content: View>: View {
         HStack(spacing: 5) {
             content
         }
-        .font(Typo.chip)
+        .sora(.chip)
         .foregroundStyle(muted ? Palette.secondary : Palette.text)
         .padding(.horizontal, 9)
         .padding(.vertical, 4)
@@ -196,7 +196,7 @@ struct ErrorBanner: View {
         HStack(spacing: 6) {
             IconView(icon: .refresh, size: 13)
             Text(text)
-                .font(Typo.secondaryMedium)
+                .sora(.secondaryMedium)
         }
         .foregroundStyle(Palette.secondary)
         .padding(.horizontal, 12)
@@ -217,7 +217,7 @@ struct NoteCard: View {
         HStack(spacing: 8) {
             IconView(icon: icon, size: 15)
             Text(text)
-                .font(Typo.secondary)
+                .sora(.secondary)
         }
         .foregroundStyle(Palette.secondary)
         .glassCard(radius: Radius.inner, padding: 14)

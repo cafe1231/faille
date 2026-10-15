@@ -76,7 +76,7 @@ struct BuildPlayersPanel: View {
                 }
                 if players.isEmpty {
                     Text("Joueurs indisponibles")
-                        .font(Typo.secondary)
+                        .sora(.secondary)
                         .foregroundStyle(Palette.secondary)
                 }
             }
@@ -112,14 +112,14 @@ struct PlayerBuildRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(line.name.isEmpty ? Format.champion(line.champion) : line.name)
-                            .font(Typo.secondaryMedium)
+                            .sora(.secondaryMedium)
                             .lineLimit(1)
                         Text(Format.role(line.role))
-                            .font(Typo.label)
+                            .sora(.label)
                             .foregroundStyle(Palette.secondary)
                     }
                     Text("\(Format.champion(line.champion)) · \(Format.kda(line)) · \(line.creepScore) CS · \(Format.gold(line.gold))")
-                        .font(Typo.secondary)
+                        .sora(.secondary)
                         .foregroundStyle(Palette.secondary)
                         .monospacedDigit()
                         .lineLimit(1)

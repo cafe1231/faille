@@ -40,22 +40,22 @@ struct PlayerSheet: View {
                     if let share = details?.championDamageShare {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
-                                StatLabel(icon: .swords, text: "Part des dégâts")
+                                StatLabel(icon: .swords, text: String(localized: "Part des dégâts"))
                                 Spacer()
-                                Text(PlayerBuilds.percent(share)).font(Typo.stat).monospacedDigit()
+                                Text(PlayerBuilds.percent(share)).sora(.stat).monospacedDigit()
                             }
                             ShareBar(value: share, tint: item.tint ?? Palette.accent)
                         }
                         .glassCard(radius: Radius.inner, padding: 14)
                     }
                     if let abilities = details?.abilities, !abilities.isEmpty {
-                        section("Ordre des sorts") {
+                        section(String(localized: "Ordre des sorts")) {
                             AbilityOrderView(abilities: abilities, champion: champion, version: context.version)
                         }
                     }
-                    section("Runes") { runes(details) }
-                    section("Objets") { items(details) }
-                    section("Sorts d'invocateur") { summonerSpells(line) }
+                    section(String(localized: "Runes")) { runes(details) }
+                    section(String(localized: "Objets")) { items(details) }
+                    section(String(localized: "Sorts d'invocateur")) { summonerSpells(line) }
                 }
                 .padding(16)
             }
@@ -80,9 +80,9 @@ struct PlayerSheet: View {
                         fallback: DDragonIcon.initials(line.champion))
             VStack(alignment: .leading, spacing: 3) {
                 Text(champion?.name ?? Format.champion(line.champion))
-                    .font(Typo.headline)
+                    .sora(.headline)
                 Text("\(item.teamCode) · \(Format.role(line.role)) · niveau \(item.player.level)")
-                    .font(Typo.secondary)
+                    .sora(.secondary)
                     .foregroundStyle(item.tint ?? Palette.secondary)
             }
             Spacer(minLength: 0)
@@ -96,11 +96,11 @@ struct PlayerSheet: View {
             detail.wardsPlaced.map { "\($0) / \(detail.wardsDestroyed ?? 0)" }
         } ?? "—"
         return VStack(spacing: 8) {
-            statRow("KDA", Format.kda(line))
-            statRow("Gold", Format.gold(line.gold))
-            statRow("CS", "\(line.creepScore)")
-            statRow("Participation aux kills", PlayerBuilds.percent(details?.killParticipation))
-            statRow("Balises posées / détruites", wards)
+            statRow(String(localized: "KDA"), Format.kda(line))
+            statRow(String(localized: "Gold"), Format.gold(line.gold))
+            statRow(String(localized: "CS"), "\(line.creepScore)")
+            statRow(String(localized: "Participation aux kills"), PlayerBuilds.percent(details?.killParticipation))
+            statRow(String(localized: "Balises posées / détruites"), wards)
         }
         .glassCard(radius: Radius.inner, padding: 14)
     }
@@ -108,13 +108,13 @@ struct PlayerSheet: View {
     private func statRow(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
-                .font(Typo.label)
+                .sora(.label)
                 .tracking(Typo.labelTracking)
                 .textCase(.uppercase)
                 .foregroundStyle(Palette.secondary)
             Spacer()
             Text(value)
-                .font(Typo.stat)
+                .sora(.stat)
                 .monospacedDigit()
         }
         .foregroundStyle(Palette.text)
@@ -130,7 +130,7 @@ struct PlayerSheet: View {
         }
         if context.keystone(details) == nil, context.secondaryTree(details) == nil {
             Text("Runes indisponibles")
-                .font(Typo.secondary)
+                .sora(.secondary)
                 .foregroundStyle(Palette.secondary)
         }
     }
@@ -139,14 +139,14 @@ struct PlayerSheet: View {
         let context = item.context
         let inventory = PlayerBuilds.inventory(details?.items ?? [], catalog: context.items)
         ForEach(Array(inventory.items.enumerated()), id: \.offset) { _, id in
-            nameRow(url: context.itemURL(id), name: context.items?.item(id)?.name ?? "Objet \(id)", round: false)
+            nameRow(url: context.itemURL(id), name: context.items?.item(id)?.name ?? String(localized: "Objet \(id)"), round: false)
         }
         if let trinket = inventory.trinket {
-            nameRow(url: context.itemURL(trinket), name: context.items?.item(trinket)?.name ?? "Balise", round: true)
+            nameRow(url: context.itemURL(trinket), name: context.items?.item(trinket)?.name ?? String(localized: "Balise"), round: true)
         }
         if inventory.items.isEmpty, inventory.trinket == nil {
             Text("Aucun objet")
-                .font(Typo.secondary)
+                .sora(.secondary)
                 .foregroundStyle(Palette.secondary)
         }
     }
@@ -169,10 +169,10 @@ struct PlayerSheet: View {
         }
         Text(item.finished
              ? (context.summonerSpells[line.champion] == nil
-                ? "Leaguepedia n'a pas encore cette game : seul le Châtiment du jungler est connu."
-                : "Source : Leaguepedia.")
-             : "En direct, Riot ne donne pas les sorts d'invocateur : seul le Châtiment du jungler est connu.")
-            .font(Typo.secondary)
+                ? String(localized: "Leaguepedia n'a pas encore cette game : seul le Châtiment du jungler est connu.")
+                : String(localized: "Source : Leaguepedia."))
+             : String(localized: "En direct, Riot ne donne pas les sorts d'invocateur : seul le Châtiment du jungler est connu."))
+            .sora(.secondary)
             .foregroundStyle(Palette.secondary)
     }
 
@@ -180,7 +180,7 @@ struct PlayerSheet: View {
         HStack(spacing: 10) {
             DDragonIcon(url: url, size: 28, radius: round ? 14 : 6)
             Text(name)
-                .font(Typo.body)
+                .sora(.body)
                 .foregroundStyle(Palette.text)
             Spacer(minLength: 0)
         }
@@ -229,7 +229,7 @@ struct AbilityOrderView: View {
                     VStack(spacing: 3) {
                         DDragonIcon(url: url(letter), size: 30, fallback: letter)
                         Text(letter)
-                            .font(Typo.label)
+                            .sora(.label)
                             .foregroundStyle(Palette.secondary)
                     }
                 }

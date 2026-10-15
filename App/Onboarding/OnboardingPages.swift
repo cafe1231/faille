@@ -6,9 +6,9 @@ struct OnboardingWelcomePage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Ton compagnon de saison LoL esport")
-                .font(Typo.title).tracking(Typo.titleTracking)
+                .sora(.title).tracking(Typo.titleTracking)
             Text("Les matchs en direct, les résultats, les stats de saison de tes équipes et de leurs joueurs, au même endroit.")
-                .font(Typo.body).foregroundStyle(Palette.secondary)
+                .sora(.body).foregroundStyle(Palette.secondary)
             OnboardingExampleCard()
         }
         .foregroundStyle(Palette.text)
@@ -32,7 +32,7 @@ struct OnboardingPickPage: View {
     var body: some View {
         let shown = query.trimmingCharacters(in: .whitespaces).isEmpty ? teams : search(query)
         VStack(alignment: .leading, spacing: 14) {
-            Text("Choisis tes équipes ou une ligue").font(Typo.title).tracking(Typo.titleTracking)
+            Text("Choisis tes équipes ou une ligue").sora(.title).tracking(Typo.titleTracking)
             ScrollView(.horizontal) {
                 HStack(spacing: 6) {
                     ForEach(leagues) { league in
@@ -47,7 +47,7 @@ struct OnboardingPickPage: View {
             HStack(spacing: 8) {
                 IconView(icon: .search, size: 16).foregroundStyle(Palette.secondary)
                 TextField("", text: $query, prompt: Text("Rechercher une équipe").foregroundStyle(Palette.secondary))
-                    .font(Typo.body)
+                    .sora(.body)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
@@ -55,7 +55,7 @@ struct OnboardingPickPage: View {
             .frame(minHeight: 44)
             .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
             if query.isEmpty {
-                Text("Équipes du Mondial").font(Typo.label).tracking(Typo.labelTracking).textCase(.uppercase)
+                Text("Équipes du Mondial").sora(.label).tracking(Typo.labelTracking).textCase(.uppercase)
                     .foregroundStyle(Palette.secondary)
             }
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
@@ -65,7 +65,7 @@ struct OnboardingPickPage: View {
             }
             if shown.count > Self.gridLimit {
                 Text("\(Self.gridLimit) équipes affichées sur \(shown.count) : affine avec la recherche.")
-                    .font(Typo.secondary).foregroundStyle(Palette.secondary)
+                    .sora(.secondary).foregroundStyle(Palette.secondary)
             }
         }
         .foregroundStyle(Palette.text)
@@ -75,7 +75,7 @@ struct OnboardingPickPage: View {
         Button { onToggleTeam(team) } label: {
             VStack(spacing: 6) {
                 TeamBadge(code: team.code, tint: followed ? Palette.accent : nil, size: 46)
-                Text(team.name).font(Typo.secondaryMedium).lineLimit(1).minimumScaleFactor(0.8)
+                Text(team.name).sora(.secondaryMedium).lineLimit(1).minimumScaleFactor(0.8)
                 IconView(icon: followed ? .starFill : .star, size: 14)
                     .foregroundStyle(followed ? Palette.accent : Palette.secondary)
             }
@@ -99,15 +99,15 @@ struct OnboardingSpoilerPage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Pas de spoiler si tu veux").font(Typo.title).tracking(Typo.titleTracking)
+            Text("Pas de spoiler si tu veux").sora(.title).tracking(Typo.titleTracking)
             HStack(alignment: .top, spacing: 10) {
                 IconView(icon: .eyeOff, size: 22).foregroundStyle(Palette.accent)
                 Text("L'œil cache les scores d'une équipe jusqu'à ce que tu choisisses de les voir.")
-                    .font(Typo.body)
+                    .sora(.body)
             }
             .glassCard(radius: Radius.inner, padding: 14)
             if chosen.isEmpty {
-                Text("Tu pourras l'activer plus tard dans l'onglet Équipes.").font(Typo.secondary)
+                Text("Tu pourras l'activer plus tard dans l'onglet Équipes.").sora(.secondary)
                     .foregroundStyle(Palette.secondary)
             } else {
                 VStack(spacing: 4) {
@@ -116,7 +116,7 @@ struct OnboardingSpoilerPage: View {
                                              set: { onSetSpoilerFree(team.id, $0) })) {
                             HStack(spacing: 10) {
                                 TeamBadge(code: team.code, size: 30)
-                                Text(team.name).font(Typo.bodyMedium)
+                                Text(team.name).sora(.bodyMedium)
                             }
                         }
                         .tint(Palette.accent)

@@ -131,7 +131,7 @@ jobs:
         run: |
           xcodebuild test -project Faille.xcodeproj -scheme Faille \
             -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/test \
-            CODE_SIGNING_ALLOWED=NO
+            -testLanguage fr -testRegion FR CODE_SIGNING_ALLOWED=NO
 
       - name: Lister les aperçus
         if: always()
