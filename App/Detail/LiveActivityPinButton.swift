@@ -2,7 +2,7 @@ import LoLKit
 import SwiftUI
 
 /// « Épingler sur l'écran verrouillé » / « Retirer de l'écran verrouillé » (spec §5.3, §6.4). Explique pourquoi rien
-/// ne s'affiche quand iOS a désactivé les Live Activities (spec §10) ou quand 3 sont déjà à l'écran.
+/// ne s'affiche quand iOS a désactivé les Activités en direct (spec §10) ou quand 3 sont déjà à l'écran.
 struct LiveActivityPinButton: View {
     @Environment(AppStore.self) private var store
     let matchId: String
@@ -40,7 +40,7 @@ struct LiveActivityPinButton: View {
                 .glassCard(radius: Radius.inner, padding: 4)
             }
             .buttonStyle(.pressable)
-            if let note = note(enabled: controller.isEnabled) {
+            if let note = Self.note(enabled: controller.isEnabled, refused: refused) {
                 Text(note)
                     .sora(.secondary)
                     .foregroundStyle(Palette.secondary)
@@ -48,14 +48,21 @@ struct LiveActivityPinButton: View {
                     .frame(maxWidth: .infinity)
             }
         }
+        // « Déjà 3 … » ne reste pas affiché quand une Activité en direct quitte l'écran ou qu'une autre arrive (audit D.1,
+        // étape 4) : le refus portait sur l'état d'alors.
+        .onChange(of: controller.shownMatchIds) {
+            refused = nil
+        }
     }
 
-    private func note(enabled: Bool) -> String? {
+    /// Note sous le bouton : Activités en direct coupées dans iOS, ou écran verrouillé plein ; nil sinon. « Activités en
+    /// direct », le nom d'iOS en français, partout (audit B-G7).
+    static func note(enabled: Bool, refused: PinOutcome?) -> String? {
         if !enabled || refused == .disabled {
-            return String(localized: "Live Activities désactivées : Réglages › Faille › Activités en direct.")
+            return String(localized: "Activités en direct désactivées : Réglages › Faille › Activités en direct.")
         }
         if refused == .full {
-            return String(localized: "Déjà 3 Live Activities sur l'écran verrouillé : retires-en une d'abord.")
+            return String(localized: "Déjà 3 Activités en direct sur l'écran verrouillé : retires-en une d'abord.")
         }
         return nil
     }

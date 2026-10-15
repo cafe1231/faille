@@ -73,7 +73,8 @@ struct LiveChipText: View {
     }
 }
 
-/// « [KC] KC   1 – 0   C9 [C9] » : badges, codes, score de série au centre (« vs » sans score).
+/// « [KC] KC   1 – 0   C9 [C9] » : badges, codes, score de série au centre (« vs » sans score). Les deux côtés ont la
+/// même largeur : le score et « vs » restent au centre de la carte, quelle que soit la largeur des codes (audit B-G10).
 struct ScoreRow: View {
     @Environment(AppStore.self) private var store
     let teams: [MatchTeam]
@@ -84,33 +85,40 @@ struct ScoreRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            if let left = teams.first {
-                badge(left, tint: tints.first ?? nil)
-                Text(left.code)
-                    .sora(.headline)
-                    .lineLimit(1)
+            HStack(spacing: 8) {
+                if let left = teams.first {
+                    badge(left, tint: tints.first ?? nil)
+                    Text(left.code)
+                        .sora(.headline)
+                        .lineLimit(1)
+                }
             }
-            Spacer(minLength: 8)
-            if let score {
-                // Score non masqué (nil quand masqué : rien ne peut défiler) ; à la révélation, il sort d'un flou
-                // (spec finitions §4, §8).
-                Text(Format.score(score))
-                    .sora(large ? .scoreLarge : .score)
-                    .monospacedDigit()
-                    .numericChange(score)
-                    .transition(Motion.revealTransition(reduceMotion: reduceMotion))
-            } else {
-                Text("vs")
-                    .sora(.bodyMedium)
-                    .foregroundStyle(Palette.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Group {
+                if let score {
+                    // Score non masqué (nil quand masqué : rien ne peut défiler) ; à la révélation, il sort d'un flou
+                    // (spec finitions §4, §8).
+                    Text(Format.score(score))
+                        .sora(large ? .scoreLarge : .score)
+                        .monospacedDigit()
+                        .numericChange(score)
+                        .transition(Motion.revealTransition(reduceMotion: reduceMotion))
+                } else {
+                    Text("vs")
+                        .sora(.bodyMedium)
+                        .foregroundStyle(Palette.secondary)
+                }
             }
-            Spacer(minLength: 8)
-            if teams.count > 1 {
-                Text(teams[1].code)
-                    .sora(.headline)
-                    .lineLimit(1)
-                badge(teams[1], tint: tints.count > 1 ? tints[1] : nil)
+            .fixedSize()
+            HStack(spacing: 8) {
+                if teams.count > 1 {
+                    Text(teams[1].code)
+                        .sora(.headline)
+                        .lineLimit(1)
+                    badge(teams[1], tint: tints.count > 1 ? tints[1] : nil)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(Self.spoken(teams: teams, score: score)))
@@ -200,7 +208,8 @@ struct MiniStatsSkeleton: View {
     }
 }
 
-/// « Score masqué · toucher pour révéler » (spec §8) : la révélation est mémorisée pour ce match.
+/// « Score masqué · toucher pour révéler » (spec §8) : la révélation est mémorisée pour ce match. Un seul texte : les
+/// espaces autour du « · » sont ceux de la phrase (audit B-G3) ; zone tactile de 44 pt de haut (audit B-D12).
 struct RevealButton: View {
     let action: () -> Void
 
@@ -208,14 +217,12 @@ struct RevealButton: View {
         Button(action: action) {
             HStack(spacing: 5) {
                 IconView(icon: .eyeOff, size: 13)
-                Text("Score masqué · ")
-                Text("toucher pour révéler")
-                    .foregroundStyle(Palette.accent)
+                Text("Score masqué · \(Text("toucher pour révéler").foregroundStyle(Palette.accent))")
+                    .multilineTextAlignment(.center)
             }
             .sora(.secondaryMedium)
             .foregroundStyle(Palette.secondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)

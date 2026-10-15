@@ -57,12 +57,18 @@ struct BuildPlayersPanel: View {
         let index = rows.indices.contains(selection) ? selection : 0
         let players = rows.indices.contains(index) ? rows[index] : []
         VStack(alignment: .leading, spacing: 10) {
-            Picker("Équipe", selection: $selection) {
-                ForEach(teams.indices, id: \.self) { position in
-                    Text(teams[position].code).tag(position)
+            // Deux pilules de la DA, dont la capsule glisse de l'une à l'autre, à la place du contrôle segmenté du
+            // système (audit B-D9).
+            PillGroup {
+                HStack(spacing: 6) {
+                    ForEach(teams.indices, id: \.self) { position in
+                        PillButton(selected: position == index, action: { selection = position }) {
+                            Text(teams[position].code)
+                        }
+                        .accessibilityAddTraits(position == index ? .isSelected : [])
+                    }
                 }
             }
-            .pickerStyle(.segmented)
             // Changement d'équipe animé (spec finitions §9) : fondu des lignes, animation portée par `selection`.
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(players) { player in
@@ -102,8 +108,8 @@ struct PlayerBuildRow: View {
                 DDragonIcon(url: context.championURL(line.champion), size: 36,
                             fallback: DDragonIcon.initials(line.champion))
                     .overlay(alignment: .bottomTrailing) {
-                        Text("\(player.level)")
-                            .font(Sora.font(9, .bold))
+                        Text(verbatim: "\(player.level)")
+                            .sora(.label)
                             .monospacedDigit()
                             .padding(.horizontal, 3)
                             .background(Palette.abyss.opacity(0.85), in: Capsule())
@@ -126,9 +132,18 @@ struct PlayerBuildRow: View {
                         .minimumScaleFactor(0.85)
                 }
                 Spacer(minLength: 4)
+                // Toujours deux emplacements : un sort inconnu (en direct, seul le Châtiment du jungler l'est) laisse
+                // une case en pointillé, au lieu d'un carré isolé sur la seule ligne du jungler (audit B-D10).
                 HStack(spacing: 3) {
-                    ForEach(context.spells(for: line), id: \.self) { spell in
-                        DDragonIcon(url: context.summonerURL(spell), size: 18, radius: 4)
+                    ForEach(Array(Self.spellSlots(context.spells(for: line)).enumerated()), id: \.offset) { _, spell in
+                        if let spell {
+                            DDragonIcon(url: context.summonerURL(spell), size: 18, radius: 4)
+                        } else {
+                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                .strokeBorder(Palette.glassBorder, style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                                .frame(width: 18, height: 18)
+                                .accessibilityHidden(true)
+                        }
                     }
                 }
             }
@@ -149,6 +164,11 @@ struct PlayerBuildRow: View {
         .accessibilityLabel("\(line.name), \(Format.champion(line.champion)), \(Format.kda(line)), \(line.creepScore) CS")
         .accessibilityHint("Ouvre la fiche du joueur")
     }
+
+    /// Les deux emplacements de sorts d'invocateur d'une ligne : les sorts connus d'abord, nil pour une case vide.
+    static func spellSlots(_ spells: [String]) -> [String?] {
+        (0..<2).map { spells.indices.contains($0) ? spells[$0] : nil }
+    }
 }
 
 /// Squelette de la section « Joueurs » enrichie : sélecteur, puis cinq lignes à deux étages, à la hauteur de
@@ -156,7 +176,12 @@ struct PlayerBuildRow: View {
 struct BuildPlayersSkeleton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SkeletonBlock(height: 32, radius: 8)
+            // Les deux pilules d'équipe (capsules de 29 pt dans une zone de 44 pt).
+            HStack(spacing: 6) {
+                SkeletonBlock(width: 56, height: 29, radius: 14.5)
+                SkeletonBlock(width: 56, height: 29, radius: 14.5)
+            }
+            .frame(minHeight: PillButton<EmptyView>.touchHeight)
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(0..<5, id: \.self) { _ in
                     VStack(alignment: .leading, spacing: 6) {

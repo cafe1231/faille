@@ -41,7 +41,8 @@ struct GoldCurveSection: View {
         if !timelines.unavailable.contains(game.id) {
             GoldChartCard(points: timelines.goldPoints(gameId: game.id, orientedTo: teams.first?.id),
                           markers: timelines.events(gameId: game.id).filter(TimelineText.isMarker),
-                          teams: timelineTeams(teams, store: store), loading: timelines.replaying.contains(game.id))
+                          teams: timelineTeams(teams, store: store), loading: timelines.replaying.contains(game.id),
+                          live: game.state == .inProgress)
         }
     }
 }

@@ -694,6 +694,17 @@
         }
       }
     },
+    "Activités en direct désactivées : Réglages › Faille › Activités en direct.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live Activities are off: Settings › Faille › Live Activities."
+          }
+        }
+      }
+    },
     "Afficher les scores": {
       "extractionState": "manual",
       "localizations": {
@@ -1545,6 +1556,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Loss"
+          }
+        }
+      }
+    },
+    "Déjà 3 Activités en direct sur l'écran verrouillé : retires-en une d'abord.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already 3 Live Activities on the Lock Screen: remove one first."
           }
         }
       }
@@ -2517,6 +2539,17 @@
         }
       }
     },
+    "Objet %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item %@"
+          }
+        }
+      }
+    },
     "Objet %lld": {
       "extractionState": "manual",
       "localizations": {
@@ -2858,6 +2891,17 @@
         }
       }
     },
+    "Regarder %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watch %@"
+          }
+        }
+      }
+    },
     "Remplaçant": {
       "extractionState": "manual",
       "localizations": {
@@ -2920,6 +2964,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rewatch game %lld"
+          }
+        }
+      }
+    },
+    "Revoir la game %lld %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rewatch game %lld %@"
           }
         }
       }
@@ -3063,6 +3118,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Score hidden · "
+          }
+        }
+      }
+    },
+    "Score masqué · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score hidden · %@"
           }
         }
       }

@@ -13,9 +13,14 @@ struct GoldChartCard: View {
     /// Les deux équipes, dans l'ordre d'affichage (gauche = au-dessus de zéro).
     let teams: [TimelineTeam]
     var loading = false
+    /// Game en cours : l'axe des temps garde une minute de marge après le dernier point (audit B-D1).
+    var live = false
 
     /// Hauteur de la courbe (et de son gabarit).
     static let height: CGFloat = 150
+    /// Place des repères de drakes et de barons, dessinés au-dessus du tracé : ils ne touchent plus la ligne d'en-tête
+    /// (audit B-D3). Le gabarit la réserve aussi : la carte garde sa hauteur quand la courbe arrive.
+    static let markerRoom: CGFloat = 8
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -33,8 +38,10 @@ struct GoldChartCard: View {
             if points.count >= 2 {
                 chart
                     .frame(height: Self.height)
+                    .padding(.top, Self.markerRoom)
             } else if loading {
                 SkeletonBlock(height: Self.height, radius: 12)
+                    .padding(.top, Self.markerRoom)
             } else {
                 Text("La courbe se dessine après quelques minutes de jeu")
                     .sora(.secondary)
@@ -87,12 +94,15 @@ struct GoldChartCard: View {
         .chartForegroundStyleScale(domain: ["gauche", "droite"], range: [tint(0).opacity(0.45), tint(1).opacity(0.45)])
         .chartLegend(.hidden)
         .chartYScale(domain: -limit...limit)
+        // L'axe des temps s'arrête au dernier point (une minute de marge en direct), sans vide à droite (audit B-D1).
+        .chartXScale(domain: GoldChartData.timeDomain(points, live: live))
         .chartXAxis {
             AxisMarks(values: .stride(by: 600)) { value in
                 AxisGridLine().foregroundStyle(Palette.glassBorder.opacity(0.4))
                 AxisValueLabel {
-                    if let seconds = value.as(Double.self) {
-                        Text("\(Int(seconds / 60))'")
+                    // Pas de « 0' » : il touchait le bas de l'axe vertical dans l'angle (audit B-D2).
+                    if let seconds = value.as(Double.self), let label = GoldChartData.timeLabel(seconds) {
+                        Text(verbatim: label)
                             .sora(.label)
                             .foregroundStyle(Palette.secondary)
                     }

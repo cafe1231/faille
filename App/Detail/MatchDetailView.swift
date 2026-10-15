@@ -127,6 +127,12 @@ struct MatchDetailView: View {
         let state = store.detailState(matchId: model.matchId)
         let tint = ordered.compactMap { store.tint(for: $0) }.first
         header(event: event, details: details, teams: ordered, order: order, state: state, masked: masked, tint: tint)
+        // « Épingler » (ruling R1, audit m8) : fixé juste sous la carte du score, au-dessus de tout ce qui se remplit
+        // (pilules, stats, fil) : sa position ne bouge plus quand le fil passe de trois lignes de gabarit à dix. Absent
+        // pour un match masqué (comme avant).
+        if !masked, showsPinButton(event: event) {
+            LiveActivityPinButton(matchId: model.matchId, onHaptic: { haptics.play($0) })
+        }
         // « Regarder » (spec fonctionnalités §1) : match en direct non masqué seulement (l'image montre le score). En direct
         // si le calendrier le dit, ou si les détails montrent une game en cours (le direct peut être tombé du cache, et le
         // calendrier pas encore relu) ; le masquage s'applique dans tous les cas.
@@ -165,9 +171,6 @@ struct MatchDetailView: View {
                     selectedGameId: details.flatMap { model.selectedGame(in: $0) }
                         .flatMap { $0.state == .completed ? $0.id : nil },
                     masked: masked)
-        if !masked, showsPinButton(event: event) {
-            LiveActivityPinButton(matchId: model.matchId, onHaptic: { haptics.play($0) })
-        }
     }
 
     /// Fiche d'un joueur (spec fonctionnalités §3), avec un retour « sélection ».
@@ -207,16 +210,23 @@ struct MatchDetailView: View {
         let bestOf = details?.bestOf ?? event?.bestOf ?? 1
         let meta = [league, event?.blockName ?? "", String(localized: "Bo\(bestOf)")].filter { !$0.isEmpty }.joined(separator: " · ")
         return VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center) {
-                Text(meta)
-                    .sora(.secondary)
-                    .foregroundStyle(Palette.secondary)
-                    .lineLimit(1)
-                Spacer(minLength: 8)
-                // La pastille ne se coupe ni ne passe à la ligne : c'est le texte de gauche qui s'abrège.
-                statusChip(event: event, state: state)
-                    .lineLimit(1)
-                    .fixedSize()
+            // Méta-texte et pastille sur une ligne quand les deux tiennent entiers ; sinon la pastille passe sous le
+            // méta-texte, qui ne s'abrège plus à quelques caractères (audit B-D14). La pastille ne se coupe jamais.
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .center) {
+                    metaText(meta)
+                        .fixedSize(horizontal: true, vertical: false)
+                    Spacer(minLength: 8)
+                    statusChip(event: event, state: state)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    metaText(meta)
+                    statusChip(event: event, state: state)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
             }
             ScoreRow(teams: teams, score: seriesScore(event: event, state: state, order: order, masked: masked),
                      tints: teams.map { store.tint(for: $0) }, large: true)
@@ -225,6 +235,14 @@ struct MatchDetailView: View {
         }
         .foregroundStyle(Palette.text)
         .glassCard(tint: tint)
+    }
+
+    /// « Mondial · Play-in · Bo5 » de l'en-tête.
+    private func metaText(_ meta: String) -> some View {
+        Text(meta)
+            .sora(.secondary)
+            .foregroundStyle(Palette.secondary)
+            .lineLimit(1)
     }
 
     /// Score de série dans l'ordre d'affichage ; nil si masqué ou pas commencé (R-M5). Détails chargés : le score de
@@ -297,12 +315,20 @@ struct MatchDetailView: View {
             }
         }
         .scrollIndicators(.hidden)
+        // Les pilules défilent jusqu'au bord de l'écran au lieu d'être rognées au bord de la gouttière ; au repos, la
+        // première reste alignée sur la gouttière (audit B-D11, B-G2).
+        .scrollClipDisabled()
+        .contentMargins(.horizontal, Self.gutter, for: .scrollContent)
+        .padding(.horizontal, -Self.gutter)
     }
+
+    /// Gouttière de l'écran.
+    private static let gutter: CGFloat = 16
 
     /// Stats et joueurs de la game affichée. Le conteneur anime l'arrivée des panneaux (`Motion.reveal`) quand la première
     /// frame de la game arrive : le squelette est remplacé en fondu, à la même hauteur pour la draft, les stats, la courbe
     /// et les joueurs. Le fil, lui, peut grandir pendant sa relecture (de trois lignes de squelette à dix et « Tout le fil »,
-    /// environ 170 pt) : le bouton « Épingler » en dessous peut alors descendre ; sa position reste à juger par Dan.
+    /// environ 170 pt) : il est en bas de l'écran, et « Épingler » est au-dessus (ruling R1), rien ne bouge en dessous.
     /// Ce conteneur n'existe que pour un match non masqué (branche `details`) : rien ne peut fuiter.
     @ViewBuilder private func gameStats(game: GameRef, teams: [MatchTeam]) -> some View {
         let ids = teams.compactMap(\.id)

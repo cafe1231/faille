@@ -14,7 +14,7 @@ struct TeamStatsPanel: View {
             row(.gold, String(localized: "Gold"), Format.gold(left.gold), Format.gold(right.gold))
             GoldBar(left: left.gold, right: right.gold, tint: tint)
             row(.tower, String(localized: "Tours"), "\(left.towers)", "\(right.towers)")
-            row(.inhib, String(localized: "Inhibs"), "\(left.inhibitors)", "\(right.inhibitors)")
+            row(.inhib, String(localized: "Inhibiteurs"), "\(left.inhibitors)", "\(right.inhibitors)")
             dragonRow
             row(.baron, String(localized: "Barons"), "\(left.barons)", "\(right.barons)")
         }
@@ -50,9 +50,12 @@ struct TeamStatsPanel: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("\(left.dragons.count)").sora(.stat).numericChange(left.dragons.count)
                 if !left.dragons.isEmpty {
+                    // Une ligne, quelle que soit la game : le panneau garde sa hauteur (audit B-D4).
                     Text(Format.dragons(left.dragons))
                         .sora(.secondary)
                         .foregroundStyle(Palette.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -63,7 +66,8 @@ struct TeamStatsPanel: View {
                     Text(Format.dragons(right.dragons))
                         .sora(.secondary)
                         .foregroundStyle(Palette.secondary)
-                        .multilineTextAlignment(.trailing)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
@@ -105,7 +109,7 @@ struct GoldBar: View {
         let share = CGFloat(left) / CGFloat(max(1, left + right))
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.14))
+                Capsule().fill(Palette.fill(.track))
                 Capsule()
                     .fill(tint)
                     .frame(width: proxy.size.width * share)
