@@ -86,6 +86,17 @@ struct CircularWidgetView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                 }
+            case let .masked(code):
+                // Prochain match masqué : le code de l'équipe et un œil barré, sans match, score ni vainqueur.
+                ring(0)
+                VStack(spacing: 2) {
+                    IconView(icon: .eyeOff, size: 16)
+                    Text(code)
+                        .font(Sora.font(10, .bold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                }
+                .foregroundStyle(.secondary)
             case .empty:
                 ring(0)
                 IconView(icon: .trophy, size: 18)

@@ -100,6 +100,23 @@ struct IslandTimerTests {
     }
 }
 
+/// Icônes de statut (B-W3, B-W4).
+struct LiveActivityIconTests {
+    @Test func stoppedClockShowsPauseNotLive() {
+        #expect(LiveActivityStatusView.icon(for: .clock(.stopped("24:30"))) == .pause)
+        #expect(LiveActivityStatusView.icon(for: .clock(.running(since: Date()))) == .live)
+        #expect(LiveActivityStatusView.icon(for: .live) == .live)
+        #expect(LiveActivityStatusView.icon(for: .betweenGames) == .pause)
+    }
+
+    @Test func maskedCompactIslandShowsLiveIconOnTheRightOnly() {
+        #expect(IslandCompactView.showsLiveIcon(side: 1, wins: nil, isMasked: true))
+        #expect(!IslandCompactView.showsLiveIcon(side: 0, wins: nil, isMasked: true))
+        #expect(!IslandCompactView.showsLiveIcon(side: 1, wins: 1, isMasked: false))
+        #expect(!IslandCompactView.showsLiveIcon(side: 1, wins: nil, isMasked: false))
+    }
+}
+
 /// Les exemples des planches couvrent chaque état de la spec §6.3.
 struct LiveActivitySampleTests {
     @Test func samplesCoverEveryState() {

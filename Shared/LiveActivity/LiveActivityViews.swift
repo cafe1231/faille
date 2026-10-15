@@ -74,7 +74,7 @@ struct LiveActivityStatusView: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            IconView(icon: icon, size: 12)
+            IconView(icon: Self.icon(for: status), size: 12)
             switch status {
             case let .clock(.running(since)):
                 if let prefix {
@@ -115,7 +115,7 @@ struct LiveActivityStatusView: View {
     }
 
     /// La nature d'une info se lit à son icône (spec §9).
-    private var icon: Icon {
+    static func icon(for status: LiveActivityDisplay.Status) -> Icon {
         switch status {
         // Chrono figé en cours de game : la partie est en pause, pas « en direct ».
         case .clock(.stopped): return .pause
@@ -226,7 +226,7 @@ struct LiveActivityMessageView: View {
     var body: some View {
         HStack(spacing: 5) {
             if let icon = message.icon {
-                IconView(icon: icon, size: 12)
+                IconView(icon: Self.icon(for: status), size: 12)
             }
             Text(message.text)
             if let accent = message.accent {

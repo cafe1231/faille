@@ -110,7 +110,7 @@ struct MediumWidgetView: View {
                         .font(Sora.font(13, .medium))
                     // Comme les autres familles : sans équipe suivie, le widget dit où en ajouter.
                     if content.teams.isEmpty && !content.appGroupMissing {
-                        Text("Ajoute-en dans l'appli")
+                        Text(WidgetText.addTeamsAdvice)
                             .font(Sora.font(11, .regular))
                     }
                 }

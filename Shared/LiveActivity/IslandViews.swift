@@ -32,6 +32,11 @@ struct IslandCompactView: View {
         .foregroundStyle(Color.white)
         .numericTransition()
     }
+
+    /// L'icône « en direct » remplace le score côté droit quand le match est masqué (B-W4).
+    static func showsLiveIcon(side: Int, wins: Int?, isMasked: Bool) -> Bool {
+        side == 1 && wins == nil && isMasked
+    }
 }
 
 /// Minimale : code de l'équipe suivie et score ; masqué : son monogramme seul.
