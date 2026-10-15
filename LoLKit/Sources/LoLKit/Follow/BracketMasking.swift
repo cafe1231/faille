@@ -25,4 +25,15 @@ public enum BracketMasking {
             return event.startTime > limit
         }.map(\.id))
     }
+
+    /// `events` sans les matchs que la progression du tableau cache. Le seuil (dernier match masqué d'une ligue) se
+    /// cherche dans `events` ET dans `context` (calendrier, direct, pages du calendrier fusionnés) : un match d'une page
+    /// de mois absent du calendrier en cache est caché comme les autres, même si le match masqué n'est que dans `context`.
+    public static func visible(_ events: [MatchEvent], context: [MatchEvent], maskedTeamIds: Set<String>,
+                               follows: FollowList, revealed: Set<String>) -> [MatchEvent] {
+        guard !maskedTeamIds.isEmpty else { return events }
+        let hidden = hiddenIds(schedule: events + context, maskedTeamIds: maskedTeamIds, follows: follows,
+                               revealed: revealed)
+        return hidden.isEmpty ? events : events.filter { !hidden.contains($0.id) }
+    }
 }

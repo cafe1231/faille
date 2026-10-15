@@ -23,6 +23,7 @@ struct SeasonCalendarView: View {
         let all = CalendarEvents.merged(pages: pages, schedule: store.schedule, live: store.live)
         // Calculé une fois par rendu (I-1) : l'ensemble masqué n'est pas recalculé par ligne.
         let events = store.withoutMaskedUpcoming(all)
+        let bracketHidden = store.bracketHiddenIds(over: all)
         let days = CalendarMonth.days(events: events, month: shownMonth, calendar: calendar,
                                       followed: HomeFeed.followedMatchIds(events, follows: store.follows), now: now)
         let day = selected ?? now
@@ -63,7 +64,7 @@ struct SeasonCalendarView: View {
                 } else {
                     VStack(spacing: 2) {
                         ForEach(list) { event in
-                            MatchLine(event: event, onReveal: reveal)
+                            MatchLine(event: event, onReveal: reveal, bracketHidden: bracketHidden)
                         }
                     }
                     .glassCard(radius: Radius.inner, padding: 12)

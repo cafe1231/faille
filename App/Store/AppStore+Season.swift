@@ -104,14 +104,23 @@ extension AppStore {
     /// Match à venir (ou en cours) non révélé qu'il faut cacher (I-1) : celui d'une équipe dont le dernier match est
     /// masqué, ou la suite d'un tableau international dont un match est masqué. Jamais de ligne, de pastille ni de jour
     /// de calendrier qui le trahisse.
-    func isUpcomingMasked(_ event: MatchEvent) -> Bool {
+    /// - Parameter bracketHidden: ids que cache la suite du tableau, calculés sur un ensemble plus large que le
+    ///   calendrier en cache (`bracketHiddenIds(over:)`, avec les pages du calendrier) ; sinon ceux du calendrier.
+    func isUpcomingMasked(_ event: MatchEvent, bracketHidden: Set<String>? = nil) -> Bool {
         guard event.state != .completed else { return false }
         if event.state == .unstarted,
            MatchLine.isHiddenUpcoming(event, maskedTeamIds: maskedLatestTeamIds, revealed: settings.revealedMatchIds) {
             return true
         }
         guard League.internationalSlugs.contains(event.league.slug) else { return false }
-        return bracketHiddenIds.contains(event.id)
+        return (bracketHidden ?? bracketHiddenIds).contains(event.id)
+    }
+
+    /// Suite d'un tableau jugée sur `events` fusionnés avec le calendrier et le direct : le seuil vient de l'ensemble
+    /// entier, pas du seul calendrier en cache (un match qui n'est que dans une page du calendrier est caché lui aussi).
+    func bracketHiddenIds(over events: [MatchEvent]) -> Set<String> {
+        BracketMasking.hiddenIds(schedule: events + schedule + (live ?? []), maskedTeamIds: maskedLatestTeamIds,
+                                 follows: follows, revealed: settings.revealedMatchIds)
     }
 
     /// `events` sans les matchs à venir masqués : à passer à `HomeModel.compute` et à `CalendarMonth.days` (pastilles).
@@ -121,8 +130,7 @@ extension AppStore {
         let masked = maskedLatestTeamIds
         guard !masked.isEmpty else { return events }
         let revealed = settings.revealedMatchIds
-        let bracket = BracketMasking.hiddenIds(schedule: schedule, maskedTeamIds: masked, follows: follows,
-                                               revealed: revealed)
+        let bracket = bracketHiddenIds(over: events)
         return events.filter {
             !MatchLine.isHiddenUpcoming($0, maskedTeamIds: masked, revealed: revealed) && !bracket.contains($0.id)
         }

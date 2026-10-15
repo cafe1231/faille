@@ -108,9 +108,12 @@ struct MatchLine: View {
     /// Afficher le jour en plus de l'heure (listes sur plusieurs jours).
     var showsDay = false
     var onReveal: ((String) -> Void)? = nil
+    /// Ids que cache la suite d'un tableau, calculés sur un ensemble plus large que le calendrier en cache (le calendrier
+    /// et ses pages) ; nil : ceux du calendrier et du direct.
+    var bracketHidden: Set<String>? = nil
 
     var body: some View {
-        if store.isUpcomingMasked(event) {
+        if store.isUpcomingMasked(event, bracketHidden: bracketHidden) {
             hiddenRow
         } else {
             let line = store.scoreLine(event)
