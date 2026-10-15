@@ -2,18 +2,21 @@ import Foundation
 
 /// Formats d'affichage en français, identiques sur toutes les plateformes.
 public enum Format {
-    /// 37442 → « 37,4k » ; 67995 → « 68k » ; 850 → « 850 ».
+    /// Signe moins typographique (U+2212), le même partout : « −800 », « −3k », « −750 ».
+    static let minus = "\u{2212}"
+
+    /// 37442 → « 37,4k » ; 67995 → « 68k » ; 850 → « 850 » ; −3000 → « −3k » (signe U+2212).
     public static func gold(_ value: Int) -> String {
         let magnitude = abs(value)
-        guard magnitude >= 1000 else { return "\(value)" }
+        let sign = value < 0 ? minus : ""
+        guard magnitude >= 1000 else { return "\(sign)\(magnitude)" }
         let tenths = (magnitude + 50) / 100
-        let sign = value < 0 ? "-" : ""
         let whole = tenths / 10
         let decimal = tenths % 10
         return decimal == 0 ? "\(sign)\(whole)k" : "\(sign)\(whole),\(decimal)k"
     }
 
-    /// Écart signé : « +1,6k », « -800 », « 0 ».
+    /// Écart signé : « +1,6k », « −800 », « 0 ».
     public static func goldDiff(_ diff: Int) -> String {
         diff > 0 ? "+" + gold(diff) : gold(diff)
     }

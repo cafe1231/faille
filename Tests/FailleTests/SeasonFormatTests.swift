@@ -21,7 +21,7 @@ struct SeasonFormatTests {
         #expect(SeasonFormat.signed(228, locale: fr) == "+228")
         #expect(plain(SeasonFormat.signed(-1450, locale: fr)) == "\u{2212}1 450")
         #expect(SeasonFormat.signed(nil) == "—")
-        #expect(SeasonFormat.record(9, 0) == "9-0")
+        #expect(SeasonFormat.record(9, 0) == "9–0")
         #expect(SeasonFormat.kda(kills: 4, deaths: 6, assists: 4) == "4/6/4")
         #expect(SeasonNames.role("bottom") == "ADC")
         #expect(SeasonNames.role(nil) == "Remplaçant")

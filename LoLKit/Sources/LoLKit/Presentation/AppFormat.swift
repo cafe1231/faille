@@ -41,16 +41,28 @@ extension Format {
         "hextech": "hextech", "chemtech": "chemtech", "elder": "ancestral",
     ]
 
-    /// Types de drakes en français : « infernal, océan ». Type inconnu : tel quel, en minuscules.
+    /// Types de drakes en français, regroupés dans l'ordre d'apparition : « infernal · océan », « 3 hextech · infernal »
+    /// (une seule ligne, quelle que soit la game). Type inconnu : tel quel, en minuscules.
     public static func dragons(_ types: [String]) -> String {
-        types.map { dragonNames[$0.lowercased()] ?? $0.lowercased() }.joined(separator: ", ")
+        var order: [String] = []
+        var counts: [String: Int] = [:]
+        for type in types {
+            let name = dragonNames[type.lowercased()] ?? type.lowercased()
+            if counts[name] == nil { order.append(name) }
+            counts[name, default: 0] += 1
+        }
+        return order.map { name in
+            let count = counts[name] ?? 1
+            return count > 1 ? "\(count) \(name)" : name
+        }.joined(separator: " · ")
     }
 
-    private static let roles = ["top": "TOP", "jungle": "JGL", "mid": "MID", "bottom": "BOT", "support": "SUP"]
+    /// Une seule table de postes pour l'appli (mêmes mots dans le Détail, la fiche, le duel, l'effectif).
+    private static let roles = ["top": "Top", "jungle": "Jungle", "mid": "Mid", "bottom": "ADC", "support": "Supp."]
 
-    /// Rôle court : « JGL ». Rôle inconnu : ses 3 premières lettres en capitales.
+    /// Poste court : « Jungle », « ADC », « Supp. ». Poste inconnu : ses 3 premières lettres, première en capitale.
     public static func role(_ role: String) -> String {
-        roles[role.lowercased()] ?? String(role.uppercased().prefix(3))
+        roles[role.lowercased()] ?? String(role.prefix(3)).capitalized
     }
 
     /// Noms de champions que la découpe à la casse ne sait pas écrire (apostrophes, nom d'affichage différent de l'id Data Dragon).

@@ -90,7 +90,7 @@ public struct LiveActivityDisplay: Sendable, Equatable {
 
     /// Message sous le score.
     public enum Message: Sendable, Equatable {
-        /// « Sans spoiler · ouvre l'appli pour révéler » (spec §8 : la révélation se fait dans l'appli).
+        /// « Score masqué · ouvre Faille pour révéler » (spec §8 : la révélation se fait dans l'appli ; un seul mot : « masqué »).
         case masked
         /// « La game 3 commence dans quelques minutes » (spec §6.3).
         case nextGame(Int)
@@ -103,7 +103,7 @@ public struct LiveActivityDisplay: Sendable, Equatable {
 
         public var text: String {
             switch self {
-            case .masked: return "Sans spoiler ·"
+            case .masked: return "Score masqué ·"
             case let .nextGame(number): return "La game \(number) commence dans quelques minutes"
             case .statsUnavailable: return "Stats live non fournies par Riot pour ce match"
             case .statsPending: return "Stats en attente du flux de Riot"
@@ -113,7 +113,7 @@ public struct LiveActivityDisplay: Sendable, Equatable {
 
         /// Suite du texte, à la couleur d'accent.
         public var accent: String? {
-            if case .masked = self { return "ouvre l'appli pour révéler" }
+            if case .masked = self { return "ouvre Faille pour révéler" }
             return nil
         }
     }
@@ -188,10 +188,10 @@ public struct LiveActivityDisplay: Sendable, Equatable {
         }
     }
 
-    /// Score de la Dynamic Island minimale : « 1-0 » ; nil si masqué.
+    /// Score de la Dynamic Island minimale : « 1–0 » (tiret demi-cadratin, comme le widget en ligne) ; nil si masqué.
     public var compactScore: String? {
         guard let score, score.count == 2 else { return nil }
-        return "\(score[0])-\(score[1])"
+        return "\(score[0])–\(score[1])"
     }
 
     /// Ordre d'affichage : l'équipe principale à gauche.

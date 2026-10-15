@@ -112,8 +112,8 @@ import Testing
         #expect(Format.gold(67995) == "68k")
         #expect(Format.gold(850) == "850")
         #expect(Format.goldDiff(1560) == "+1,6k")
-        #expect(Format.goldDiff(-800) == "-800")
-        #expect(Format.goldDiff(-2100) == "-2,1k")
+        #expect(Format.goldDiff(-800) == "−800")
+        #expect(Format.goldDiff(-2100) == "−2,1k")
         #expect(Format.goldDiff(0) == "0")
     }
 
