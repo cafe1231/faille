@@ -28,3 +28,8 @@ Concerns : `isUpcomingMasked` recalcule `bracketHiddenIds` par ligne (limite aux
 - `TeamCards.build` pose `liveBracketMasked` / `lastBracketMasked` (ids dans `BracketMasking.hiddenIds`, ligue internationale, non révélés). `Presenter.scoreLine(bracketMasked:)` masque le score comme un match anti-spoiler ; `latestIsMasked` rend la ligne « Prochain » et `maskedLatestTeamIds` cohérentes (F1/C). Carte Matchs : « En direct » sans score + « toucher pour révéler » ; « Dernier · … · Terminé ». Widgets : `makeLine` honore les drapeaux.
 - Ligues : seuil `bracketHiddenIds(over: [])` (calendrier + direct).
 - Limite connue : l'écran Détail d'un tel match passe par `store.scoreLine` sans drapeau (non traité).
+
+## Détail d'un match caché par BracketMasking
+- `AppStore.isDetailMasked` / `isBracketHidden(matchId:)` : le Détail traite un match de `bracketHiddenIds` non révélé comme un match en anti-spoiler (même chemin `masked`, une seule décision par rendu via `bracketHidden` de la vue).
+- Clés de tâches (`featureGame`), `loadSelectedGame`, `spellGames`, bouton d'épingle Live Activity, Regarder/Replay, Duel : tous sur le drapeau combiné ; aucune requête de stats.
+- Test hébergé : `aBracketHiddenMatchIsMaskedInTheDetailUntilRevealed` (HomeTests). Aucun changement LoLKit ni chaîne.
